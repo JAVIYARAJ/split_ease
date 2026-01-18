@@ -1,0 +1,33 @@
+import 'package:fpdart/fpdart.dart';
+import 'package:split_ease/core/error/failure.dart';
+import 'package:split_ease/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:split_ease/features/auth/domain/entities/user_entity.dart';
+import 'package:split_ease/features/auth/domain/repositories/auth_repository.dart';
+
+import '../../../../core/error/exception.dart';
+
+class AuthRepositoryImpl implements AuthRepository {
+  final AuthRemoteDataSource authRemoteDataSource;
+
+  AuthRepositoryImpl({required this.authRemoteDataSource});
+
+  @override
+  Future<Either<Failure, UserEntity>> signUpWithEmailPassword({required String name, required String email, required String password}) async {
+    try {
+      var user = await authRemoteDataSource.signUpWithEmailPassword(name: name, email: email, password: password);
+      return right(user);
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserEntity>> loginWithEmailPassword({required String email, required String password}) async {
+    try {
+      var user = await authRemoteDataSource.loginWithEmailPassword(email: email, password: password);
+      return right(user);
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    }
+  }
+}

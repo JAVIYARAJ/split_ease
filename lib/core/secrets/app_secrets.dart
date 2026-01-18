@@ -1,0 +1,4 @@
+class AppSecrets {
+  static String supabaseUrl = 'https://pbfnylvcpscoawcsqetw.supabase.co';
+  static String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiZm55bHZjcHNjb2F3Y3NxZXR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5Mjc3MjcsImV4cCI6MjA4MjUwMzcyN30.idVdKDm9qqXc4NwWnWhbQ7mRYxPg_wqnzG51l0owAUQ';
+}
