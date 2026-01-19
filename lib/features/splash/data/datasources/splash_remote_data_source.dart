@@ -1,8 +1,9 @@
 import 'package:split_ease/core/error/exception.dart';
+import 'package:split_ease/features/auth/data/models/user_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract interface class SplashRemoteDataSource {
-  Future<bool> isUserLogin();
+  Future<UserModel> isUserLogin();
 }
 
 class SplashRemoteDataSourceImpl implements SplashRemoteDataSource {
@@ -11,9 +12,13 @@ class SplashRemoteDataSourceImpl implements SplashRemoteDataSource {
   SplashRemoteDataSourceImpl({required this.client});
 
   @override
-  Future<bool> isUserLogin() async {
+  Future<UserModel> isUserLogin() async {
     try {
-      return client.auth.currentUser != null;
+      if (client.auth.currentUser != null) {
+        return UserModel.fromSupabaseUser(client.auth.currentUser!);
+      } else {
+        throw ServerException(message: "User not login");
+      }
     } catch (e) {
       throw ServerException(message: e.toString());
     }

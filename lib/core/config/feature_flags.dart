@@ -5,4 +5,5 @@ class FeatureFlags {
   /// Controls whether social authentication (Google, Apple, etc.) is enabled.
   static const bool isSocialAuthEnabled = false;
   static const bool isForgotPasswordEnabled = false;
+  static const bool isSubscriptionEnabled = false;
 }

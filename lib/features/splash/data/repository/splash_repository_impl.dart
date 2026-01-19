@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:split_ease/core/error/exception.dart';
 import 'package:split_ease/core/error/failure.dart';
+import 'package:split_ease/features/auth/data/models/user_model.dart';
 import 'package:split_ease/features/splash/data/datasources/splash_remote_data_source.dart';
 import 'package:split_ease/features/splash/domain/repository/splash_repository.dart';
 
@@ -10,7 +11,7 @@ class SplashRepositoryImpl implements SplashRepository {
   SplashRepositoryImpl({required this.dataSource});
 
   @override
-  Future<Either<Failure, bool>> isUserActiveSession() async {
+  Future<Either<Failure, UserModel>> isUserActiveSession() async {
     try {
       return right(await dataSource.isUserLogin());
     } on ServerException catch (e) {

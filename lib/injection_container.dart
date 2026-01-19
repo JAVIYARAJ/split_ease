@@ -1,9 +1,16 @@
 import 'package:get_it/get_it.dart';
+import 'package:split_ease/features/account/data/datasources/account_remote_data_source.dart';
+import 'package:split_ease/features/account/data/repository/account_repository_impl.dart';
+import 'package:split_ease/features/account/domain/repository/account_repository.dart';
+import 'package:split_ease/features/account/domain/usecases/account_logout.dart';
+import 'package:split_ease/features/account/presentation/bloc/account_bloc.dart';
+import 'package:split_ease/features/activity/presentation/bloc/activity_bloc.dart';
 import 'package:split_ease/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:split_ease/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:split_ease/features/auth/domain/usecases/user_sign_up.dart';
 import 'package:split_ease/features/auth/presentation/login/bloc/login_bloc.dart';
 import 'package:split_ease/features/auth/presentation/register/bloc/register_bloc.dart';
+import 'package:split_ease/features/friends/presentation/bloc/friends_bloc.dart';
 import 'package:split_ease/features/splash/data/datasources/splash_remote_data_source.dart';
 import 'package:split_ease/features/splash/data/repository/splash_repository_impl.dart';
 import 'package:split_ease/features/splash/domain/repository/splash_repository.dart';
@@ -13,9 +20,11 @@ import 'core/secrets/app_secrets.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/domain/usecases/user_login.dart';
 
+import 'features/groups/presentation/bloc/groups_bloc.dart';
 import 'features/splash/presentation/cubit/splash_cubit.dart';
 import 'features/welcome/presentation/cubit/welcome_cubit.dart';
 import 'features/home/presentation/bloc/home_bloc.dart';
+import 'core/common/cubit/app_user_cubit.dart';
 
 
 // Service Locator (Shared Instance)
@@ -39,6 +48,9 @@ Future<void> _core() async {
   // 'LazySingleton' means the instance is created only when it's first requested,
   // and the same instance is returned for subsequent calls.
   sl.registerLazySingleton(() => sc.client);
+
+  // Core Cubits
+  sl.registerLazySingleton(() => AppUserCubit());
 }
 
 
@@ -60,7 +72,7 @@ void _splash() {
 
   // Register SplashCubit. Factories return a new instance every time they are called.
   // ViewModels/Blocs/Cubits are usually factories so that their state resets when the screen is recreated.
-  sl.registerLazySingleton(() => SplashCubit(sl<UserActiveSession>()));
+  sl.registerLazySingleton(() => SplashCubit(sl<UserActiveSession>(), sl<AppUserCubit>()));
 }
 
 void _welcome() {
@@ -70,6 +82,18 @@ void _welcome() {
 void _home() {
   // Presentation Layer - BLoC (Contains Mock Data Logic)
   sl.registerFactory(() => HomeBloc());
+  sl.registerLazySingleton(() => FriendsBloc(),);
+  sl.registerLazySingleton(() => GroupsBloc(),);
+  sl.registerLazySingleton(() => ActivityBloc(),);
+
+  sl.registerFactory<AccountRemoteDataSource>(() => AccountRemoteDataSourceImpl(sl<SupabaseClient>()),);
+
+  sl.registerFactory<AccountRepository>(() => AccountRepositoryImpl(accountRemoteDataSource: sl<AccountRemoteDataSource>()),);
+
+  sl.registerFactory(() => AccountLogout(sl<AccountRepository>()),);
+
+  sl.registerLazySingleton(() => AccountBloc(accountLogout: sl<AccountLogout>(), appUserCubit: sl<AppUserCubit>()),);
+
 }
 
 /// Registers dependencies for the Authentication feature following Clean Architecture.
@@ -92,8 +116,8 @@ void _auth() {
 
   // 4. Blocs / State Management (Presentation Layer)
   // Receives user input, calls Use Cases, and emits States to the UI.
-  sl.registerFactory(() => LoginBloc(sl<UserLogin>()));
-  sl.registerLazySingleton(() => RegisterBloc(sl<UserSignUp>()));
+  sl.registerFactory(() => LoginBloc(sl<UserLogin>(), sl<AppUserCubit>()));
+  sl.registerLazySingleton(() => RegisterBloc(sl<UserSignUp>(), sl<AppUserCubit>()));
 }
 
 /* 
