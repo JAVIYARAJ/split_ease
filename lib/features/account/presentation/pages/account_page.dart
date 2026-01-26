@@ -30,7 +30,7 @@ class AccountPage extends StatelessWidget {
           String userEmail = "email@example.com";
 
           if (userState is AppUserLoggedIn) {
-            userName = userState.user.name ?? "User";
+            userName = userState.user.name;
             userEmail = userState.user.email;
           }
 

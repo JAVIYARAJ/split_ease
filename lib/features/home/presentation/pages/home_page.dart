@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:split_ease/features/account/domain/usecases/account_logout.dart';
+
 import 'package:split_ease/features/account/presentation/bloc/account_bloc.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
 import '../../../../core/theme/app_colors.dart';

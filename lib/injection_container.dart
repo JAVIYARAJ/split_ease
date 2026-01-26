@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:split_ease/features/account/data/datasources/account_remote_data_source.dart';
 import 'package:split_ease/features/account/data/repository/account_repository_impl.dart';
 import 'package:split_ease/features/account/domain/repository/account_repository.dart';
@@ -11,16 +12,32 @@ import 'package:split_ease/features/auth/domain/usecases/user_sign_up.dart';
 import 'package:split_ease/features/auth/presentation/login/bloc/login_bloc.dart';
 import 'package:split_ease/features/auth/presentation/register/bloc/register_bloc.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friends_bloc.dart';
+import 'package:split_ease/features/groups/data/datasources/group_remote_data_source.dart';
+import 'package:split_ease/features/groups/data/repository/group_repository_impl.dart';
+import 'package:split_ease/features/groups/domain/repository/group_repository.dart';
+import 'package:split_ease/features/groups/domain/usecases/get_all_groups.dart';
+import 'package:split_ease/features/groups/domain/usecases/get_group_detail.dart';
+import 'package:split_ease/features/groups/domain/usecases/group_create.dart';
+import 'package:split_ease/features/groups/domain/usecases/check_invite_code.dart';
+import 'package:split_ease/features/groups/domain/usecases/join_group.dart';
+import 'package:split_ease/features/groups/presentation/bloc/group_detail_bloc.dart';
+import 'package:split_ease/features/groups/presentation/bloc/group_settings_bloc.dart';
+import 'package:split_ease/features/groups/domain/usecases/leave_group.dart';
+import 'package:split_ease/features/groups/domain/usecases/delete_group.dart';
+import 'package:split_ease/features/groups/presentation/bloc/join_group_bloc.dart';
 import 'package:split_ease/features/splash/data/datasources/splash_remote_data_source.dart';
 import 'package:split_ease/features/splash/data/repository/splash_repository_impl.dart';
 import 'package:split_ease/features/splash/domain/repository/splash_repository.dart';
 import 'package:split_ease/features/splash/domain/usecases/user_active_session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/secrets/app_secrets.dart';
+import 'core/services/image_picker_service.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/domain/usecases/user_login.dart';
 
+import 'features/groups/domain/usecases/group_insert_icon.dart';
 import 'features/groups/presentation/bloc/groups_bloc.dart';
+import 'features/groups/presentation/bloc/create_group_bloc.dart';
 import 'features/splash/presentation/cubit/splash_cubit.dart';
 import 'features/welcome/presentation/cubit/welcome_cubit.dart';
 import 'features/home/presentation/bloc/home_bloc.dart';
@@ -49,6 +66,10 @@ Future<void> _core() async {
   // and the same instance is returned for subsequent calls.
   sl.registerLazySingleton(() => sc.client);
 
+  // Services
+  sl.registerLazySingleton(() => ImagePicker());
+  sl.registerLazySingleton<ImagePickerService>(() => ImagePickerServiceImpl(sl()));
+
   // Core Cubits
   sl.registerLazySingleton(() => AppUserCubit());
 }
@@ -61,6 +82,35 @@ void _features() {
   _auth();
   _welcome();
   _home();
+  _group();
+  _inviteCode();
+}
+
+void _group() {
+
+  sl.registerFactory<GroupRemoteDataSource>(() => GroupRemoteDataSourceImpl(client: sl<SupabaseClient>()),);
+
+  sl.registerFactory<GroupRepository>(() => GroupRepositoryImpl(dataSource: sl<GroupRemoteDataSource>()),);
+
+  sl.registerFactory(() => GroupInsertIcon(groupRepository: sl<GroupRepository>()),);
+
+  sl.registerFactory(() => GroupCreate(groupRepository: sl<GroupRepository>()),);
+  
+  sl.registerFactory(() => CheckInviteCode(groupRepository: sl<GroupRepository>()));
+
+  sl.registerFactory(() => CreateGroupBloc(sl<ImagePickerService>(),sl<GroupInsertIcon>(),sl<GroupCreate>(), sl<CheckInviteCode>()));
+
+
+  sl.registerFactory(() => GetGroupDetail(groupRepository: sl<GroupRepository>()),);
+
+  sl.registerFactory(() => GroupDetailBloc(getGroupDetail: sl<GetGroupDetail>()),);
+
+  sl.registerFactory(() => LeaveGroup(groupRepository: sl<GroupRepository>()));
+  sl.registerFactory(() => DeleteGroup(groupRepository: sl<GroupRepository>()));
+
+  sl.registerFactory(() => GroupSettingsBloc(
+    getGroupDetail: sl<GetGroupDetail>(),
+  ));
 }
 
 void _splash() {
@@ -82,9 +132,11 @@ void _welcome() {
 void _home() {
   // Presentation Layer - BLoC (Contains Mock Data Logic)
   sl.registerFactory(() => HomeBloc());
-  sl.registerLazySingleton(() => FriendsBloc(),);
-  sl.registerLazySingleton(() => GroupsBloc(),);
-  sl.registerLazySingleton(() => ActivityBloc(),);
+  sl.registerFactory(() => FriendsBloc(),);
+
+  sl.registerFactory(() => GetAllGroups(groupRepository: sl<GroupRepository>()),);
+  sl.registerFactory(() => GroupsBloc(getAllGroups: sl<GetAllGroups>()),);
+  sl.registerFactory(() => ActivityBloc(),);
 
   sl.registerFactory<AccountRemoteDataSource>(() => AccountRemoteDataSourceImpl(sl<SupabaseClient>()),);
 
@@ -92,7 +144,7 @@ void _home() {
 
   sl.registerFactory(() => AccountLogout(sl<AccountRepository>()),);
 
-  sl.registerLazySingleton(() => AccountBloc(accountLogout: sl<AccountLogout>(), appUserCubit: sl<AppUserCubit>()),);
+  sl.registerFactory(() => AccountBloc(accountLogout: sl<AccountLogout>(), appUserCubit: sl<AppUserCubit>()),);
 
 }
 
@@ -117,7 +169,14 @@ void _auth() {
   // 4. Blocs / State Management (Presentation Layer)
   // Receives user input, calls Use Cases, and emits States to the UI.
   sl.registerFactory(() => LoginBloc(sl<UserLogin>(), sl<AppUserCubit>()));
-  sl.registerLazySingleton(() => RegisterBloc(sl<UserSignUp>(), sl<AppUserCubit>()));
+  sl.registerFactory(() => RegisterBloc(sl<UserSignUp>(), sl<AppUserCubit>()));
+}
+
+void _inviteCode(){
+
+  sl.registerFactory(() => JoinGroup(groupRepository: sl<GroupRepository>()),);
+
+  sl.registerFactory(() => JoinGroupBloc(joinGroup: sl<JoinGroup>()),);
 }
 
 /* 

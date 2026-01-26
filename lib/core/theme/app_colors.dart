@@ -16,5 +16,12 @@ class AppColors {
   
   static const Color successGreen = Color(0xFF00C853);
   static const Color warningOrange = Color(0xFFFF6D00);
+  
+  // Custom Feature Colors
+  static const Color primaryTeal = Color(0xFF009688);
+  static const Color primaryTealDark = Color(0xFF00A99D);
+  static const Color backgroundLightGrey = Color(0xFFF5F7F9);
+  static const Color borderGreyLight = Color(0xFFE0E0E0); // shade300 approx
+  static const Color iconGrey = Color(0xFF9E9E9E);  
 
 }

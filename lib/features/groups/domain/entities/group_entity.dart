@@ -1,17 +1,31 @@
-import 'group_balance_detail.dart';
+import 'package:split_ease/features/auth/domain/entities/user_entity.dart';
+import 'package:split_ease/features/groups/domain/entities/group_member_entity.dart';
 
 class GroupEntity {
-  final String id;
-  final String name;
-  final String? imageUrl;
-  final double totalBalance; // Positive: you are owed, Negative: you owe
-  final List<GroupBalanceDetail> balanceDetails;
+  String? id;
+  String? name;
+  UserEntity? createdBy;
+  bool? isActive;
+  bool? isDeleted;
+  String? updatedAt;
+  String? createdAt;
+  String? groupType;
+  String? groupIcon;
+  String? inviteCode;
+  List<GroupMemberEntity>? members;
 
-  const GroupEntity({
-    required this.id,
-    required this.name,
-    this.imageUrl,
-    required this.totalBalance,
-    required this.balanceDetails,
+
+  GroupEntity({
+    this.id,
+    this.name,
+    this.createdBy,
+    this.isActive,
+    this.isDeleted,
+    this.updatedAt,
+    this.createdAt,
+    this.groupType,
+    this.groupIcon,
+    this.inviteCode,
+    this.members,
   });
 }

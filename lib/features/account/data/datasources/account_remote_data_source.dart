@@ -1,4 +1,5 @@
 import 'package:split_ease/core/error/exception.dart';
+import 'package:split_ease/core/utils/error_message_utils.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract interface class AccountRemoteDataSource {
@@ -16,7 +17,7 @@ class AccountRemoteDataSourceImpl implements AccountRemoteDataSource {
       await client.auth.signOut();
       return true;
     } catch (error) {
-      throw ServerException(message: error.toString());
+      throw ServerException(message: ErrorMessageUtils.generate(error));
     }
   }
 }

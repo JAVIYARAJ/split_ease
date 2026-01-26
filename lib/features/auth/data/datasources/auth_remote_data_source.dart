@@ -1,4 +1,5 @@
 import 'package:split_ease/core/error/exception.dart';
+import 'package:split_ease/core/utils/error_message_utils.dart';
 import 'package:split_ease/features/auth/data/models/user_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -23,7 +24,7 @@ class AuthDataSourceDataSourceImpl implements AuthRemoteDataSource {
         return UserModel.fromSupabaseUser(response.user!);
       }
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(message: ErrorMessageUtils.generate(e));
     }
   }
 
@@ -37,7 +38,7 @@ class AuthDataSourceDataSourceImpl implements AuthRemoteDataSource {
         return UserModel.fromSupabaseUser(response.user!);
       }
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(message: ErrorMessageUtils.generate(e));
     }
   }
 }

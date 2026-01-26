@@ -1,18 +1,30 @@
 part of 'groups_bloc.dart';
 
-@immutable
-sealed class GroupsState {}
+enum GroupsStatus { initial, loading, success, failure }
 
-class GroupsInitial extends GroupsState {}
-
-class GroupsLoading extends GroupsState {}
-
-class GroupsLoaded extends GroupsState {
+class GroupsState extends Equatable {
+  final GroupsStatus status;
   final List<GroupEntity> groups;
-  GroupsLoaded(this.groups);
-}
+  final String? errorMessage;
 
-class GroupsError extends GroupsState {
-  final String message;
-  GroupsError(this.message);
+  const GroupsState({
+    this.status = GroupsStatus.initial,
+    this.groups = const [],
+    this.errorMessage,
+  });
+
+  GroupsState copyWith({
+    GroupsStatus? status,
+    List<GroupEntity>? groups,
+    String? errorMessage,
+  }) {
+    return GroupsState(
+      status: status ?? this.status,
+      groups: groups ?? this.groups,
+      errorMessage: errorMessage ?? this.errorMessage,
+    );
+  }
+
+  @override
+  List<Object?> get props => [status, groups, errorMessage];
 }

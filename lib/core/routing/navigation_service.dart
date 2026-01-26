@@ -34,9 +34,9 @@ class NavigationService {
   ///
   /// Example:
   /// NavigationService.pushReplacement('/home');
-  static void pushReplacement(String route) {
-    navigatorKey.currentState!
-        .pushReplacementNamed(route);
+  static Future<dynamic> pushReplacement(String route, {Object? args}) {
+    return navigatorKey.currentState!
+        .pushReplacementNamed(route, arguments: args);
   }
 
   /// Clears the entire navigation stack and pushes a new route
@@ -61,7 +61,7 @@ class NavigationService {
   ///
   /// Example:
   /// NavigationService.pop();
-  static void pop() {
-    navigatorKey.currentState!.pop();
+  static void pop({dynamic arg}) {
+    navigatorKey.currentState!.pop(arg);
   }
 }

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:split_ease/core/routing/navigation_service.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
+import '../../../../../core/presentation/widgets/custom_refresh_indicator.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../widgets/group_list_item.dart';
 import '../bloc/groups_bloc.dart';
+import '../../../../../core/routing/app_routes.dart';
 
 class GroupsPage extends StatelessWidget {
   const GroupsPage({super.key});
@@ -18,16 +21,31 @@ class GroupsPage extends StatelessWidget {
         backgroundColor: AppColors.backgroundWhite,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.search, color: Colors.black, size: 28),
+          icon: const Icon(Icons.search, color: AppColors.textBlack, size: 28),
           onPressed: () {},
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.qr_code_scanner, color: AppColors.textBlack),
+            onPressed: () async {
+              var res = await NavigationService.pushNamed(AppRoutes.enterInviteCode);
+              if (res == true) {
+                if (!context.mounted) return;
+                context.read<GroupsBloc>().add(LoadGroups());
+              }
+            },
+          ),
           TextButton(
-            onPressed: () {},
+            onPressed: () async {
+              await NavigationService.pushNamed(AppRoutes.createGroup);
+              // ignore: use_build_context_synchronously
+              if (!context.mounted) return;
+              context.read<GroupsBloc>().add(LoadGroups());
+            },
             child: Text(
               "Create group",
               style: GoogleFonts.openSans(
-                color: const Color(0xFF009688), // Teal color
+                color: AppColors.primaryTeal, // Teal color
                 fontWeight: FontWeight.w600,
                 fontSize: 16,
               ),
@@ -41,7 +59,7 @@ class GroupsPage extends StatelessWidget {
          child: FloatingActionButton.extended(
           heroTag: "groups_fab",
           onPressed: () {},
-          backgroundColor:  const Color(0xFF00A99D), 
+          backgroundColor:  AppColors.primaryTealDark, 
           icon: const Icon(Icons.receipt_long, color: Colors.white),
           label: Text(
             "Add expense",
@@ -92,33 +110,78 @@ class GroupsPage extends StatelessWidget {
           Expanded(
             child: BlocBuilder<GroupsBloc, GroupsState>(
               builder: (context, state) {
-                if (state is GroupsLoading) {
+                if (state.status == GroupsStatus.loading) {
                   return const Center(child: CircularProgressIndicator());
-                } else if (state is GroupsLoaded) {
-                  if (state.groups.isEmpty) {
-                     return const Center(child: Text("No groups found"));
-                  }
-                  return ListView.separated(
-                    itemCount: state.groups.length,
-                    separatorBuilder: (context, index) =>  Divider(
-                      color: Colors.grey.shade100, 
-                      height: 1, 
-                      indent: 80, 
-                      endIndent: 24,
-                    ),
-                    itemBuilder: (context, index) {
-                      final group = state.groups[index];
-                      return GroupListItem(
-                        group: group,
-                        onTap: () {
-                          // Navigate to group details
+                } else if (state.status == GroupsStatus.success ||
+                    (state.status == GroupsStatus.failure &&
+                        state.groups.isNotEmpty)) { // Show cache if failure occurs
+                  // Note: The original request implies handling failure.
+                  // If failure, we check below.
+                  // But usually success implies we have valid data.
+                  // Let's stick to the logic:
+                  // if success, show list (empty or populated).
+                  
+                   if (state.groups.isEmpty) {
+                    return CustomRefreshIndicator(
+                      onRefresh: () async {
+                        context.read<GroupsBloc>().add(LoadGroups());
+                      },
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          return SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                              child: const Center(child: Text("No groups found")),
+                            ),
+                          );
                         },
-                      );
+                      ),
+                    );
+                  }
+                  return CustomRefreshIndicator(
+                    onRefresh: () async {
+                      context.read<GroupsBloc>().add(LoadGroups());
                     },
-                    padding: const EdgeInsets.only(bottom: 100), // Add padding for FAB + Nav Bar
+                    child: ListView.separated(
+                      itemCount: state.groups.length,
+                      separatorBuilder: (context, index) => Divider(
+                        color: Colors.grey.shade100,
+                        height: 1,
+                        indent: 80,
+                        endIndent: 24,
+                      ),
+                      itemBuilder: (context, index) {
+                        final group = state.groups[index];
+                        return GroupListItem(
+                          group: group,
+                          onTap: () {
+                            NavigationService.pushNamed(AppRoutes.groupDetail,
+                                args: {"group_id": group.id});
+                          },
+                        );
+                      },
+                      padding: const EdgeInsets.only(bottom: 100), // Add padding for FAB + Nav Bar
+                    ),
                   );
-                } else if (state is GroupsError) {
-                   return Center(child: Text(state.message));
+
+                } else if (state.status == GroupsStatus.failure) {
+                  return CustomRefreshIndicator(
+                    onRefresh: () async {
+                      context.read<GroupsBloc>().add(LoadGroups());
+                    },
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                            child: Center(child: Text(state.errorMessage ?? "Unknown error")),
+                          ),
+                        );
+                      },
+                    ),
+                  );
                 }
                 return const SizedBox();
               },

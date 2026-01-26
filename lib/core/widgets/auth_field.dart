@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
 class AuthField extends StatefulWidget {
-  final String label;
+  final String? label;
   final String hint;
   final bool isPassword;
   final bool isObscured;
@@ -16,7 +16,7 @@ class AuthField extends StatefulWidget {
 
   const AuthField({
     super.key,
-    required this.label,
+    this.label,
     required this.hint,
     this.isPassword = false,
     this.isObscured = false,
@@ -43,13 +43,15 @@ class _AuthFieldState extends State<AuthField> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              widget.label,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.w600,
+            if (widget.label != null) ...[
+              Text(
+                widget.label!,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
-            ),
-            const SizedBox(height: 8),
+              const SizedBox(height: 8),
+            ],
             Focus(
               onFocusChange: (hasFocus) {
                 setState(() => _isFocused = hasFocus);
