@@ -4,6 +4,7 @@ import 'package:split_ease/features/account/data/datasources/account_remote_data
 import 'package:split_ease/features/account/data/repository/account_repository_impl.dart';
 import 'package:split_ease/features/account/domain/repository/account_repository.dart';
 import 'package:split_ease/features/account/domain/usecases/account_logout.dart';
+import 'package:split_ease/features/account/domain/usecases/upload_profile_picture.dart';
 import 'package:split_ease/features/account/presentation/bloc/account_bloc.dart';
 import 'package:split_ease/features/activity/presentation/bloc/activity_bloc.dart';
 import 'package:split_ease/features/auth/data/datasources/auth_remote_data_source.dart';
@@ -144,9 +145,17 @@ void _home() {
 
   sl.registerFactory(() => AccountLogout(sl<AccountRepository>()),);
 
-  sl.registerFactory(() => AccountBloc(accountLogout: sl<AccountLogout>(), appUserCubit: sl<AppUserCubit>()),);
 
+  sl.registerFactory(() => UploadProfilePicture(accountRepository: sl<AccountRepository>()));
+
+  sl.registerFactory(() => AccountBloc(
+        accountLogout: sl<AccountLogout>(),
+        appUserCubit: sl<AppUserCubit>(),
+        uploadProfilePicture: sl<UploadProfilePicture>(),
+        imagePickerService: sl<ImagePickerService>(),
+      ));
 }
+
 
 /// Registers dependencies for the Authentication feature following Clean Architecture.
 /// Flow: Data Source -> Repository -> Use Case -> Bloc

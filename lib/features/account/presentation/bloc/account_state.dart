@@ -1,8 +1,6 @@
 part of 'account_bloc.dart';
 
-enum AccountStatus { initial, loading, success, failure }
-
-
+enum AccountStatus { initial, loading, success, failure, profileUpdated }
 
 class AccountState {
   final AccountStatus status;

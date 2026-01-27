@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/config/feature_flags.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
@@ -8,7 +9,6 @@ import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/account/presentation/bloc/account_bloc.dart';
 import '../../../../../core/common/cubit/app_user_cubit.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
-import '../../../../../core/theme/app_colors.dart';
 
 class AccountPage extends StatelessWidget {
   const AccountPage({super.key});
@@ -22,16 +22,20 @@ class AccountPage extends StatelessWidget {
           NavigationService.pushAndRemoveUntil(AppRoutes.login);
         } else if (state.status == AccountStatus.failure) {
           AppAlerts.showError(context, state.message);
+        }else if(state.status == AccountStatus.profileUpdated) {
+          AppAlerts.showSuccess(context, state.message);
         }
       },
       child: BlocBuilder<AppUserCubit, AppUserState>(
         builder: (context, userState) {
           String userName = "User";
           String userEmail = "email@example.com";
+          String? userAvatar;
 
           if (userState is AppUserLoggedIn) {
             userName = userState.user.name;
             userEmail = userState.user.email;
+            userAvatar = userState.user.avatarUrl;
           }
 
           return BaseScreen(
@@ -63,20 +67,23 @@ class AccountPage extends StatelessWidget {
                         Stack(
                           alignment: Alignment.bottomRight,
                           children: [
-                            const CircleAvatar(
+                            CircleAvatar(
                               radius: 36,
-                              backgroundColor: Color(0xFFA00030), // Dark Red
-                              // Replace with actual image if available
-                              child: Icon(Icons.person, size: 40, color: Colors.white24),
+                              backgroundColor: const Color(0xFFA00030),
+                              backgroundImage: userAvatar != null ? NetworkImage(userAvatar) : null,
+                              child: userAvatar == null ? const Icon(Icons.person, size: 40, color: Colors.white24) : null,
                             ),
-                            Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[800],
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 2),
+                            GestureDetector(
+                              onTap: () => _showImagePickerModal(context),
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[800],
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 2),
+                                ),
+                                child: const Icon(Icons.camera_alt, color: Colors.white, size: 12),
                               ),
-                              child: const Icon(Icons.camera_alt, color: Colors.white, size: 12),
                             ),
                           ],
                         ),
@@ -203,9 +210,7 @@ class AccountPage extends StatelessWidget {
                   // 4. Footer
                   Center(
                     child: TextButton(
-                      onPressed: () {
-                        context.read<AccountBloc>().add(AccountLogoutEvent());
-                      },
+                      onPressed: () => _showLogoutConfirmationDialog(context),
                       child: Text(
                         "Log out",
                         style: GoogleFonts.openSans(color: const Color(0xFF00C853), fontSize: 16, fontWeight: FontWeight.w500),
@@ -250,16 +255,6 @@ class AccountPage extends StatelessWidget {
       onTap: onTap,
       leading: icon != null
           ? Icon(icon, color: iconColor ?? Colors.black87, size: 24)
-          // If no icon, we typically don't show anything, or maybe indent?
-          // In the screenshot, the text starts aligned with the title of items with icons?
-          // No, looking at "Notifications", it seems to be aligned left, maybe slightly indented or just standard leading.
-          // If I use ListTile without leading, the title moves to the left.
-          // In the screenshot 1: "Scan code" (Icon) ...
-          // In screenshot 2: "Notifications" (No icon).
-          // It seems "Notifications" text aligns with "Scan code" text.
-          // So I should keep a placeholder or just standard content padding.
-          // Let's assume standard content padding handles it or they just don't have icons.
-          // If alignment is needed, I can add a SizedBox(width: 24) as leading.
           : null,
       title: Text(
         title,
@@ -267,7 +262,134 @@ class AccountPage extends StatelessWidget {
       ),
       trailing: const Icon(Icons.chevron_right, color: Colors.grey),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-      minLeadingWidth: icon != null ? 24 : 0, // Minimize space if no icon
+      minLeadingWidth: icon != null ? 24 : 0,
+    );
+  }
+
+  void _showImagePickerModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+      ),
+      builder: (_) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Colors.black87),
+                title: Text("Take Photo", style: GoogleFonts.openSans(fontSize: 16)),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.read<AccountBloc>().add(AccountImagePicked(ImageSource.camera));
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: Colors.black87),
+                title: Text("Choose from Gallery", style: GoogleFonts.openSans(fontSize: 16)),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.read<AccountBloc>().add(AccountImagePicked(ImageSource.gallery));
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showLogoutConfirmationDialog(BuildContext context) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      transitionDuration: const Duration(milliseconds: 200),
+      pageBuilder: (context, animation, secondaryAnimation) => Container(),
+      transitionBuilder: (_, animation, secondaryAnimation, child) {
+        return ScaleTransition(
+          scale: CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+          child: Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.rectangle,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black26, blurRadius: 10.0, offset: Offset(0.0, 10.0)),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF0F0), // Light red bg
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 32),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    "Log out?",
+                    style: GoogleFonts.openSans(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    "Are you sure you want to log out of your account?", // clearer text
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.openSans(fontSize: 16, color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            backgroundColor: Colors.grey[100],
+                          ),
+                          child: Text(
+                            "Cancel",
+                            style: GoogleFonts.openSans(fontSize: 16, color: Colors.black54, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            context.read<AccountBloc>().add(AccountLogoutEvent());
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            "Log out",
+                            style: GoogleFonts.openSans(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:split_ease/features/auth/domain/entities/user_entity.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -6,6 +8,7 @@ class UserModel extends UserEntity {
     required super.id,
     required super.email,
     required super.name,
+    super.avatarUrl,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -13,6 +16,7 @@ class UserModel extends UserEntity {
       id: json['id'] ?? '',
       email: json['email'] ?? '',
       name: json['name'] ?? json['full_name'] ?? '',
+      avatarUrl: json['avatar_url'] ?? json['avtar'],
     );
   }
   
@@ -22,6 +26,7 @@ class UserModel extends UserEntity {
       id: user.id,
       email: user.email ?? '',
       name: user.userMetadata?['name'] ?? '',
+      avatarUrl: user.userMetadata?['avatar_url'],
     );
   }
 
@@ -30,6 +35,7 @@ class UserModel extends UserEntity {
       'id': id,
       'email': email,
       'name': name,
+      'avatar_url': avatarUrl,
     };
   }
 }
