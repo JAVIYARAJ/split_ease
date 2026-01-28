@@ -37,10 +37,12 @@ class GroupsPage extends StatelessWidget {
           ),
           TextButton(
             onPressed: () async {
-              await NavigationService.pushNamed(AppRoutes.createGroup);
+              var res = await NavigationService.pushNamed(AppRoutes.createGroup);
               // ignore: use_build_context_synchronously
               if (!context.mounted) return;
-              context.read<GroupsBloc>().add(LoadGroups());
+              if (res == true) {
+                 context.read<GroupsBloc>().add(LoadGroups());
+              }
             },
             child: Text(
               "Create group",
@@ -155,9 +157,14 @@ class GroupsPage extends StatelessWidget {
                         final group = state.groups[index];
                         return GroupListItem(
                           group: group,
-                          onTap: () {
-                            NavigationService.pushNamed(AppRoutes.groupDetail,
-                                args: {"group_id": group.id});
+                          onTap: () async {
+                            var res = await NavigationService.pushNamed(AppRoutes.groupDetail,
+                                args: {"group_id": group.id, "preview_group": group});
+                             if (res == true) {
+                                if (context.mounted) {
+                                  context.read<GroupsBloc>().add(LoadGroups());
+                                }
+                             }
                           },
                         );
                       },

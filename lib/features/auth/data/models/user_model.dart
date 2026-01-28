@@ -1,4 +1,4 @@
-import 'dart:convert';
+
 
 import 'package:split_ease/features/auth/domain/entities/user_entity.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

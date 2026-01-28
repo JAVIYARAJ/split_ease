@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/presentation/widgets/base_screen.dart';
-import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/features/groups/presentation/bloc/group_detail_bloc.dart';
 import 'package:split_ease/features/groups/presentation/pages/group_settings_page.dart';
+
+import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
+
 
 class GroupDetailPage extends StatefulWidget {
   const GroupDetailPage({super.key});
@@ -16,16 +18,27 @@ class GroupDetailPage extends StatefulWidget {
 }
 
 class _GroupDetailPageState extends State<GroupDetailPage> {
+  bool _canPop = false;
+
+  void _onBack() {
+    setState(() {
+      _canPop = true;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final state = context.read<GroupDetailBloc>().state;
+        Navigator.pop(context, state.hasChanges);
+      }
+    });
+  }
+
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       if (!mounted) return;
-      dynamic argument = ModalRoute
-          .of(context)
-          ?.settings
-          .arguments;
-      if (argument != null && argument?["group_id"] != null) {
-        context.read<GroupDetailBloc>().add(LoadGroupDetails(argument?["group_id"]));
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      if (args != null && args["group_id"] != null) {
+        context.read<GroupDetailBloc>().add(LoadGroupDetails(args["group_id"], previewGroup: args["preview_group"]));
       }
     });
     super.initState();
@@ -33,7 +46,13 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BaseScreen(
+    return PopScope(
+      canPop: _canPop,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _onBack();
+      },
+      child: BaseScreen(
       useSafeArea: false,
       backgroundColor: AppColors.backgroundWhite,
       floatingActionButton: FloatingActionButton.extended(
@@ -47,19 +66,25 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       ),
       child: CustomScrollView(
         slivers: [
-          const _GroupDetailAppBar(),
-          const _GroupDetailInfo(),
+          _GroupDetailAppBar(onBack: _onBack),
+          BlocBuilder<GroupDetailBloc, GroupDetailState>(
+            builder: (context, state) {
+              if (state.groupEntity == null) return const SliverToBoxAdapter(child: SizedBox());
+              return _GroupDetailInfo(state.groupEntity!);
+            },
+          ),
           _TransactionList(),
         ],
+      ),
       ),
     );
   }
 }
 
 class _GroupDetailInfo extends StatelessWidget {
+  final GroupEntity group;
 
-
-  const _GroupDetailInfo({super.key});
+  const _GroupDetailInfo(this.group);
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +112,8 @@ class _GroupDetailInfo extends StatelessWidget {
 
 
 class _GroupDetailAppBar extends StatelessWidget {
-  const _GroupDetailAppBar();
+  final VoidCallback onBack;
+  const _GroupDetailAppBar({required this.onBack});
 
   @override
   Widget build(BuildContext context) {
@@ -97,12 +123,12 @@ class _GroupDetailAppBar extends StatelessWidget {
       backgroundColor: AppColors.primaryTeal,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
-        onPressed: () => NavigationService.pop(),
+        onPressed: onBack,
       ),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.settings_outlined, color: Colors.white),
-          onPressed: () {
+          IconButton(
+            icon: const Icon(Icons.settings_outlined, color: Colors.white),
+            onPressed: () {
             final state = context.read<GroupDetailBloc>().state;
             if (state.groupEntity?.id != null) {
               Navigator.push(
@@ -112,7 +138,7 @@ class _GroupDetailAppBar extends StatelessWidget {
                 ),
               ).then((value) {
                 if(value == true && context.mounted){
-                   context.read<GroupDetailBloc>().add(LoadGroupDetails(state.groupEntity!.id!));
+                   context.read<GroupDetailBloc>().add(LoadGroupDetails(state.groupEntity!.id!, hasChanges: true));
                 }
               });
             }
@@ -121,44 +147,49 @@ class _GroupDetailAppBar extends StatelessWidget {
       ],
       flexibleSpace: BlocBuilder<GroupDetailBloc, GroupDetailState>(
         builder: (context, state) {
-          return FlexibleSpaceBar(
-            background: Container(
-              decoration: state.groupEntity?.groupIcon == null ? null : BoxDecoration(
+          
+          Widget backgroundContent = Container(
+            decoration: state.groupEntity?.groupIcon == null ? null : BoxDecoration(
                 image: DecorationImage(image: CachedNetworkImageProvider(state.groupEntity!.groupIcon!),
-                    fit: BoxFit.cover),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.only(left: 20, bottom: 20),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    /*Group name*/
-                    Text(
-                      state.groupEntity?.name ?? "",
-                      style: GoogleFonts.openSans(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                fit: BoxFit.cover),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 20, bottom: 20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  /*Group name*/
+                  Text(
+                    state.groupEntity?.name ?? "",
+                    style: GoogleFonts.openSans(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  /*Group member count*/
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(color: Colors.black.withAlpha(30), borderRadius: BorderRadius.circular(20)),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.people_outline, color: Colors.white, size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          "${state.groupEntity?.members?.length ?? 0} people",
+                          style: GoogleFonts.openSans(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    /*Group member count*/
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(color: Colors.black.withAlpha(30), borderRadius: BorderRadius.circular(20)),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.people_outline, color: Colors.white, size: 16),
-                          const SizedBox(width: 4),
-                          Text(
-                            "${state.groupEntity?.members?.length ?? 0} people",
-                            style: GoogleFonts.openSans(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
+          );
+
+          return FlexibleSpaceBar(
+              background: state.groupEntity?.id != null
+                  ? Hero(tag: state.groupEntity!.id!, child: Material(type: MaterialType.transparency, child: backgroundContent))
+                  : backgroundContent
           );
         },
       ),

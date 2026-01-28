@@ -15,7 +15,11 @@ class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
   }
 
   Future<void> _onLoadGroupDetails(LoadGroupDetails event, Emitter<GroupDetailState> emit) async {
-    emit(state.copyWith(status: GroupDetailStatus.loading));
+    if (event.previewGroup != null) {
+      emit(state.copyWith(status: GroupDetailStatus.loading, groupEntity: event.previewGroup, hasChanges: event.hasChanges));
+    } else {
+      emit(state.copyWith(status: GroupDetailStatus.loading, hasChanges: event.hasChanges));
+    }
     try {
       var response = await getGroupDetail(GroupDetailParam(event.groupId));
       response.fold(
@@ -23,10 +27,9 @@ class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
           emit(state.copyWith(status: GroupDetailStatus.failure, errorMessage: l.message));
         },
         (r) {
-          emit(state.copyWith(status: GroupDetailStatus.success, groupEntity: r));
+          emit(state.copyWith(status: GroupDetailStatus.success, groupEntity: r, hasChanges: event.hasChanges));
         },
       );
-      emit(state.copyWith(status: GroupDetailStatus.success));
     } catch (e) {
       emit(state.copyWith(status: GroupDetailStatus.failure, errorMessage: e.toString()));
     }

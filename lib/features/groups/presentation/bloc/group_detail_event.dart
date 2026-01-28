@@ -9,9 +9,11 @@ abstract class GroupDetailEvent extends Equatable {
 
 class LoadGroupDetails extends GroupDetailEvent {
   final String groupId;
+  final GroupEntity? previewGroup;
+  final bool hasChanges;
 
-  const LoadGroupDetails(this.groupId);
+  const LoadGroupDetails(this.groupId, {this.previewGroup, this.hasChanges = false});
 
   @override
-  List<Object> get props => [groupId];
+  List<Object> get props => [groupId, if (previewGroup != null) previewGroup!];
 }

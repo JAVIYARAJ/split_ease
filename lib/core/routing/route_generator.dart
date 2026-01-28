@@ -60,7 +60,7 @@ class RouteGenerator {
             BlocProvider(
               create: (context) => sl<CreateGroupBloc>(),
               child: const CreateGroupPage(),
-            ));
+            ),settings: RouteSettings(name: settings.name,arguments: settings.arguments));
       case AppRoutes.groupDetail:
         return MaterialPageRoute(builder: (_) =>
             BlocProvider(

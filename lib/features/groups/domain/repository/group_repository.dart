@@ -21,4 +21,6 @@ abstract interface class GroupRepository {
   Future<Either<Failure, bool>> leaveGroup(String groupId);
 
   Future<Either<Failure, bool>> deleteGroup(String groupId);
+
+  Future<Either<Failure, bool>> updateGroup(String id, String name, String type, String? icon,String inviteCode);
 }

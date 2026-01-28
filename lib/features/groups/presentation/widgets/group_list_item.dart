@@ -35,36 +35,39 @@ class GroupListItem extends StatelessWidget {
             child: Row(
               children: [
                 // Group Icon
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color: Colors.white,
-                  ),
-                  child: group.groupIcon != null
-                      ? AppImageView(
-                          url: group.groupIcon,
-                          height: 50,
-                          width: 50,
-                          radius: 12,
-                          fit: BoxFit.cover,
-                        )
-                      : Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            gradient: const LinearGradient(
-                              colors: [
-                                AppColors.primaryTeal,
-                                AppColors.primaryTealDark
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                Hero(
+                  tag: group.id!,
+                  child: Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.white,
+                    ),
+                    child: group.groupIcon != null
+                        ? AppImageView(
+                            url: group.groupIcon,
+                            height: 50,
+                            width: 50,
+                            radius: 12,
+                            fit: BoxFit.cover,
+                          )
+                        : Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              gradient: const LinearGradient(
+                                colors: [
+                                  AppColors.primaryTeal,
+                                  AppColors.primaryTealDark
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
                             ),
+                            child: Icon(_getIconData(group.groupType),
+                                color: Colors.white, size: 24),
                           ),
-                          child: Icon(_getIconData(group.groupType),
-                              color: Colors.white, size: 24),
-                        ),
+                  ),
                 ),
                 const SizedBox(width: 16),
 

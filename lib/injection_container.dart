@@ -21,6 +21,7 @@ import 'package:split_ease/features/groups/domain/usecases/get_group_detail.dart
 import 'package:split_ease/features/groups/domain/usecases/group_create.dart';
 import 'package:split_ease/features/groups/domain/usecases/check_invite_code.dart';
 import 'package:split_ease/features/groups/domain/usecases/join_group.dart';
+import 'package:split_ease/features/groups/domain/usecases/update_group.dart';
 import 'package:split_ease/features/groups/presentation/bloc/group_detail_bloc.dart';
 import 'package:split_ease/features/groups/presentation/bloc/group_settings_bloc.dart';
 import 'package:split_ease/features/groups/domain/usecases/leave_group.dart';
@@ -99,7 +100,9 @@ void _group() {
   
   sl.registerFactory(() => CheckInviteCode(groupRepository: sl<GroupRepository>()));
 
-  sl.registerFactory(() => CreateGroupBloc(sl<ImagePickerService>(),sl<GroupInsertIcon>(),sl<GroupCreate>(), sl<CheckInviteCode>()));
+  sl.registerFactory(() => UpdateGroup(repository: sl<GroupRepository>()),);
+
+  sl.registerFactory(() => CreateGroupBloc(sl<ImagePickerService>(),sl<GroupInsertIcon>(),sl<GroupCreate>(), sl<CheckInviteCode>(),sl<UpdateGroup>()));
 
 
   sl.registerFactory(() => GetGroupDetail(groupRepository: sl<GroupRepository>()),);

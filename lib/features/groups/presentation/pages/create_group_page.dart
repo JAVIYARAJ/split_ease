@@ -9,7 +9,9 @@ import '../../../../../core/presentation/widgets/base_screen.dart';
 import '../../../../../core/widgets/auth_field.dart';
 import '../widgets/group_type_card.dart';
 import '../bloc/create_group_bloc.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../domain/entities/group_type.dart';
+import '../../domain/entities/group_entity.dart';
 
 class CreateGroupPage extends StatefulWidget {
   const CreateGroupPage({super.key});
@@ -24,7 +26,16 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   @override
   void initState() {
     super.initState();
-    context.read<CreateGroupBloc>().add(const GenerateInviteCode());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      if (args != null && args['is_edit'] == true) {
+        final group = args['group'] as GroupEntity;
+        _groupNameController.text = group.name ?? '';
+        context.read<CreateGroupBloc>().add(InitializeCreateGroup(group: group));
+      } else {
+        context.read<CreateGroupBloc>().add(const GenerateInviteCode());
+      }
+    });
   }
 
   @override
@@ -38,8 +49,12 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     return BlocConsumer<CreateGroupBloc, CreateGroupState>(
       listener: (context, state) {
         if (state.status == CreateGroupStatus.success) {
-          AppAlerts.showSuccess(context, "Group created successfully");
-          NavigationService.pushReplacement(AppRoutes.groupDetail,args: {"group_id":state.createdGroupId});
+          AppAlerts.showSuccess(context, state.isEditMode ? "Group updated successfully" : "Group created successfully");
+          if (state.isEditMode) {
+             Navigator.pop(context, true);
+          } else {
+             NavigationService.pushReplacement(AppRoutes.groupDetail,args: {"group_id":state.createdGroupId}, result: true);
+          }
         } else if (state.status == CreateGroupStatus.failure) {
           AppAlerts.showError(context, state.errorMessage ?? "An error occurred");
         }
@@ -66,7 +81,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
             ),
             centerTitle: true,
             title: Text(
-              "Create a group",
+              state.isEditMode ? "Edit Group" : "Create a group",
               style: GoogleFonts.openSans(color: AppColors.textBlack, fontSize: 18, fontWeight: FontWeight.w600),
             ),
             actions: [
@@ -74,12 +89,20 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                 padding: const EdgeInsets.only(right: 8.0),
                 child: TextButton(
                   onPressed: () {
-                    context.read<CreateGroupBloc>().add(CreateGroupSubmitted(name: _groupNameController.text, type: state.selectedType));
+                    if (state.isEditMode) {
+                      context.read<CreateGroupBloc>().add(UpdateGroupSubmitted(
+                        groupId: state.createdGroupId!, 
+                        name: _groupNameController.text, 
+                        type: state.selectedType
+                      ));
+                    } else {
+                      context.read<CreateGroupBloc>().add(CreateGroupSubmitted(name: _groupNameController.text, type: state.selectedType));
+                    }
                   },
                   child: state.status == CreateGroupStatus.loading
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                       : Text(
-                          "Done",
+                          state.isEditMode ? "Save" : "Done",
                           style: GoogleFonts.openSans(
                             color: AppColors.successGreen, // Green
                             fontSize: 16,
@@ -113,9 +136,13 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                               color: AppColors.backgroundLightGrey, // Light grey background
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(color: AppColors.borderGreyLight, width: 1, style: BorderStyle.solid),
-                              image: state.groupImage != null ? DecorationImage(image: FileImage(state.groupImage!), fit: BoxFit.cover) : null,
+                              image: state.groupImage != null 
+                                  ? DecorationImage(image: FileImage(state.groupImage!), fit: BoxFit.cover) 
+                                  : (state.existingIconUrl != null 
+                                      ? DecorationImage(image: CachedNetworkImageProvider(state.existingIconUrl!), fit: BoxFit.cover)
+                                      : null),
                             ),
-                            child: state.groupImage == null
+                            child: state.groupImage == null && state.existingIconUrl == null
                                 ? const Center(child: Icon(Icons.camera_alt_outlined, color: AppColors.textGrey, size: 28))
                                 : null,
                           ),

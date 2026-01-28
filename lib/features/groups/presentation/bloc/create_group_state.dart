@@ -10,6 +10,8 @@ class CreateGroupState extends Equatable {
   final String? createdGroupId;
   final String inviteCode;
   final bool isGeneratingCode;
+  final bool isEditMode;
+  final String? existingIconUrl;
 
   const CreateGroupState({
     this.selectedType = GroupType.trip,
@@ -19,6 +21,8 @@ class CreateGroupState extends Equatable {
     this.createdGroupId,
     this.inviteCode = '',
     this.isGeneratingCode = false,
+    this.isEditMode = false,
+    this.existingIconUrl,
   });
 
   CreateGroupState copyWith({
@@ -29,6 +33,8 @@ class CreateGroupState extends Equatable {
     String? createdGroupId,
     String? inviteCode,
     bool? isGeneratingCode,
+    bool? isEditMode,
+    String? existingIconUrl,
   }) {
     return CreateGroupState(
       selectedType: selectedType ?? this.selectedType,
@@ -38,10 +44,12 @@ class CreateGroupState extends Equatable {
       createdGroupId: createdGroupId ?? this.createdGroupId,
       inviteCode: inviteCode ?? this.inviteCode,
       isGeneratingCode: isGeneratingCode ?? this.isGeneratingCode,
+      isEditMode: isEditMode ?? this.isEditMode,
+      existingIconUrl: existingIconUrl ?? this.existingIconUrl,
     );
   }
 
   @override
   @override
-  List<Object?> get props => [selectedType, groupImage, status, errorMessage, createdGroupId, inviteCode, isGeneratingCode];
+  List<Object?> get props => [selectedType, groupImage, status, errorMessage, createdGroupId, inviteCode, isGeneratingCode, isEditMode, existingIconUrl];
 }

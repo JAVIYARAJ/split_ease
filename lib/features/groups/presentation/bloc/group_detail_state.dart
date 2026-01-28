@@ -6,26 +6,30 @@ class GroupDetailState extends Equatable {
   final GroupDetailStatus status;
   final String? errorMessage;
   final GroupEntity? groupEntity;
+  final bool hasChanges;
   // Add more fields here as needed, e.g., Group entity, List<Transaction>
 
   const GroupDetailState({
     this.status = GroupDetailStatus.loading,
     this.errorMessage,
-    this.groupEntity
+    this.groupEntity,
+    this.hasChanges = false,
   });
 
   GroupDetailState copyWith({
     GroupDetailStatus? status,
     String? errorMessage,
-    GroupEntity? groupEntity
+    GroupEntity? groupEntity,
+    bool? hasChanges,
   }) {
     return GroupDetailState(
       status: status ?? this.status,
       errorMessage: errorMessage ?? this.errorMessage,
       groupEntity: groupEntity ?? this.groupEntity,
+      hasChanges: hasChanges ?? this.hasChanges,
     );
   }
 
   @override
-  List<Object?> get props => [status, errorMessage,groupEntity];
+  List<Object?> get props => [status, errorMessage, groupEntity, hasChanges];
 }

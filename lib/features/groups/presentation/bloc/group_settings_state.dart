@@ -8,7 +8,8 @@ class GroupSettingsLoading extends GroupSettingsState {}
 
 class GroupSettingsLoaded extends GroupSettingsState {
   final GroupEntity group;
-  GroupSettingsLoaded(this.group);
+  final bool hasChanges;
+  GroupSettingsLoaded(this.group, {this.hasChanges = false});
 }
 
 class GroupSettingsError extends GroupSettingsState {

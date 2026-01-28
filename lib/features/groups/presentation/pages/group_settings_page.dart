@@ -5,47 +5,83 @@ import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
 import 'package:split_ease/features/groups/presentation/bloc/group_settings_bloc.dart';
 import 'package:split_ease/injection_container.dart';
-
+import 'package:split_ease/core/routing/navigation_service.dart';
+import 'package:split_ease/core/routing/app_routes.dart';
 import '../../domain/entities/group_member_entity.dart';
 
-class GroupSettingsPage extends StatelessWidget {
+class GroupSettingsPage extends StatefulWidget {
   final String groupId;
 
   const GroupSettingsPage({super.key, required this.groupId});
 
   @override
+  State<GroupSettingsPage> createState() => _GroupSettingsPageState();
+}
+
+class _GroupSettingsPageState extends State<GroupSettingsPage> {
+  bool _canPop = false;
+
+  void _onBack(BuildContext context) {
+    setState(() {
+      _canPop = true;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final state = context.read<GroupSettingsBloc>().state;
+        final hasChanges = state is GroupSettingsLoaded ? state.hasChanges : false;
+        Navigator.pop(context, hasChanges);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => sl<GroupSettingsBloc>()..add(LoadGroupSettings(groupId)),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Group settings'),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-            onPressed: () => Navigator.pop(context),
-          ),
-          titleTextStyle: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.w600),
-        ),
-        body: BlocConsumer<GroupSettingsBloc, GroupSettingsState>(
-          listener: (context, state) {
-            if (state is GroupSettingsError) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
-            } else if (state is GroupActionSuccess) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
-              Navigator.pop(context, true); // Return true to refresh previous screen
-            }
-          },
-          builder: (context, state) {
-            if (state is GroupSettingsLoading) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (state is GroupSettingsLoaded) {
-              return _GroupSettingsContent(group: state.group);
-            }
-            return const SizedBox.shrink();
-          },
-        ),
+      create: (context) => sl<GroupSettingsBloc>()..add(LoadGroupSettings(widget.groupId)),
+      child: Builder(
+        builder: (context) {
+          return PopScope(
+            canPop: _canPop,
+            onPopInvokedWithResult: (didPop, result) {
+              if (didPop) return;
+              _onBack(context);
+            },
+            child: Scaffold(
+              appBar: AppBar(
+                title: const Text('Group settings'),
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+                  onPressed: () {
+                    _onBack(context);
+                  },
+                ),
+                titleTextStyle: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+              body: BlocConsumer<GroupSettingsBloc, GroupSettingsState>(
+                listener: (context, state) {
+                  if (state is GroupSettingsError) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
+                  } else if (state is GroupActionSuccess) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
+                    Navigator.pop(context, true); // This is for delete/leave
+                  }
+                },
+                builder: (context, state) {
+                  if (state is GroupSettingsLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (state is GroupSettingsLoaded) {
+                    return _GroupSettingsContent(
+                        group: state.group,
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ),
+          );
+        }
       ),
     );
   }
@@ -86,7 +122,20 @@ class _GroupSettingsContent extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: () {
-                    // Navigate to edit group name/icon if implemented
+                    NavigationService.pushNamed(
+                      AppRoutes.createGroup,
+                      args: {
+                        'is_edit': true,
+                        'group': group,
+                      },
+                      // result: true removed because pushNamed doesn't support it
+                    ).then((value) {
+                      if (value == true) {
+                         if(context.mounted) {
+                            context.read<GroupSettingsBloc>().add(LoadGroupSettings(group.id!, hasChanges: true));
+                         }
+                      }
+                    });
                   },
                   child: const Text('Edit', style: TextStyle(color: Colors.teal)),
                 ),
@@ -157,7 +206,7 @@ class _GroupSettingsContent extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: Colors.teal.withOpacity(0.1),
+                color: Colors.teal.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(color: Colors.teal, width: 0.5),
               ),

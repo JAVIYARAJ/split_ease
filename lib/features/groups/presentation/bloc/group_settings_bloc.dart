@@ -21,7 +21,7 @@ class GroupSettingsBloc extends Bloc<GroupSettingsEvent, GroupSettingsState> {
     final result = await getGroupDetail(GroupDetailParam(event.groupId));
     result.fold(
       (failure) => emit(GroupSettingsError(failure.message)),
-      (group) => emit(GroupSettingsLoaded(group)),
+      (group) => emit(GroupSettingsLoaded(group, hasChanges: event.hasChanges)),
     );
   }
 

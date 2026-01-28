@@ -92,4 +92,14 @@ class GroupRepositoryImpl implements GroupRepository {
       return left(Failure(message: error.message));
     }
   }
+
+  @override
+  Future<Either<Failure, bool>> updateGroup(String id, String name, String type, String? icon,String inviteCode) async {
+     try {
+      var response = await dataSource.updateGroup(id, name, type, icon,inviteCode);
+      return right(response);
+    } on ServerException catch (error) {
+      return left(Failure(message: error.message));
+    }
+  }
 }

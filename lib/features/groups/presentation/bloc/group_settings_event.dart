@@ -4,7 +4,8 @@ abstract class GroupSettingsEvent {}
 
 class LoadGroupSettings extends GroupSettingsEvent {
   final String groupId;
-  LoadGroupSettings(this.groupId);
+  final bool hasChanges;
+  LoadGroupSettings(this.groupId, {this.hasChanges = false});
 }
 
 

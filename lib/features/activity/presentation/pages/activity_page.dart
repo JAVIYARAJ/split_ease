@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
-import '../../domain/entities/activity_entity.dart';
+
 import '../widgets/activity_list_item.dart';
 import '../bloc/activity_bloc.dart';
 

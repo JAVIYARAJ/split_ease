@@ -34,9 +34,9 @@ class NavigationService {
   ///
   /// Example:
   /// NavigationService.pushReplacement('/home');
-  static Future<dynamic> pushReplacement(String route, {Object? args}) {
+  static Future<dynamic> pushReplacement(String route, {Object? args, dynamic result}) {
     return navigatorKey.currentState!
-        .pushReplacementNamed(route, arguments: args);
+        .pushReplacementNamed(route, arguments: args, result: result);
   }
 
   /// Clears the entire navigation stack and pushes a new route

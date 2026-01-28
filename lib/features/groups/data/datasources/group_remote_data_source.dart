@@ -21,6 +21,8 @@ abstract interface class GroupRemoteDataSource {
   Future<bool> leaveGroup(String groupId);
 
   Future<bool> deleteGroup(String groupId);
+
+  Future<bool> updateGroup(String id, String name, String type, String? icon,String inviteCode);
 }
 
 class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
@@ -130,6 +132,17 @@ class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
     try {
         await client.from('group').delete().eq('id', groupId);
         return true;
+    } catch (error) {
+      throw ServerException(message: ErrorMessageUtils.generate(error));
+    }
+  }
+
+  @override
+  Future<bool> updateGroup(String id, String name, String type, String? icon,String inviteCode) async {
+    try {
+      var payload = {"name": name, "group_type": type, if(icon != null) "group_icon": icon,"invite_code":inviteCode};
+      await client.from("group").update(payload).eq("id", id);
+      return true;
     } catch (error) {
       throw ServerException(message: ErrorMessageUtils.generate(error));
     }
