@@ -38,193 +38,469 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => sl<GroupSettingsBloc>()..add(LoadGroupSettings(widget.groupId)),
-      child: Builder(
-        builder: (context) {
-          return PopScope(
-            canPop: _canPop,
-            onPopInvokedWithResult: (didPop, result) {
-              if (didPop) return;
-              _onBack(context);
-            },
-            child: Scaffold(
-              appBar: AppBar(
-                title: const Text('Group settings'),
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-                  onPressed: () {
-                    _onBack(context);
-                  },
-                ),
-                titleTextStyle: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              body: BlocConsumer<GroupSettingsBloc, GroupSettingsState>(
-                listener: (context, state) {
-                  if (state is GroupSettingsError) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
-                  } else if (state is GroupActionSuccess) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
-                    Navigator.pop(context, true); // This is for delete/leave
-                  }
-                },
-                builder: (context, state) {
-                  if (state is GroupSettingsLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (state is GroupSettingsLoaded) {
-                    return _GroupSettingsContent(
-                        group: state.group,
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
+      child: Builder(builder: (context) {
+        return PopScope(
+          canPop: _canPop,
+          onPopInvokedWithResult: (didPop, result) {
+            if (didPop) return;
+            _onBack(context);
+          },
+          child: Scaffold(
+            backgroundColor: AppColors.backgroundLightGrey,
+            body: BlocConsumer<GroupSettingsBloc, GroupSettingsState>(
+              listener: (context, state) {
+                if (state is GroupSettingsError) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
+                } else if (state is GroupActionSuccess) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
+                  Navigator.pop(context, true);
+                }
+              },
+              builder: (context, state) {
+                if (state is GroupSettingsLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (state is GroupSettingsLoaded) {
+                  return _GroupSettingsContent(
+                    group: state.group,
+                    onBack: () => _onBack(context),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
             ),
-          );
-        }
-      ),
+          ),
+        );
+      }),
     );
   }
 }
 
 class _GroupSettingsContent extends StatelessWidget {
   final GroupEntity group;
+  final VoidCallback onBack;
 
-  const _GroupSettingsContent({required this.group});
+  const _GroupSettingsContent({required this.group, required this.onBack});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    // final userCubit = context.read<AppUserCubit>(); // To check current user for "you" logic if needed
+    return CustomScrollView(
+      slivers: [
+        _buildSliverAppBar(context),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 24, 16, 40),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              _buildSectionHeader('General'),
+              const SizedBox(height: 12),
+              _buildActionsSection(context),
+              const SizedBox(height: 32),
+              _buildSectionHeader('Members'),
+              const SizedBox(height: 12),
+              _buildMembersSection(group),
+              const SizedBox(height: 32),
+              _buildSectionHeader('Danger Zone', color: AppColors.errorRed),
+              const SizedBox(height: 12),
+              _buildDangerZone(context),
+            ]),
+          ),
+        ),
+      ],
+    );
+  }
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    image: group.groupIcon != null ? DecorationImage(image: NetworkImage(group.groupIcon!), fit: BoxFit.cover) : null,
-                    color: Colors.teal, // Placeholder color
-                  ),
-                  child: group.groupIcon == null ? const Icon(Icons.group, color: Colors.white, size: 30) : null,
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(group.name ?? 'Group Name', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500, fontSize: 18)),
-                ),
-                TextButton(
-                  onPressed: () {
-                    NavigationService.pushNamed(
-                      AppRoutes.createGroup,
-                      args: {
-                        'is_edit': true,
-                        'group': group,
-                      },
-                      // result: true removed because pushNamed doesn't support it
-                    ).then((value) {
-                      if (value == true) {
-                         if(context.mounted) {
-                            context.read<GroupSettingsBloc>().add(LoadGroupSettings(group.id!, hasChanges: true));
-                         }
-                      }
-                    });
-                  },
-                  child: const Text('Edit', style: TextStyle(color: Colors.teal)),
-                ),
-              ],
+  Widget _buildSliverAppBar(BuildContext context) {
+    return SliverAppBar(
+      expandedHeight: 280,
+      pinned: true,
+      backgroundColor: AppColors.backgroundWhite,
+      surfaceTintColor: AppColors.backgroundWhite,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      leading: IconButton(
+        icon: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.8),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.arrow_back_ios_new, size: 18, color: AppColors.textBlack),
+        ),
+        onPressed: onBack,
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 16.0),
+          child: IconButton(
+            onPressed: () {
+               NavigationService.pushNamed(
+                AppRoutes.createGroup,
+                args: {
+                  'is_edit': true,
+                  'group': group,
+                },
+              ).then((value) {
+                if (value == true) {
+                  if (context.mounted) {
+                    context.read<GroupSettingsBloc>().add(LoadGroupSettings(group.id!, hasChanges: true));
+                  }
+                }
+              });
+            },
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                 color: AppColors.primaryTeal.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.edit_rounded, size: 20, color: AppColors.primaryTeal),
             ),
           ),
-          Divider(color: AppColors.borderGrey, height: 0.2),
+        )
+      ],
+      flexibleSpace: FlexibleSpaceBar(
+        collapseMode: CollapseMode.parallax,
+        background: Container(
+          decoration: BoxDecoration(
+            color: AppColors.backgroundLightGrey,
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (group.groupIcon != null)
+                Opacity(
+                  opacity: 0.15,
+                  child: Image.network(
+                    group.groupIcon!,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              Container(
+                 decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      AppColors.primaryTeal.withValues(alpha: 0.1),
+                       AppColors.backgroundLightGrey.withValues(alpha: 0.8),
+                      AppColors.backgroundLightGrey,
+                    ],
+                  ),
+                ),
+              ),
+              Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 60), 
+              Hero(
+                tag: 'group_image_${group.id}',
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 4),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                    image: group.groupIcon != null
+                        ? DecorationImage(image: NetworkImage(group.groupIcon!), fit: BoxFit.cover)
+                        : null,
+                     color: AppColors.primaryTeal.withValues(alpha: 0.1),
+                  ),
+                   child: group.groupIcon == null
+                      ? const Icon(Icons.group, color: AppColors.primaryTeal, size: 50)
+                      : null,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                group.name ?? 'Group Name',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textBlack,
+                  letterSpacing: -0.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+                ),
+                child: Text(
+                  '${group.members?.length ?? 0} Members',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textGrey,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          ],
+        ),
+        ),
+      ),
+    );
+  }
 
-          // Group members
+  Widget _buildSectionHeader(String title, {Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8.0),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: color ?? AppColors.textGrey,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionsSection(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.backgroundWhite,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _buildSettingsTile(
+            icon: Icons.person_add_rounded,
+            title: 'Add people to group',
+            onTap: () {},
+            iconBgColor: const Color(0xFFE3F2FD),
+            iconColor: const Color(0xFF1E88E5),
+          ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Text('Group members', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+            padding: const EdgeInsets.only(left: 64),
+            child: Divider(height: 1, color: AppColors.borderGrey.withValues(alpha: 0.3)),
           ),
-
-          _buildActionItem(Icons.person_add_alt_1_outlined, 'Add people to group', () {}),
-          _buildActionItem(Icons.link, 'Invite via link', () {}),
-
-          if (group.members != null) ...group.members!.map((member) => _buildMemberItem(member)),
-
-          const SizedBox(height: 20),
-
-          // Leave group
-          ListTile(
-            leading: const Icon(Icons.exit_to_app),
-            title: const Text('Leave group'),
-            subtitle: const Text('You can\'t leave this group because you have outstanding debts with other group members.'), // Placeholder logic
-            onTap: () {
-              // Check debts logic or just trigger event
-              // context.read<GroupSettingsBloc>().add(LeaveGroupEvent(group.id!));
-            },
+          _buildSettingsTile(
+            icon: Icons.link_rounded,
+            title: 'Invite via link',
+            onTap: () {},
+            iconBgColor: const Color(0xFFF3E5F5),
+            iconColor: const Color(0xFF8E24AA),
           ),
-
-          // Delete group
-          ListTile(
-            leading: const Icon(Icons.delete_outline, color: Colors.red),
-            title: const Text('Delete group', style: TextStyle(color: Colors.red)),
-            onTap: () {
-              context.read<GroupSettingsBloc>().add(DeleteGroupEvent(group.id!));
-            },
-          ),
-          const SizedBox(height: 30),
         ],
       ),
     );
   }
 
-  Widget _buildActionItem(IconData icon, String title, VoidCallback onTap) {
-    return ListTile(leading: Icon(icon), title: Text(title), onTap: onTap);
-  }
+  Widget _buildMembersSection(GroupEntity group) {
+    if (group.members == null || group.members!.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
-  Widget _buildMemberItem(GroupMemberEntity member) {
-    return ListTile(
-      leading:  SizedBox(
-          height: 55,
-          width: 55,
-          child: member.avtar == null ? Icon(Icons.person, size: 55, color: Colors.grey.shade400) : AppImageView(url: member.avtar, height: 55, width: 55, radius: 55)),
-      title: Row(
-        children: [
-          Flexible(
-            child: Text(
-              member.fullName ?? "-",
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.backgroundWhite,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+             color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
           ),
-          if (member.role?.toLowerCase() == 'admin') ...[
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.teal.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: Colors.teal, width: 0.5),
-              ),
-              child: const Text(
-                'Admin',
-                style: TextStyle(fontSize: 10, color: Colors.teal, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
         ],
       ),
-      subtitle: Text(member.email??"-"),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      child: ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: group.members!.length,
+        separatorBuilder: (context, index) => Padding(
+           padding: const EdgeInsets.only(left: 64),
+          child: Divider(
+            height: 1,
+            color: AppColors.borderGrey.withValues(alpha: 0.3),
+          ),
+        ),
+        itemBuilder: (context, index) {
+          return _buildMemberTile(group.members![index]);
+        },
+      ),
+    );
+  }
+
+  Widget _buildDangerZone(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.backgroundWhite,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
         children: [
-          // Placeholder for debts. Need debt calculation logic.
-          // For now showing empty or static
+          _buildSettingsTile(
+            icon: Icons.exit_to_app_rounded,
+            title: 'Leave Group',
+             onTap: () {
+               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Cannot leave group with outstanding debts.")));
+            },
+             iconBgColor: const Color(0xFFFFF3E0),
+            iconColor: const Color(0xFFFB8C00),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 64),
+            child: Divider(height: 1, color: AppColors.borderGrey.withValues(alpha: 0.3)),
+          ),
+          _buildSettingsTile(
+            icon: Icons.delete_outline_rounded,
+            title: 'Delete Group',
+             titleColor: AppColors.errorRed,
+             onTap: () {
+              context.read<GroupSettingsBloc>().add(DeleteGroupEvent(group.id!));
+            },
+            iconBgColor: const Color(0xFFFFEBEE),
+            iconColor: const Color(0xFFE53935),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildSettingsTile({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    Color? titleColor,
+    Color? iconBgColor,
+    Color? iconColor,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: iconBgColor ?? AppColors.primaryTeal.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: iconColor ?? AppColors.primaryTeal, size: 22),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: titleColor ?? AppColors.textBlack,
+                  ),
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.borderGrey, size: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMemberTile(GroupMemberEntity member) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          (member.avtar == null || member.avtar!.isEmpty)
+              ? Container(
+                  height: 48,
+                  width: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(Icons.person, color: Colors.grey.shade400, size: 28),
+                )
+              : AppImageView(
+                  url: member.avtar,
+                  height: 48,
+                  width: 48,
+                  radius: 16,
+                ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        member.fullName ?? "Unknown",
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textBlack,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (member.role?.toLowerCase() == 'admin') ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE0F2F1), // Very light teal
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'ADMIN',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.primaryTealDark,
+                            letterSpacing: 0.5
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  member.email ?? "-",
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textGrey,
+                    fontWeight: FontWeight.w500
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
