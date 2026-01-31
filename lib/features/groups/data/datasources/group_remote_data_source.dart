@@ -16,7 +16,7 @@ abstract interface class GroupRemoteDataSource {
 
   Future<bool> checkInviteCode(String code);
 
-  Future<bool> joinGroup(String code,);
+  Future<String?> joinGroup(String code);
 
   Future<bool> leaveGroup(String groupId);
 
@@ -98,7 +98,7 @@ class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
   }
 
   @override
-  Future<bool> joinGroup(String code) async {
+  Future<String?> joinGroup(String code) async {
     try {
       final response = await client.rpc(
         'join_group_by_code',
@@ -107,7 +107,13 @@ class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
         },
       );
 
-      return response as bool;
+      if (response == true) {
+        // If join successful, fetch group details
+        final groupResponse = await client.from("group").select().eq("invite_code", code).single();
+        return groupResponse["id"];
+      } else {
+        throw ServerException(message: "Failed to join group");
+      }
     } catch (error) {
       throw ServerException(message: ErrorMessageUtils.generate(error));
     }

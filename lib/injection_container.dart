@@ -114,6 +114,8 @@ void _group() {
 
   sl.registerFactory(() => GroupSettingsBloc(
     getGroupDetail: sl<GetGroupDetail>(),
+    deleteGroup: sl<DeleteGroup>(),
+    authRepository: sl<AuthRepository>(),
   ));
 }
 

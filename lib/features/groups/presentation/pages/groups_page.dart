@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
+import '../../../../../core/utils/navigation_utils.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
 import '../../../../../core/presentation/widgets/custom_refresh_indicator.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -27,22 +28,21 @@ class GroupsPage extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.qr_code_scanner, color: AppColors.textBlack),
-            onPressed: () async {
-              var res = await NavigationService.pushNamed(AppRoutes.enterInviteCode);
-              if (res == true) {
-                if (!context.mounted) return;
-                context.read<GroupsBloc>().add(LoadGroups());
-              }
+            onPressed: () {
+              NavigationUtils.handleResult(
+                context: context,
+                navigation: NavigationService.pushNamed(AppRoutes.enterInviteCode),
+                onRefresh: () => context.read<GroupsBloc>().add(LoadGroups()),
+              );
             },
           ),
           TextButton(
             onPressed: () async {
-              var res = await NavigationService.pushNamed(AppRoutes.createGroup);
-              // ignore: use_build_context_synchronously
-              if (!context.mounted) return;
-              if (res == true) {
-                 context.read<GroupsBloc>().add(LoadGroups());
-              }
+              NavigationUtils.handleResult(
+                context: context,
+                navigation: NavigationService.pushNamed(AppRoutes.createGroup),
+                onRefresh: () => context.read<GroupsBloc>().add(LoadGroups()),
+              );
             },
             child: Text(
               "Create group",
@@ -157,14 +157,15 @@ class GroupsPage extends StatelessWidget {
                         final group = state.groups[index];
                         return GroupListItem(
                           group: group,
-                          onTap: () async {
-                            var res = await NavigationService.pushNamed(AppRoutes.groupDetail,
-                                args: {"group_id": group.id, "preview_group": group});
-                             if (res == true) {
-                                if (context.mounted) {
-                                  context.read<GroupsBloc>().add(LoadGroups());
-                                }
-                             }
+                          onTap: () {
+                            NavigationUtils.handleResult(
+                              context: context,
+                              navigation: NavigationService.pushNamed(
+                                AppRoutes.groupDetail,
+                                args: {"group_id": group.id, "preview_group": group},
+                              ),
+                              onRefresh: () => context.read<GroupsBloc>().add(LoadGroups()),
+                            );
                           },
                         );
                       },

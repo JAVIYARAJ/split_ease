@@ -7,6 +7,8 @@ abstract interface class AuthRemoteDataSource {
   Future<UserModel> signUpWithEmailPassword({required String name, required String email, required String password});
 
   Future<UserModel> loginWithEmailPassword({required String email, required String password});
+
+  Future<UserModel?> getCurrentUser();
 }
 
 class AuthDataSourceDataSourceImpl implements AuthRemoteDataSource {
@@ -37,6 +39,19 @@ class AuthDataSourceDataSourceImpl implements AuthRemoteDataSource {
       } else {
         return UserModel.fromSupabaseUser(response.user!);
       }
+    } catch (e) {
+      throw ServerException(message: ErrorMessageUtils.generate(e));
+    }
+  }
+
+  @override
+  Future<UserModel?> getCurrentUser() async {
+    try {
+      final user = client.auth.currentUser;
+      if (user != null) {
+        return UserModel.fromSupabaseUser(user);
+      }
+      return null;
     } catch (e) {
       throw ServerException(message: ErrorMessageUtils.generate(e));
     }

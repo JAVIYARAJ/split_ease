@@ -175,7 +175,7 @@ class _ErrorView extends StatelessWidget {
                 icon: const Icon(Icons.refresh),
                 label: const Text("Try Again"),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryAccent,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),

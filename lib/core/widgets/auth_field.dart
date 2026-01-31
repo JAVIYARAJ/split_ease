@@ -66,16 +66,16 @@ class _AuthFieldState extends State<AuthField> {
                     color: state.hasError
                         ? AppColors.errorRed
                         : _isFocused
-                            ? AppColors.primaryAccentDark
+                            ? AppColors.primary
                             : AppColors.borderGrey,
-                    width: 1.5,
+                    width: 1,
                   ),
                 ),
                 child: TextField(
                   controller: widget.controller,
                   obscureText: widget.isObscured,
                   style: Theme.of(context).textTheme.bodyLarge,
-                  cursorColor: AppColors.primaryAccentDark,
+                  cursorColor: AppColors.primary,
                   onChanged: (value) {
                     state.didChange(value);
                   },
@@ -86,7 +86,7 @@ class _AuthFieldState extends State<AuthField> {
                         ),
                     prefixIcon: widget.icon != null
                         ? Icon(widget.icon,
-                            color: _isFocused ? AppColors.primaryAccentDark : Colors.grey,
+                            color: _isFocused ? AppColors.primary : Colors.grey,
                             size: 20)
                         : null,
                     suffixIcon: widget.isPassword

@@ -71,7 +71,7 @@ class _RegisterPageState extends State<RegisterPage> {
               child: Container(
                 width: 300,
                 height: 300,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.primaryAccent.withValues(alpha: 0.1)),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.primary.withValues(alpha: 0.1)),
                 child: BackdropFilter(filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80), child: const SizedBox()),
               ),
             ),
@@ -81,7 +81,7 @@ class _RegisterPageState extends State<RegisterPage> {
               child: Container(
                 width: 250,
                 height: 250,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.blueGrey.withValues(alpha: 0.05)),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.primary.withValues(alpha: 0.05)),
                 child: BackdropFilter(filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80), child: const SizedBox()),
               ),
             ),

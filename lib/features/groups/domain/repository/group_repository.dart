@@ -14,7 +14,7 @@ abstract interface class GroupRepository {
 
   Future<Either<Failure,GroupEntity>> getGroupDetail(String id);
 
-  Future<Either<Failure, bool>> joinGroup(String code);
+  Future<Either<Failure, String?>> joinGroup(String code);
 
   Future<Either<Failure, bool>> checkInviteCode(String code);
 

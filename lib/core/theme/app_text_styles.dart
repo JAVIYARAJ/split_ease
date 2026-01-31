@@ -114,11 +114,11 @@ class AppTextStyles {
   static TextStyle get buttonText => labelLarge.copyWith(
     fontSize: 18,
     fontWeight: FontWeight.bold,
-    color: Colors.black, // Buttons often on primary color
+    color: Colors.white, // Buttons often on primary color
   );
   
   static TextStyle get linkText => bodyMedium.copyWith(
-    color: AppColors.primaryAccentDark,
+    color: AppColors.primary,
     fontWeight: FontWeight.bold,
     decoration: TextDecoration.underline,
   );

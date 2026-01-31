@@ -85,7 +85,7 @@ class WelcomePage extends StatelessWidget {
                           context.read<WelcomeCubit>().navigateToAuth();
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryAccent,
+                          backgroundColor: AppColors.primary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),
@@ -99,15 +99,15 @@ class WelcomePage extends StatelessWidget {
                               style: Theme.of(context).textTheme.labelLarge?.copyWith(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.black,
+                                color: Colors.white,
                               ),
                             ),
                             // Native Icon Chevrons
                             const Row(
                               children: [
-                                Icon(Icons.chevron_right, color: Colors.black54, size: 18),
-                                Icon(Icons.chevron_right, color: Colors.black87, size: 18),
-                                Icon(Icons.chevron_right, color: Colors.black, size: 18),
+                                Icon(Icons.chevron_right, color: Colors.white54, size: 18),
+                                Icon(Icons.chevron_right, color: Colors.white70, size: 18),
+                                Icon(Icons.chevron_right, color: Colors.white, size: 18),
                               ],
                             )
                           ],

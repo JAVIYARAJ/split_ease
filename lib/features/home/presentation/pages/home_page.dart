@@ -148,9 +148,9 @@ class HomePage extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? const Color(0xFF7B61FF).withValues(alpha: 0.1) : Colors.transparent,
+          color: isActive ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -165,7 +165,7 @@ class HomePage extends StatelessWidget {
               child: Icon(
                 isActive ? activeIcon : inactiveIcon,
                 key: ValueKey(isActive),
-                color: isActive ? const Color(0xFF7B61FF) : const Color(0xFF9E9E9E), // Grey 500
+                color: isActive ? AppColors.primary : AppColors.iconGrey,
                 size: 24,
               ),
             ),
@@ -174,7 +174,7 @@ class HomePage extends StatelessWidget {
               duration: const Duration(milliseconds: 200),
               style: GoogleFonts.openSans(
                 fontSize: 12,
-                color: isActive ? const Color(0xFF7B61FF) : const Color(0xFF9E9E9E),
+                color: isActive ? AppColors.primary : AppColors.iconGrey,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
               ),
               child: Text(label),

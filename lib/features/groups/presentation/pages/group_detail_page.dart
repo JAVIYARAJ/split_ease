@@ -153,8 +153,16 @@ class _GroupDetailAppBar extends StatelessWidget {
                 image: DecorationImage(image: CachedNetworkImageProvider(state.groupEntity!.groupIcon!),
                 fit: BoxFit.cover),
             ),
-            child: Padding(
+            child: Container(
               padding: const EdgeInsets.only(left: 20, bottom: 20),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Colors.black54],
+                  stops: [0.6, 1.0],
+                ),
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -168,15 +176,19 @@ class _GroupDetailAppBar extends StatelessWidget {
                   /*Group member count*/
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(color: Colors.black.withAlpha(30), borderRadius: BorderRadius.circular(20)),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.9), // More opaque and canonical teal
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white24, width: 1), // Subtle border for edge definition
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.people_outline, color: Colors.white, size: 16),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 6),
                         Text(
                           "${state.groupEntity?.members?.length ?? 0} people",
-                          style: GoogleFonts.openSans(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+                          style: GoogleFonts.openSans(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
@@ -251,11 +263,12 @@ class _ActionButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          flex: 3,
-          child: ElevatedButton(
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: BouncingScrollPhysics(),
+      child: Row(
+        children: [
+          ElevatedButton(
             onPressed: () {},
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.warningOrange,
@@ -264,39 +277,27 @@ class _ActionButtons extends StatelessWidget {
             ),
             child: Text("Settle up", style: GoogleFonts.openSans(fontWeight: FontWeight.w600, fontSize: 16)),
           ),
-        ),
-        const SizedBox(width: 8),
-        _buildOutlineButton(Icons.diamond_outlined, "Charts"),
-        const SizedBox(width: 8),
-        _buildOutlineButton(null, "Balances"),
-        const SizedBox(width: 8),
-        _buildOutlineButton(null, "Totals"),
-      ],
-    );
-  }
-
-  Widget _buildOutlineButton(IconData? icon, String label) {
-    return Expanded(
-      flex: 2,
-      child: OutlinedButton(
-        onPressed: () {},
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          side: const BorderSide(color: AppColors.borderGrey),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (icon != null) ...[Icon(icon, size: 16, color: Colors.purple), const SizedBox(width: 4)],
-            Text(
-              // Changed Expanded to Text/Flexible to prevent layout overflow in small buttons
-              label,
-              style: GoogleFonts.openSans(color: AppColors.textBlack, fontSize: 13, fontWeight: FontWeight.w600),
-              overflow: TextOverflow.ellipsis,
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: () {},
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.warningOrange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-          ],
-        ),
+            child: Text("Balances", style: GoogleFonts.openSans(fontWeight: FontWeight.w600, fontSize: 16)),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: () {},
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.warningOrange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: Text("Totals", style: GoogleFonts.openSans(fontWeight: FontWeight.w600, fontSize: 16)),
+          ),
+        ],
       ),
     );
   }

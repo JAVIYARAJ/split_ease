@@ -5,6 +5,7 @@ import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
+import 'package:split_ease/core/utils/clipboard_utils.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
 import '../../../../../core/widgets/auth_field.dart';
 import '../widgets/group_type_card.dart';
@@ -227,15 +228,27 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                           color: AppColors.textBlack,
                         ),
                       ),
-                      IconButton(
-                        onPressed: state.isGeneratingCode
-                            ? null
-                            : () {
-                          context.read<CreateGroupBloc>().add(const GenerateInviteCode());
-                        },
-                        icon: state.isGeneratingCode
-                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                            : const Icon(Icons.refresh, color: AppColors.primaryTeal),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            onPressed: () {
+                              ClipboardUtils.copyToClipboard(context, state.inviteCode, successMessage: "Invite code copied!");
+                            },
+                            icon: const Icon(Icons.copy_rounded, color: AppColors.primaryTeal),
+                            tooltip: "Copy Code",
+                          ),
+                          IconButton(
+                            onPressed: state.isGeneratingCode
+                                ? null
+                                : () {
+                              context.read<CreateGroupBloc>().add(const GenerateInviteCode());
+                            },
+                            icon: state.isGeneratingCode
+                                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                                : const Icon(Icons.refresh, color: AppColors.primaryTeal),
+                          ),
+                        ],
                       ),
                     ],
                   ),

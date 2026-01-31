@@ -23,7 +23,7 @@ class AppPrimaryButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryAccent.withValues(alpha: 0.4),
+            color: AppColors.primary.withValues(alpha: 0.4),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -31,11 +31,11 @@ class AppPrimaryButton extends StatelessWidget {
       ),
       child: ElevatedButton(
         // Logic: Pass empty function if loading to disable clicks
-        // but keep the Yellow color (passing null turns it grey)
+        // but keep the color (passing null turns it grey)
         onPressed: isLoading ? () {} : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryAccent,
-          foregroundColor: Colors.black,
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -43,13 +43,14 @@ class AppPrimaryButton extends StatelessWidget {
         ),
         child: isLoading
             ? const CupertinoActivityIndicator(
-          color: Colors.black, // Matches text color
+          color: Colors.white, // Matches text color
         )
             : Text(
           text,
           style: Theme.of(context).textTheme.labelLarge?.copyWith(
             fontSize: 16,
             fontWeight: FontWeight.w700,
+            color: Colors.white
           ),
         ),
       ),

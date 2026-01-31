@@ -54,7 +54,7 @@ class GroupRepositoryImpl implements GroupRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> joinGroup(String code) async {
+  Future<Either<Failure, String?>> joinGroup(String code) async {
      try{
       var response = await dataSource.joinGroup(code);
       return right(response);

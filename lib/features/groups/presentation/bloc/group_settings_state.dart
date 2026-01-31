@@ -9,7 +9,9 @@ class GroupSettingsLoading extends GroupSettingsState {}
 class GroupSettingsLoaded extends GroupSettingsState {
   final GroupEntity group;
   final bool hasChanges;
-  GroupSettingsLoaded(this.group, {this.hasChanges = false});
+  final String? currentUserId;
+
+  GroupSettingsLoaded(this.group, {this.hasChanges = false, this.currentUserId});
 }
 
 class GroupSettingsError extends GroupSettingsState {
