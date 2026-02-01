@@ -32,6 +32,7 @@ import 'package:split_ease/features/splash/data/repository/splash_repository_imp
 import 'package:split_ease/features/splash/domain/repository/splash_repository.dart';
 import 'package:split_ease/features/splash/domain/usecases/user_active_session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/common/cubit/app_user_cubit.dart';
 import 'core/secrets/app_secrets.dart';
 import 'core/services/image_picker_service.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
@@ -43,8 +44,12 @@ import 'features/groups/presentation/bloc/create_group_bloc.dart';
 import 'features/splash/presentation/cubit/splash_cubit.dart';
 import 'features/welcome/presentation/cubit/welcome_cubit.dart';
 import 'features/home/presentation/bloc/home_bloc.dart';
-import 'core/common/cubit/app_user_cubit.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
+import 'core/data/datasources/app_settings_local_data_source.dart';
+import 'core/data/repositories/app_settings_repository_impl.dart';
+import 'core/domain/repositories/app_settings_repository.dart';
+import 'core/domain/usecases/is_first_time_user.dart';
+import 'core/domain/usecases/set_first_time_user_seen.dart';
 
 // Service Locator (Shared Instance)
 // This is the central repository where all dependencies (objects) are stored and retrieved.
@@ -71,6 +76,16 @@ Future<void> _core() async {
   // Services
   sl.registerLazySingleton(() => ImagePicker());
   sl.registerLazySingleton<ImagePickerService>(() => ImagePickerServiceImpl(sl()));
+
+  // Local Storage
+  final sharedPreferences = await SharedPreferences.getInstance();
+  sl.registerLazySingleton(() => sharedPreferences);
+
+  // App Settings (FTUX)
+  sl.registerLazySingleton<AppSettingsLocalDataSource>(() => AppSettingsLocalDataSourceImpl(sl()));
+  sl.registerLazySingleton<AppSettingsRepository>(() => AppSettingsRepositoryImpl(sl()));
+  sl.registerLazySingleton(() => IsFirstTimeUser(sl()));
+  sl.registerLazySingleton(() => SetFirstTimeUserSeen(sl()));
 
   // Core Cubits
   sl.registerLazySingleton(() => AppUserCubit());
@@ -128,11 +143,11 @@ void _splash() {
 
   // Register SplashCubit. Factories return a new instance every time they are called.
   // ViewModels/Blocs/Cubits are usually factories so that their state resets when the screen is recreated.
-  sl.registerLazySingleton(() => SplashCubit(sl<UserActiveSession>(), sl<AppUserCubit>()));
+  sl.registerLazySingleton(() => SplashCubit(sl<UserActiveSession>(), sl<AppUserCubit>(), sl<IsFirstTimeUser>()));
 }
 
 void _welcome() {
-  sl.registerFactory(() => WelcomeCubit());
+  sl.registerFactory(() => WelcomeCubit(sl<SetFirstTimeUserSeen>()));
 }
 
 void _home() {
