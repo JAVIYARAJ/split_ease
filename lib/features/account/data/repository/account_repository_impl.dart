@@ -1,4 +1,4 @@
-import 'dart:io';
+
 import 'package:fpdart/fpdart.dart';
 import 'package:split_ease/core/error/exception.dart';
 import 'package:split_ease/core/error/failure.dart';
@@ -20,13 +20,5 @@ class AccountRepositoryImpl implements AccountRepository {
     }
   }
 
-  @override
-  Future<Either<Failure, String>> uploadProfilePicture(File image) async {
-    try {
-      final response = await accountRemoteDataSource.uploadProfilePicture(image);
-      return right(response);
-    } on ServerException catch (error) {
-      return left(Failure(message: error.message));
-    }
-  }
+
 }
