@@ -68,7 +68,7 @@ class WelcomePage extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      "Experience Seamless Mobility With Ubar – Your\nUltimate Ride Companion.",
+                      "Manage shared expenses effortlessly with friends and family. Track, split, and settle up with ease.",
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: Colors.white70,
                         height: 1.4,
@@ -102,14 +102,8 @@ class WelcomePage extends StatelessWidget {
                                 color: Colors.white,
                               ),
                             ),
-                            // Native Icon Chevrons
-                            const Row(
-                              children: [
-                                Icon(Icons.chevron_right, color: Colors.white54, size: 18),
-                                Icon(Icons.chevron_right, color: Colors.white70, size: 18),
-                                Icon(Icons.chevron_right, color: Colors.white, size: 18),
-                              ],
-                            )
+                            // Custom Animated Chevrons
+                            const _AnimatedChevrons(),
                           ],
                         ),
                       ),
@@ -122,6 +116,65 @@ class WelcomePage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AnimatedChevrons extends StatefulWidget {
+  const _AnimatedChevrons();
+
+  @override
+  State<_AnimatedChevrons> createState() => _AnimatedChevronsState();
+}
+
+class _AnimatedChevronsState extends State<_AnimatedChevrons> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Row(
+          children: List.generate(3, (index) {
+             // Calculate opacity based on controller value
+             // 0.0-0.33 -> Arrow 0 active
+             // 0.33-0.66 -> Arrow 1 active
+             // 0.66-1.0 -> Arrow 2 active
+             int activeIndex = (_controller.value * 3).floor();
+             bool isActive = index == activeIndex;
+             
+             return Icon(
+               Icons.chevron_right,
+               color: isActive ? Colors.white : Colors.white38,
+               size: 20,
+               shadows: isActive
+                   ? [
+                       Shadow(
+                         color: Colors.white.withValues(alpha: 0.9),
+                         blurRadius: 20,
+                       )
+                     ]
+                   : null,
+             );
+          }),
+        );
+      },
     );
   }
 }

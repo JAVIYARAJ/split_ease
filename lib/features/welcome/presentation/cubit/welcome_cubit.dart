@@ -1,13 +1,17 @@
-import 'package:bloc/bloc.dart';
-import 'package:meta/meta.dart';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:split_ease/core/domain/usecases/set_first_time_user_seen.dart';
 
 part 'welcome_state.dart';
 
 class WelcomeCubit extends Cubit<WelcomeState> {
-  WelcomeCubit() : super(WelcomeInitial());
+  final SetFirstTimeUserSeen setFirstTimeUserSeen;
 
-  void navigateToAuth(){
+  WelcomeCubit(this.setFirstTimeUserSeen) : super(WelcomeInitial());
+
+  Future<void> navigateToAuth() async {
+    await setFirstTimeUserSeen();
     emit(WelcomeNavigateToAuth());
   }
-
 }
