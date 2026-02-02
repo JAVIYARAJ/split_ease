@@ -4,7 +4,7 @@ import 'package:split_ease/features/account/data/datasources/account_remote_data
 import 'package:split_ease/features/account/data/repository/account_repository_impl.dart';
 import 'package:split_ease/features/account/domain/repository/account_repository.dart';
 import 'package:split_ease/features/account/domain/usecases/account_logout.dart';
-import 'package:split_ease/features/account/domain/usecases/upload_profile_picture.dart';
+
 import 'package:split_ease/features/account/presentation/bloc/account_bloc.dart';
 import 'package:split_ease/features/activity/presentation/bloc/activity_bloc.dart';
 import 'package:split_ease/features/auth/data/datasources/auth_remote_data_source.dart';
@@ -32,6 +32,7 @@ import 'package:split_ease/features/splash/data/repository/splash_repository_imp
 import 'package:split_ease/features/splash/domain/repository/splash_repository.dart';
 import 'package:split_ease/features/splash/domain/usecases/user_active_session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/common/cubit/app_user_cubit.dart';
 import 'core/secrets/app_secrets.dart';
 import 'core/services/image_picker_service.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
@@ -41,10 +42,19 @@ import 'features/groups/domain/usecases/group_insert_icon.dart';
 import 'features/groups/presentation/bloc/groups_bloc.dart';
 import 'features/groups/presentation/bloc/create_group_bloc.dart';
 import 'features/splash/presentation/cubit/splash_cubit.dart';
+import 'features/profile/data/datasources/profile_remote_data_source.dart';
+import 'features/profile/data/repositories/profile_repository_impl.dart';
+import 'features/profile/domain/repositories/profile_repository.dart';
+import 'features/profile/domain/usecases/update_profile_usecase.dart';
+import 'features/profile/presentation/bloc/profile_bloc.dart';
 import 'features/welcome/presentation/cubit/welcome_cubit.dart';
 import 'features/home/presentation/bloc/home_bloc.dart';
-import 'core/common/cubit/app_user_cubit.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
+import 'core/data/datasources/app_settings_local_data_source.dart';
+import 'core/data/repositories/app_settings_repository_impl.dart';
+import 'core/domain/repositories/app_settings_repository.dart';
+import 'core/domain/usecases/is_first_time_user.dart';
+import 'core/domain/usecases/set_first_time_user_seen.dart';
 
 // Service Locator (Shared Instance)
 // This is the central repository where all dependencies (objects) are stored and retrieved.
@@ -72,6 +82,16 @@ Future<void> _core() async {
   sl.registerLazySingleton(() => ImagePicker());
   sl.registerLazySingleton<ImagePickerService>(() => ImagePickerServiceImpl(sl()));
 
+  // Local Storage
+  final sharedPreferences = await SharedPreferences.getInstance();
+  sl.registerLazySingleton(() => sharedPreferences);
+
+  // App Settings (FTUX)
+  sl.registerLazySingleton<AppSettingsLocalDataSource>(() => AppSettingsLocalDataSourceImpl(sl()));
+  sl.registerLazySingleton<AppSettingsRepository>(() => AppSettingsRepositoryImpl(sl()));
+  sl.registerLazySingleton(() => IsFirstTimeUser(sl()));
+  sl.registerLazySingleton(() => SetFirstTimeUserSeen(sl()));
+
   // Core Cubits
   sl.registerLazySingleton(() => AppUserCubit());
 }
@@ -86,6 +106,18 @@ void _features() {
   _home();
   _group();
   _inviteCode();
+  _profile();
+}
+
+void _profile() {
+  sl.registerFactory<ProfileRemoteDataSource>(() => ProfileRemoteDataSourceImpl(client: sl<SupabaseClient>()));
+  sl.registerFactory<ProfileRepository>(() => ProfileRepositoryImpl(sl<ProfileRemoteDataSource>()));
+  sl.registerFactory(() => UpdateProfileUseCase(sl<ProfileRepository>()));
+  sl.registerFactory(() => ProfileBloc(
+        updateProfileUseCase: sl<UpdateProfileUseCase>(),
+        appUserCubit: sl<AppUserCubit>(),
+        imagePickerService: sl<ImagePickerService>(),
+      ));
 }
 
 void _group() {
@@ -128,11 +160,11 @@ void _splash() {
 
   // Register SplashCubit. Factories return a new instance every time they are called.
   // ViewModels/Blocs/Cubits are usually factories so that their state resets when the screen is recreated.
-  sl.registerLazySingleton(() => SplashCubit(sl<UserActiveSession>(), sl<AppUserCubit>()));
+  sl.registerLazySingleton(() => SplashCubit(sl<UserActiveSession>(), sl<AppUserCubit>(), sl<IsFirstTimeUser>()));
 }
 
 void _welcome() {
-  sl.registerFactory(() => WelcomeCubit());
+  sl.registerFactory(() => WelcomeCubit(sl<SetFirstTimeUserSeen>()));
 }
 
 void _home() {
@@ -151,13 +183,9 @@ void _home() {
   sl.registerFactory(() => AccountLogout(sl<AccountRepository>()),);
 
 
-  sl.registerFactory(() => UploadProfilePicture(accountRepository: sl<AccountRepository>()));
-
   sl.registerFactory(() => AccountBloc(
         accountLogout: sl<AccountLogout>(),
         appUserCubit: sl<AppUserCubit>(),
-        uploadProfilePicture: sl<UploadProfilePicture>(),
-        imagePickerService: sl<ImagePickerService>(),
       ));
 }
 
