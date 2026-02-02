@@ -4,9 +4,3 @@ part of 'account_bloc.dart';
 sealed class AccountEvent {}
 
 class AccountLogoutEvent extends AccountEvent {}
-
-class AccountImagePicked extends AccountEvent {
-  final ImageSource source;
-
-  AccountImagePicked(this.source);
-}
