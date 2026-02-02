@@ -120,7 +120,7 @@ class _GroupDetailAppBar extends StatelessWidget {
     return SliverAppBar(
       expandedHeight: 200.0,
       pinned: true,
-      backgroundColor: AppColors.primaryTeal,
+      backgroundColor: Colors.transparent,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
         onPressed: onBack,
@@ -147,61 +147,98 @@ class _GroupDetailAppBar extends StatelessWidget {
       ],
       flexibleSpace: BlocBuilder<GroupDetailBloc, GroupDetailState>(
         builder: (context, state) {
-          
-          Widget backgroundContent = Container(
-            decoration: state.groupEntity?.groupIcon == null ? null : BoxDecoration(
-                image: DecorationImage(image: CachedNetworkImageProvider(state.groupEntity!.groupIcon!),
-                fit: BoxFit.cover),
-            ),
-            child: Container(
-              padding: const EdgeInsets.only(left: 20, bottom: 20),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black54],
-                  stops: [0.6, 1.0],
-                ),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.start,
+          final groupEntity = state.groupEntity;
+
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final double expandedHeight = 200.0;
+              final double collapsedHeight = kToolbarHeight + MediaQuery.of(context).padding.top;
+              final double currentHeight = constraints.maxHeight;
+              
+              // t ranges from 0.0 (collapsed) to 1.0 (expanded)
+              final double t = ((currentHeight - collapsedHeight) / (expandedHeight - collapsedHeight)).clamp(0.0, 1.0);
+              
+              // Animations
+              final double titleSizes = Tween<double>(begin: 20.0, end: 28.0).transform(t);
+              final double titleLeft = Tween<double>(begin: 50.0, end: 20.0).transform(t); // 50 to clear back button roughly
+              final double titleBottom = Tween<double>(begin: 14.0, end: 55.0).transform(t); // 14 centers in AppBar, 55 moves up for member pill
+              final double memberOpacity = Tween<double>(begin: 0.0, end: 1.0).transform((t - 0.5).clamp(0.0, 0.5) * 2); // Fade in only in latter half
+
+              return Stack(
+                fit: StackFit.expand,
                 children: [
-                  /*Group name*/
-                  Text(
-                    state.groupEntity?.name ?? "",
-                    style: GoogleFonts.openSans(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  /*Group member count*/
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.9), // More opaque and canonical teal
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white24, width: 1), // Subtle border for edge definition
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.people_outline, color: Colors.white, size: 16),
-                        const SizedBox(width: 6),
-                        Text(
-                          "${state.groupEntity?.members?.length ?? 0} people",
-                          style: GoogleFonts.openSans(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                  // 1. Background Image (Persistent)
+                  if (groupEntity?.groupIcon != null)
+                     Hero(
+                        tag: groupEntity!.id!,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: CachedNetworkImageProvider(groupEntity.groupIcon!),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
                         ),
-                      ],
+                     )
+                  else
+                    Container(color: AppColors.primaryTeal),
+                  
+                  // 2. Gradient (Persistent)
+                  Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.transparent, Colors.black54],
+                        stops: [0.6, 1.0],
+                      ),
+                    ),
+                  ),
+
+                  // 3. Title Animation
+                  Positioned(
+                    left: titleLeft,
+                    bottom: titleBottom,
+                    child: Text(
+                      groupEntity?.name ?? "",
+                      style: GoogleFonts.openSans(
+                        color: Colors.white,
+                        fontSize: titleSizes,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+                  // 4. Member Count (Fades out)
+                  Positioned(
+                    left: 20,
+                    bottom: 20,
+                    child: Opacity(
+                      opacity: memberOpacity,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white24, width: 1),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.people_outline, color: Colors.white, size: 16),
+                            const SizedBox(width: 6),
+                            Text(
+                              "${groupEntity?.members?.length ?? 0} people",
+                              style: GoogleFonts.openSans(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ],
-              ),
-            ),
-          );
-
-          return FlexibleSpaceBar(
-              background: state.groupEntity?.id != null
-                  ? Hero(tag: state.groupEntity!.id!, child: Material(type: MaterialType.transparency, child: backgroundContent))
-                  : backgroundContent
+              );
+            },
           );
         },
       ),
@@ -309,7 +346,7 @@ class _TransactionList extends StatelessWidget {
     return SliverList(
       delegate: SliverChildBuilderDelegate((context, index) {
         return const _TransactionItem();
-      }, childCount: 5),
+      }, childCount: 15),
     );
   }
 }

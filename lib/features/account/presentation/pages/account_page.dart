@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:image_picker/image_picker.dart';
+
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/config/feature_flags.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
@@ -9,6 +9,7 @@ import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/account/presentation/bloc/account_bloc.dart';
 import '../../../../../core/common/cubit/app_user_cubit.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
+import 'package:split_ease/features/profile/presentation/pages/edit_profile_page.dart';
 
 class AccountPage extends StatelessWidget {
   const AccountPage({super.key});
@@ -22,8 +23,6 @@ class AccountPage extends StatelessWidget {
           NavigationService.pushAndRemoveUntil(AppRoutes.login);
         } else if (state.status == AccountStatus.failure) {
           AppAlerts.showError(context, state.message);
-        }else if(state.status == AccountStatus.profileUpdated) {
-          AppAlerts.showSuccess(context, state.message);
         }
       },
       child: BlocBuilder<AppUserCubit, AppUserState>(
@@ -64,32 +63,16 @@ class AccountPage extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Row(
                       children: [
-                        Stack(
-                          alignment: Alignment.bottomRight,
-                          children: [
-                            CircleAvatar(
-                              radius: 36,
-                              backgroundColor: const Color(0xFFA00030),
-                              backgroundImage: userAvatar != null ? NetworkImage(userAvatar) : null,
-                              child: userAvatar == null ? const Icon(Icons.person, size: 40, color: Colors.white24) : null,
-                            ),
-                            GestureDetector(
-                              onTap: () => _showImagePickerModal(context),
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[800],
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 2),
-                                ),
-                                child: const Icon(Icons.camera_alt, color: Colors.white, size: 12),
-                              ),
-                            ),
-                          ],
+                        CircleAvatar(
+                          radius: 36,
+                          backgroundColor: const Color(0xFFA00030),
+                          backgroundImage: userAvatar != null ? NetworkImage(userAvatar) : null,
+                          child: userAvatar == null ? const Icon(Icons.person, size: 40, color: Colors.white24) : null,
                         ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
+                        
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
@@ -101,7 +84,13 @@ class AccountPage extends StatelessWidget {
                           ),
                         ),
                         TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                             if (userState is AppUserLoggedIn) {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (context) => EditProfilePage(user: userState.user)),
+                                );
+                             }
+                          },
                           child: Text(
                             "Edit",
                             style: GoogleFonts.openSans(
@@ -266,39 +255,7 @@ class AccountPage extends StatelessWidget {
     );
   }
 
-  void _showImagePickerModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
-      ),
-      builder: (_) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.camera_alt, color: Colors.black87),
-                title: Text("Take Photo", style: GoogleFonts.openSans(fontSize: 16)),
-                onTap: () {
-                  Navigator.pop(context);
-                  context.read<AccountBloc>().add(AccountImagePicked(ImageSource.camera));
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library, color: Colors.black87),
-                title: Text("Choose from Gallery", style: GoogleFonts.openSans(fontSize: 16)),
-                onTap: () {
-                  Navigator.pop(context);
-                  context.read<AccountBloc>().add(AccountImagePicked(ImageSource.gallery));
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+
 
   void _showLogoutConfirmationDialog(BuildContext context) {
     showGeneralDialog(

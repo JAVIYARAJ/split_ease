@@ -4,7 +4,7 @@ import 'package:split_ease/features/account/data/datasources/account_remote_data
 import 'package:split_ease/features/account/data/repository/account_repository_impl.dart';
 import 'package:split_ease/features/account/domain/repository/account_repository.dart';
 import 'package:split_ease/features/account/domain/usecases/account_logout.dart';
-import 'package:split_ease/features/account/domain/usecases/upload_profile_picture.dart';
+
 import 'package:split_ease/features/account/presentation/bloc/account_bloc.dart';
 import 'package:split_ease/features/activity/presentation/bloc/activity_bloc.dart';
 import 'package:split_ease/features/auth/data/datasources/auth_remote_data_source.dart';
@@ -42,6 +42,11 @@ import 'features/groups/domain/usecases/group_insert_icon.dart';
 import 'features/groups/presentation/bloc/groups_bloc.dart';
 import 'features/groups/presentation/bloc/create_group_bloc.dart';
 import 'features/splash/presentation/cubit/splash_cubit.dart';
+import 'features/profile/data/datasources/profile_remote_data_source.dart';
+import 'features/profile/data/repositories/profile_repository_impl.dart';
+import 'features/profile/domain/repositories/profile_repository.dart';
+import 'features/profile/domain/usecases/update_profile_usecase.dart';
+import 'features/profile/presentation/bloc/profile_bloc.dart';
 import 'features/welcome/presentation/cubit/welcome_cubit.dart';
 import 'features/home/presentation/bloc/home_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -101,6 +106,18 @@ void _features() {
   _home();
   _group();
   _inviteCode();
+  _profile();
+}
+
+void _profile() {
+  sl.registerFactory<ProfileRemoteDataSource>(() => ProfileRemoteDataSourceImpl(client: sl<SupabaseClient>()));
+  sl.registerFactory<ProfileRepository>(() => ProfileRepositoryImpl(sl<ProfileRemoteDataSource>()));
+  sl.registerFactory(() => UpdateProfileUseCase(sl<ProfileRepository>()));
+  sl.registerFactory(() => ProfileBloc(
+        updateProfileUseCase: sl<UpdateProfileUseCase>(),
+        appUserCubit: sl<AppUserCubit>(),
+        imagePickerService: sl<ImagePickerService>(),
+      ));
 }
 
 void _group() {
@@ -166,13 +183,9 @@ void _home() {
   sl.registerFactory(() => AccountLogout(sl<AccountRepository>()),);
 
 
-  sl.registerFactory(() => UploadProfilePicture(accountRepository: sl<AccountRepository>()));
-
   sl.registerFactory(() => AccountBloc(
         accountLogout: sl<AccountLogout>(),
         appUserCubit: sl<AppUserCubit>(),
-        uploadProfilePicture: sl<UploadProfilePicture>(),
-        imagePickerService: sl<ImagePickerService>(),
       ));
 }
 

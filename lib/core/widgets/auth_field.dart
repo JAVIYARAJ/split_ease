@@ -13,6 +13,7 @@ class AuthField extends StatefulWidget {
   final VoidCallback? onToggleVisibility;
   final TextEditingController? controller;
   final String? Function(String?)? validator;
+  final bool isReadyOnly;
 
   const AuthField({
     super.key,
@@ -24,6 +25,7 @@ class AuthField extends StatefulWidget {
     this.onToggleVisibility,
     this.controller,
     this.validator,
+    this.isReadyOnly = false,
   });
 
   @override
@@ -74,6 +76,7 @@ class _AuthFieldState extends State<AuthField> {
                 child: TextField(
                   controller: widget.controller,
                   obscureText: widget.isObscured,
+                  readOnly: widget.isReadyOnly,
                   style: Theme.of(context).textTheme.bodyLarge,
                   cursorColor: AppColors.primary,
                   onChanged: (value) {

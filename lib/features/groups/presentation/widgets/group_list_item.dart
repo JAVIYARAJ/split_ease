@@ -18,12 +18,7 @@ class GroupListItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.backgroundWhite,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 10,
-              offset: const Offset(0, 4))
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Material(
         color: Colors.transparent,
@@ -40,32 +35,19 @@ class GroupListItem extends StatelessWidget {
                   child: Container(
                     width: 50,
                     height: 50,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: Colors.white,
-                    ),
+                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: Colors.white),
                     child: group.groupIcon != null
-                        ? AppImageView(
-                            url: group.groupIcon,
-                            height: 50,
-                            width: 50,
-                            radius: 12,
-                            fit: BoxFit.cover,
-                          )
+                        ? AppImageView(url: group.groupIcon, height: 50, width: 50, radius: 12, fit: BoxFit.cover)
                         : Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
                               gradient: const LinearGradient(
-                                colors: [
-                                  AppColors.primaryTeal,
-                                  AppColors.primaryTealDark
-                                ],
+                                colors: [AppColors.primaryTeal, AppColors.primaryTealDark],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
                             ),
-                            child: Icon(_getIconData(group.groupType),
-                                color: Colors.white, size: 24),
+                            child: Icon(_getIconData(group.groupType), color: Colors.white, size: 24),
                           ),
                   ),
                 ),
