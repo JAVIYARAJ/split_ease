@@ -26,8 +26,8 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   bool _isObscured = true;
-  final TextEditingController _emailController = TextEditingController(text: "rjcoding@mailinator.com");
-  final TextEditingController _passwordController = TextEditingController(text: "Test@123");
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   void dispose() {
