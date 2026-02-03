@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/presentation/widgets/app_image_view.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
+import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
 import 'package:split_ease/features/groups/presentation/bloc/group_settings_bloc.dart';
 import 'package:split_ease/injection_container.dart';
@@ -101,13 +102,13 @@ class _GroupSettingsContent extends StatelessWidget {
           delegate: SliverChildListDelegate([
             const SizedBox(height: 16),
             _buildSectionHeader('General'),
-            _buildSettingsTile(
-              icon: Icons.person_add_rounded,
-              title: 'Add people to group',
-              onTap: () {},
-              iconBgColor: AppColors.primary.withValues(alpha: 0.1),
-              iconColor: AppColors.primary,
-            ),
+            // _buildSettingsTile(
+            //   icon: Icons.person_add_rounded,
+            //   title: 'Add people to group',
+            //   onTap: () {},
+            //   iconBgColor: AppColors.primary.withValues(alpha: 0.1),
+            //   iconColor: AppColors.primary,
+            // ),
             _buildDivider(),
             
             // Invite QR - Permission Check
@@ -148,7 +149,7 @@ class _GroupSettingsContent extends StatelessWidget {
                 icon: Icons.exit_to_app_rounded,
                 title: 'Leave Group',
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Cannot leave group with outstanding debts.")));
+                  AppAlerts.showError(context, "Cannot leave group with outstanding debts.");
                 },
                 iconBgColor: const Color(0xFFFFF3E0),
                 iconColor: const Color(0xFFFB8C00),
@@ -159,7 +160,7 @@ class _GroupSettingsContent extends StatelessWidget {
                 title: 'Delete Group',
                 titleColor: AppColors.errorRed,
                 onTap: () {
-                  context.read<GroupSettingsBloc>().add(DeleteGroupEvent(group.id!));
+                  //context.read<GroupSettingsBloc>().add(DeleteGroupEvent(group.id!));
                 },
                 iconBgColor: const Color(0xFFFFEBEE),
                 iconColor: const Color(0xFFE53935),

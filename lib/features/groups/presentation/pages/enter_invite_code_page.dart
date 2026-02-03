@@ -7,6 +7,7 @@ import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/groups/presentation/bloc/join_group_bloc.dart';
+import 'package:split_ease/features/groups/presentation/pages/qr_scanner_page.dart';
 import '../widgets/congratulation_dialog.dart';
 
 class EnterInviteCodePage extends StatelessWidget {
@@ -83,6 +84,20 @@ class EnterInviteCodePage extends StatelessWidget {
                       hintStyle: GoogleFonts.openSans(color: Colors.grey.shade400),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.qr_code_scanner_rounded, color: AppColors.primaryTeal),
+                        onPressed: () async {
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const QrScannerPage()),
+                          );
+                          if (result != null && result is String && context.mounted) {
+                            final bloc = context.read<JoinGroupBloc>();
+                            bloc.add(JoinGroupCodeChanged(result));
+                            bloc.add(const JoinGroupSubmitted());
+                          }
+                        },
+                      ),
                     ),
                   );
                 },
