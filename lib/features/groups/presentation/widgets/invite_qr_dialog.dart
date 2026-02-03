@@ -122,6 +122,16 @@ class _InviteQrDialogState extends State<InviteQrDialog> {
                       "Scan to join group", // Helper text in image
                       style: GoogleFonts.openSans(fontSize: 10, color: AppColors.textGrey),
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Split Ease",
+                      style: GoogleFonts.openSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
                   ],
                 ),
               ),
