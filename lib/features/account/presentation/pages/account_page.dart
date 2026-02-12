@@ -10,6 +10,7 @@ import 'package:split_ease/features/account/presentation/bloc/account_bloc.dart'
 import '../../../../../core/common/cubit/app_user_cubit.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
 import 'package:split_ease/features/profile/presentation/pages/edit_profile_page.dart';
+import 'package:split_ease/features/account/presentation/pages/user_qr_page.dart';
 
 class AccountPage extends StatelessWidget {
   const AccountPage({super.key});
@@ -170,7 +171,26 @@ class AccountPage extends StatelessWidget {
                   const SizedBox(height: 20),
 
                   // 3. Settings List
-                  _buildListItem(icon: Icons.qr_code_scanner, title: "Scan code", onTap: () {}),
+                  _buildListItem(
+                    icon: Icons.qr_code_scanner,
+                    title: "Scan code",
+                    onTap: () {
+                      if (userState is AppUserLoggedIn) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => UserQrPage(
+                              userId: userState.user.id,
+                              userName: userState.user.name,
+                              userAvatar: userState.user.avatarUrl,
+                            ),
+                          ),
+                        );
+                      } else {
+                        AppAlerts.showError(context, "Please log in to see your QR code.");
+                      }
+                    },
+                  ),
                   _buildListItem(icon: Icons.diamond_outlined, title: "Splitwise Pro", iconColor: Colors.deepPurple, onTap: () {}),
 
                   const SizedBox(height: 20),

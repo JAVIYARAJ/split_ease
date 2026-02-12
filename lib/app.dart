@@ -17,12 +17,12 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Expense Tracker',
         debugShowCheckedModeBanner: false,
-    
+
         // Routing
         initialRoute: AppRoutes.splash,
         onGenerateRoute: RouteGenerator.generateRoute,
         navigatorKey: NavigationService.navigatorKey,
-    
+
         // Theme (optional)
         theme: AppTheme.lightTheme,
       ),

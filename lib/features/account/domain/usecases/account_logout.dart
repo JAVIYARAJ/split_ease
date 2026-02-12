@@ -14,4 +14,4 @@ class AccountLogout implements UseCase<dynamic, NoParams> {
   }
 }
 
-class NoParams {}
+

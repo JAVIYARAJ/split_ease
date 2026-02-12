@@ -2,16 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 
-class CongratulationDialog extends StatefulWidget {
+class SuccessDialog extends StatefulWidget {
   final VoidCallback onContinue;
+  final String title;
+  final String description;
+  final String buttonText;
 
-  const CongratulationDialog({super.key, required this.onContinue});
+  const SuccessDialog({
+    super.key,
+    required this.onContinue,
+    this.title = "Success",
+    required this.description,
+    this.buttonText = "Continue",
+  });
 
   @override
-  State<CongratulationDialog> createState() => _CongratulationDialogState();
+  State<SuccessDialog> createState() => _SuccessDialogState();
 }
 
-class _CongratulationDialogState extends State<CongratulationDialog> with SingleTickerProviderStateMixin {
+class _SuccessDialogState extends State<SuccessDialog> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
@@ -63,7 +72,7 @@ class _CongratulationDialogState extends State<CongratulationDialog> with Single
               children: [
                 // Title
                 Text(
-                  "Woohoo!",
+                  widget.title,
                   style: GoogleFonts.openSans(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
@@ -74,7 +83,7 @@ class _CongratulationDialogState extends State<CongratulationDialog> with Single
                 const SizedBox(height: 8),
                 // Body
                 Text(
-                  "You're in! Get ready to split bills and settle up seamlessly.",
+                  widget.description,
                   style: GoogleFonts.openSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
@@ -101,8 +110,8 @@ class _CongratulationDialogState extends State<CongratulationDialog> with Single
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                         Text(
-                          "Open Group",
+                        Text(
+                          widget.buttonText,
                           style: GoogleFonts.openSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
@@ -118,7 +127,7 @@ class _CongratulationDialogState extends State<CongratulationDialog> with Single
               ],
             ),
           ),
-          
+
           // Floating Animated Icon
           Positioned(
             top: -50,
@@ -135,9 +144,9 @@ class _CongratulationDialogState extends State<CongratulationDialog> with Single
                 child: Container(
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
-                       begin: Alignment.topLeft,
-                       end: Alignment.bottomRight,
-                       colors: [AppColors.secondary, AppColors.primary],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [AppColors.secondary, AppColors.primary],
                     ),
                     shape: BoxShape.circle,
                   ),
