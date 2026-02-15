@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/common/cubit/app_user_cubit.dart';
 import 'package:split_ease/features/account/domain/usecases/account_logout.dart';
+
+import '../../../../core/usecases/use_case.dart';
 part 'account_event.dart';
 
 part 'account_state.dart';

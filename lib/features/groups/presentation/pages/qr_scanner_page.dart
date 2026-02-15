@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 
 class QrScannerPage extends StatefulWidget {
@@ -54,6 +54,19 @@ class _QrScannerPageState extends State<QrScannerPage> {
           IconButton(
             icon: const Icon(Icons.cameraswitch_rounded, color: Colors.white),
             onPressed: () => controller.switchCamera(),
+          ),
+          IconButton(
+            icon: const Icon(Icons.image, color: Colors.white),
+            onPressed: () async {
+              final ImagePicker picker = ImagePicker();
+              final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+              if (image != null) {
+                var response = await controller.analyzeImage(image.path);
+                if(response!=null){
+                  _onDetect(response);
+                }
+              }
+            },
           ),
         ],
       ),

@@ -1,74 +1,66 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:split_ease/features/friends/domain/usecases/friend_join.dart';
+import 'package:split_ease/features/friends/domain/usecases/get_my_friends.dart';
+import 'package:split_ease/features/friends/domain/usecases/get_unread_friend_request_count.dart';
+import '../../../../core/usecases/use_case.dart';
 import '../../domain/entities/friend_entity.dart';
 
 part 'friends_event.dart';
+
 part 'friends_state.dart';
 
 class FriendsBloc extends Bloc<FriendsEvent, FriendsState> {
-  FriendsBloc() : super(FriendsInitial()) {
+  final FriendJoin _friendJoin;
+  final GetMyFriends _getMyFriends;
+  final GetUnreadFriendRequestCount _getUnreadFriendRequestCount;
+
+  FriendsBloc({
+    required FriendJoin friendJoin,
+    required GetMyFriends getMyFriends,
+    required GetUnreadFriendRequestCount getUnreadFriendRequestCount,
+  })  : _friendJoin = friendJoin,
+        _getMyFriends = getMyFriends,
+        _getUnreadFriendRequestCount = getUnreadFriendRequestCount,
+        super(const FriendsState()) {
     on<LoadFriends>(_onLoadFriends);
+    on<FriendQrJoinEvent>(_onQrJoinFriend);
+    on<LoadUnreadFriendRequestCount>(_onLoadUnreadCount);
   }
 
   Future<void> _onLoadFriends(LoadFriends event, Emitter<FriendsState> emit) async {
-    emit(FriendsLoading());
-    try {
-      // Simulate network delay
-      await Future.delayed(const Duration(seconds: 1));
-      
-      // Mock Data 
-      // In a real app, this would come from a UseCase/Repository
-      final List<FriendEntity> friends = [
-        const FriendEntity(
-          id: "1",
-          name: "Alpesh sureja",
-          balance: 246.33,
-          activeGroup: "Trip",
-        ),
-        const FriendEntity(
-          id: "2",
-          name: "Bhavya Fultariya",
-          balance: -173.34,
-          imageUrl: "https://randomuser.me/api/portraits/men/1.jpg", 
-          activeGroup: "Dinner",
-        ),
-        const FriendEntity(
-          id: "3",
-          name: "Bhruvik Mori",
-          balance: 1388.36,
-          activeGroup: "Events",
-        ),
-         const FriendEntity(
-          id: "4",
-          name: "Kavan patel",
-          balance: 2471.09,
-          imageUrl: "https://randomuser.me/api/portraits/men/2.jpg",
-          activeGroup: "Parties",
-        ),
-        const FriendEntity(
-          id: "5",
-          name: "keval kadivar",
-          balance: 0.0,
-          activeGroup: "",
-        ),
-        const FriendEntity(
-          id: "6",
-          name: "Kevin Bhimani",
-          balance: 927.30,
-          imageUrl: "https://randomuser.me/api/portraits/men/3.jpg",
-          activeGroup: "Esparkbiz",
-        ),
-        const FriendEntity(
-          id: "7",
-          name: "Meet Koradiya",
-          balance: -856.28,
-          activeGroup: "Project",
-        ),
-      ];
+    emit(state.copyWith(status: FriendsStatus.loading));
+    final response = await _getMyFriends(NoParams());
+    response.fold(
+      (failure) => emit(state.copyWith(status: FriendsStatus.failure, errorMessage: failure.message)),
+      (friends) => emit(state.copyWith(status: FriendsStatus.success, friends: friends)),
+    );
+  }
 
-      emit(FriendsLoaded(friends));
+  Future<void> _onQrJoinFriend(FriendQrJoinEvent event, Emitter<FriendsState> emit) async {
+    emit(state.copyWith(joinStatus: FriendJoinStatus.loading));
+    try {
+      var response = await _friendJoin(FriendJoinParam(friendId: event.friendId));
+      response.fold(
+        (error) {
+          emit(state.copyWith(joinStatus: FriendJoinStatus.failure, joinErrorMessage: error.message));
+        },
+        (successId) {
+          emit(state.copyWith(joinStatus: FriendJoinStatus.success));
+          // Reset join status after success so dialog doesn't show again if state rebuilds
+          emit(state.copyWith(joinStatus: FriendJoinStatus.initial));
+        },
+      );
     } catch (e) {
-      emit(FriendsError("Failed to load friends"));
+      emit(state.copyWith(joinStatus: FriendJoinStatus.failure, joinErrorMessage: "Failed to join friend"));
     }
+  }
+
+  Future<void> _onLoadUnreadCount(LoadUnreadFriendRequestCount event, Emitter<FriendsState> emit) async {
+    final response = await _getUnreadFriendRequestCount(NoParams());
+    response.fold(
+      (_) {}, // silently ignore errors for badge count
+      (count) => emit(state.copyWith(unreadRequestCount: count)),
+    );
   }
 }
