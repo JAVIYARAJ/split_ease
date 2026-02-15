@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:split_ease/features/groups/domain/usecases/get_all_groups.dart';
 
+import '../../../../core/usecases/use_case.dart';
 import '../../domain/entities/group_entity.dart';
 
 part 'groups_event.dart';

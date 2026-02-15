@@ -12,7 +12,16 @@ import 'package:split_ease/features/auth/data/repositories/auth_repository_impl.
 import 'package:split_ease/features/auth/domain/usecases/user_sign_up.dart';
 import 'package:split_ease/features/auth/presentation/login/bloc/login_bloc.dart';
 import 'package:split_ease/features/auth/presentation/register/bloc/register_bloc.dart';
+import 'package:split_ease/features/friends/data/datasources/friends_remote_data_source.dart';
+import 'package:split_ease/features/friends/data/repository/friends_repository_impl.dart';
+import 'package:split_ease/features/friends/domain/repository/friends_repository.dart';
+import 'package:split_ease/features/friends/domain/usecases/friend_join.dart';
+import 'package:split_ease/features/friends/domain/usecases/get_my_friends.dart';
+import 'package:split_ease/features/friends/domain/usecases/get_friend_requests.dart';
+import 'package:split_ease/features/friends/domain/usecases/get_unread_friend_request_count.dart';
+import 'package:split_ease/features/friends/domain/usecases/respond_to_friend_request.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friends_bloc.dart';
+import 'package:split_ease/features/friends/presentation/bloc/friend_requests_bloc.dart';
 import 'package:split_ease/features/groups/data/datasources/group_remote_data_source.dart';
 import 'package:split_ease/features/groups/data/repository/group_repository_impl.dart';
 import 'package:split_ease/features/groups/domain/repository/group_repository.dart';
@@ -35,6 +44,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/common/cubit/app_user_cubit.dart';
 import 'core/secrets/app_secrets.dart';
 import 'core/services/image_picker_service.dart';
+import 'core/services/realtime_service.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/domain/usecases/user_login.dart';
 
@@ -81,6 +91,7 @@ Future<void> _core() async {
   // Services
   sl.registerLazySingleton(() => ImagePicker());
   sl.registerLazySingleton<ImagePickerService>(() => ImagePickerServiceImpl(sl()));
+  sl.registerLazySingleton<RealtimeService>(() => RealtimeService(client: sl<SupabaseClient>()));
 
   // Local Storage
   final sharedPreferences = await SharedPreferences.getInstance();
@@ -104,6 +115,7 @@ void _features() {
   _auth();
   _welcome();
   _home();
+  _friend();
   _group();
   _inviteCode();
   _profile();
@@ -151,6 +163,10 @@ void _group() {
   ));
 }
 
+void _friend() {
+
+}
+
 void _splash() {
   sl.registerFactory<SplashRemoteDataSource>(() => SplashRemoteDataSourceImpl(client: sl<SupabaseClient>()));
 
@@ -170,7 +186,20 @@ void _welcome() {
 void _home() {
   // Presentation Layer - BLoC (Contains Mock Data Logic)
   sl.registerFactory(() => HomeBloc());
-  sl.registerFactory(() => FriendsBloc(),);
+
+  sl.registerFactory<FriendsRemoteDataSource>(() => FriendRemoteDatSourceImpl(client: sl<SupabaseClient>()),);
+
+  sl.registerFactory<FriendsRepository>(() => FriendsRepositoryImpl(friendsRemoteDataSource: sl<FriendsRemoteDataSource>()),);
+
+  sl.registerFactory(() => FriendJoin(friendsRepository: sl<FriendsRepository>()),);
+  sl.registerFactory(() => GetMyFriends(friendsRepository: sl<FriendsRepository>()),);
+  sl.registerFactory(() => GetFriendRequests(friendsRepository: sl<FriendsRepository>()),);
+  sl.registerFactory(() => RespondToFriendRequest(friendsRepository: sl<FriendsRepository>()),);
+
+  sl.registerFactory(() => GetUnreadFriendRequestCount(friendsRepository: sl<FriendsRepository>()),);
+
+  sl.registerFactory(() => FriendsBloc(friendJoin: sl<FriendJoin>(), getMyFriends: sl<GetMyFriends>(), getUnreadFriendRequestCount: sl<GetUnreadFriendRequestCount>()),);
+  sl.registerFactory(() => FriendRequestsBloc(getFriendRequests: sl<GetFriendRequests>(), respondToFriendRequest: sl<RespondToFriendRequest>()),);
 
   sl.registerFactory(() => GetAllGroups(groupRepository: sl<GroupRepository>()),);
   sl.registerFactory(() => GroupsBloc(getAllGroups: sl<GetAllGroups>()),);

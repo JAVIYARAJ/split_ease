@@ -8,7 +8,7 @@ import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/groups/presentation/bloc/join_group_bloc.dart';
 import 'package:split_ease/features/groups/presentation/pages/qr_scanner_page.dart';
-import '../widgets/congratulation_dialog.dart';
+import 'package:split_ease/core/presentation/widgets/success_dialog.dart';
 
 class EnterInviteCodePage extends StatelessWidget {
   const EnterInviteCodePage({super.key});
@@ -22,7 +22,10 @@ class EnterInviteCodePage extends StatelessWidget {
           showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (context) => CongratulationDialog(
+            builder: (context) => SuccessDialog(
+              title: "Woohoo!",
+              description: "You're in! Get ready to split bills and settle up seamlessly.",
+              buttonText: "Open Group",
               onContinue: () async {
                 Navigator.of(context).pop(); // Pop dialog
                 if (state.joinedGroupId != null) {
