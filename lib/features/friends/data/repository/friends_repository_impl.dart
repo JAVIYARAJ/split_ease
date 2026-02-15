@@ -52,4 +52,14 @@ class FriendsRepositoryImpl implements FriendsRepository {
       return left(Failure(message: error.message));
     }
   }
+
+  @override
+  Future<Either<Failure, int>> getUnreadFriendRequestCount() async {
+    try {
+      final count = await friendsRemoteDataSource.getUnreadFriendRequestCount();
+      return right(count);
+    } on ServerException catch (error) {
+      return left(Failure(message: error.message));
+    }
+  }
 }

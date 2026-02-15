@@ -10,6 +10,7 @@ abstract interface class FriendsRemoteDataSource {
   Future<List<FriendModel>> getMyFriends();
   Future<List<FriendRequestModel>> getFriendRequests();
   Future<void> respondToFriendRequest(String friendshipId, String action);
+  Future<int> getUnreadFriendRequestCount();
 }
 
 class FriendRemoteDatSourceImpl implements FriendsRemoteDataSource {
@@ -61,6 +62,16 @@ class FriendRemoteDatSourceImpl implements FriendsRemoteDataSource {
           'p_action': action,
         },
       );
+    } catch (error) {
+      throw ServerException(message: ErrorMessageUtils.generate(error));
+    }
+  }
+
+  @override
+  Future<int> getUnreadFriendRequestCount() async {
+    try {
+      final response = await client.rpc('get_unread_friend_request_count_rpc');
+      return (response as int?) ?? 0;
     } catch (error) {
       throw ServerException(message: ErrorMessageUtils.generate(error));
     }

@@ -226,19 +226,6 @@ class AccountPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Center(
-                    child: Column(
-                      children: [
-                        Text("Made with :) in Providence, RI, USA", style: GoogleFonts.openSans(color: Colors.grey, fontSize: 12)),
-                        Text("Copyright © 2026 Splitwise, Inc.", style: GoogleFonts.openSans(color: Colors.grey, fontSize: 12)),
-                        Text("P.S. Kittens!", style: GoogleFonts.openSans(color: Colors.grey, fontSize: 12)),
-                        const SizedBox(height: 8),
-                        Text("25.12.2/985", style: GoogleFonts.openSans(color: Colors.grey, fontSize: 12)),
-                      ],
-                    ),
-                  ),
-
                   const SizedBox(height: 100), // Bottom padding
                 ],
               ),

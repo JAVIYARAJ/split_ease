@@ -24,6 +24,17 @@ class _FriendsPageState extends State<FriendsPage> {
   void initState() {
     super.initState();
     context.read<FriendsBloc>().add(LoadFriends());
+    context.read<FriendsBloc>().add(LoadUnreadFriendRequestCount());
+  }
+
+  void _navigateToRequests() async {
+    final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const FriendRequestsPage()));
+    if (context.mounted) {
+      context.read<FriendsBloc>().add(LoadUnreadFriendRequestCount());
+      if (result == true) {
+        context.read<FriendsBloc>().add(LoadFriends());
+      }
+    }
   }
 
   @override
@@ -41,30 +52,47 @@ class _FriendsPageState extends State<FriendsPage> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12.0),
-            child: InkWell(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const FriendRequestsPage()));
-              },
-              borderRadius: BorderRadius.circular(24),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.08),
+            child: BlocBuilder<FriendsBloc, FriendsState>(
+              buildWhen: (previous, current) => previous.unreadRequestCount != current.unreadRequestCount,
+              builder: (context, state) {
+                return InkWell(
+                  onTap: _navigateToRequests,
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: AppColors.primary.withOpacity(0.1)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.mark_email_unread_outlined, color: AppColors.primary, size: 18),
-                    const SizedBox(width: 6),
-                    Text(
-                      "Requests",
-                      style: GoogleFonts.outfit(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 14),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: AppColors.primary.withOpacity(0.1)),
                     ),
-                  ],
-                ),
-              ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.mark_email_unread_outlined, color: AppColors.primary, size: 18),
+                        const SizedBox(width: 6),
+                        Text(
+                          "Requests",
+                          style: GoogleFonts.outfit(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 14),
+                        ),
+                        if (state.unreadRequestCount > 0) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              state.unreadRequestCount > 99 ? '99+' : '${state.unreadRequestCount}',
+                              style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 11),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           IconButton(

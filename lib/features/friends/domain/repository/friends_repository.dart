@@ -8,4 +8,5 @@ abstract interface class FriendsRepository {
   Future<Either<Failure, List<FriendEntity>>> getMyFriends();
   Future<Either<Failure, List<FriendRequestEntity>>> getFriendRequests();
   Future<Either<Failure, void>> respondToFriendRequest(String friendshipId, String action);
+  Future<Either<Failure, int>> getUnreadFriendRequestCount();
 }

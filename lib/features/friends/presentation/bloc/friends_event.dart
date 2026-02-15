@@ -10,3 +10,5 @@ class FriendQrJoinEvent extends FriendsEvent{
 
   FriendQrJoinEvent({required this.friendId});
 }
+
+class LoadUnreadFriendRequestCount extends FriendsEvent {}

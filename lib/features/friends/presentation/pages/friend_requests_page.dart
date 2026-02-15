@@ -16,6 +16,8 @@ class FriendRequestsPage extends StatefulWidget {
 }
 
 class _FriendRequestsPageState extends State<FriendRequestsPage> {
+  bool _hasResponded = false;
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -23,31 +25,40 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
       child: BlocConsumer<FriendRequestsBloc, FriendRequestsState>(
         listener: (context, state) {
           if (state.respondStatus == RespondStatus.success) {
+            _hasResponded = true;
             AppAlerts.showSuccess(context, state.respondMessage);
           } else if (state.respondStatus == RespondStatus.failure) {
             AppAlerts.showError(context, state.respondMessage);
           }
         },
         builder: (context, state) {
-          return BaseScreen(
-            appBar: AppBar(
-              backgroundColor: Colors.white,
-              surfaceTintColor: Colors.transparent,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              centerTitle: false,
-              iconTheme: const IconThemeData(color: AppColors.textBlack),
-              title: Text(
-                'Friend Requests',
-                style: GoogleFonts.outfit(
-                  color: AppColors.textBlack,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 20,
+          return PopScope(
+            canPop: false,
+            onPopInvokedWithResult: (didPop, result) {
+              if (!didPop) {
+                Navigator.pop(context, _hasResponded);
+              }
+            },
+            child: BaseScreen(
+              appBar: AppBar(
+                backgroundColor: Colors.white,
+                surfaceTintColor: Colors.transparent,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                centerTitle: false,
+                iconTheme: const IconThemeData(color: AppColors.textBlack),
+                title: Text(
+                  'Friend Requests',
+                  style: GoogleFonts.outfit(
+                    color: AppColors.textBlack,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 20,
+                  ),
                 ),
               ),
+              backgroundColor: Colors.white,
+              child: _buildBody(state),
             ),
-            backgroundColor: Colors.white,
-            child: _buildBody(state),
           );
         },
       ),

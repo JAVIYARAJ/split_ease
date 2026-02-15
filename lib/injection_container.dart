@@ -18,6 +18,7 @@ import 'package:split_ease/features/friends/domain/repository/friends_repository
 import 'package:split_ease/features/friends/domain/usecases/friend_join.dart';
 import 'package:split_ease/features/friends/domain/usecases/get_my_friends.dart';
 import 'package:split_ease/features/friends/domain/usecases/get_friend_requests.dart';
+import 'package:split_ease/features/friends/domain/usecases/get_unread_friend_request_count.dart';
 import 'package:split_ease/features/friends/domain/usecases/respond_to_friend_request.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friends_bloc.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friend_requests_bloc.dart';
@@ -195,7 +196,9 @@ void _home() {
   sl.registerFactory(() => GetFriendRequests(friendsRepository: sl<FriendsRepository>()),);
   sl.registerFactory(() => RespondToFriendRequest(friendsRepository: sl<FriendsRepository>()),);
 
-  sl.registerFactory(() => FriendsBloc(friendJoin: sl<FriendJoin>(), getMyFriends: sl<GetMyFriends>()),);
+  sl.registerFactory(() => GetUnreadFriendRequestCount(friendsRepository: sl<FriendsRepository>()),);
+
+  sl.registerFactory(() => FriendsBloc(friendJoin: sl<FriendJoin>(), getMyFriends: sl<GetMyFriends>(), getUnreadFriendRequestCount: sl<GetUnreadFriendRequestCount>()),);
   sl.registerFactory(() => FriendRequestsBloc(getFriendRequests: sl<GetFriendRequests>(), respondToFriendRequest: sl<RespondToFriendRequest>()),);
 
   sl.registerFactory(() => GetAllGroups(groupRepository: sl<GroupRepository>()),);

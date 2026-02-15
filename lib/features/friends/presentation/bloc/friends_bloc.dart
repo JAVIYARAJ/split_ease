@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:split_ease/features/friends/domain/usecases/friend_join.dart';
 import 'package:split_ease/features/friends/domain/usecases/get_my_friends.dart';
+import 'package:split_ease/features/friends/domain/usecases/get_unread_friend_request_count.dart';
 import '../../../../core/usecases/use_case.dart';
 import '../../domain/entities/friend_entity.dart';
 
@@ -12,15 +13,19 @@ part 'friends_state.dart';
 class FriendsBloc extends Bloc<FriendsEvent, FriendsState> {
   final FriendJoin _friendJoin;
   final GetMyFriends _getMyFriends;
+  final GetUnreadFriendRequestCount _getUnreadFriendRequestCount;
 
   FriendsBloc({
     required FriendJoin friendJoin,
     required GetMyFriends getMyFriends,
+    required GetUnreadFriendRequestCount getUnreadFriendRequestCount,
   })  : _friendJoin = friendJoin,
         _getMyFriends = getMyFriends,
+        _getUnreadFriendRequestCount = getUnreadFriendRequestCount,
         super(const FriendsState()) {
     on<LoadFriends>(_onLoadFriends);
     on<FriendQrJoinEvent>(_onQrJoinFriend);
+    on<LoadUnreadFriendRequestCount>(_onLoadUnreadCount);
   }
 
   Future<void> _onLoadFriends(LoadFriends event, Emitter<FriendsState> emit) async {
@@ -49,5 +54,13 @@ class FriendsBloc extends Bloc<FriendsEvent, FriendsState> {
     } catch (e) {
       emit(state.copyWith(joinStatus: FriendJoinStatus.failure, joinErrorMessage: "Failed to join friend"));
     }
+  }
+
+  Future<void> _onLoadUnreadCount(LoadUnreadFriendRequestCount event, Emitter<FriendsState> emit) async {
+    final response = await _getUnreadFriendRequestCount(NoParams());
+    response.fold(
+      (_) {}, // silently ignore errors for badge count
+      (count) => emit(state.copyWith(unreadRequestCount: count)),
+    );
   }
 }
