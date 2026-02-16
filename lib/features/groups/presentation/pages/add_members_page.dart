@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/groups/domain/entities/group_friend_entity.dart';
@@ -40,6 +41,8 @@ class _AddMembersPageState extends State<AddMembersPage> {
           }
         },
         builder: (context, state) {
+          final selectedCount = state.selectedUserIds.length;
+
           return Scaffold(
             backgroundColor: Colors.white,
             appBar: AppBar(
@@ -48,52 +51,45 @@ class _AddMembersPageState extends State<AddMembersPage> {
               elevation: 0,
               scrolledUnderElevation: 0,
               centerTitle: true,
-              leadingWidth: 80,
-              leading: TextButton(
+              leading: IconButton(
+                icon: const Icon(Icons.close, color: AppColors.textBlack),
                 onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Cancel',
-                  style: GoogleFonts.outfit(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                  ),
-                ),
               ),
               title: Text(
-                'Add group members',
-                style: GoogleFonts.outfit(
+                'Add Members',
+                style: GoogleFonts.openSans(
                   color: AppColors.textBlack,
                   fontWeight: FontWeight.w700,
                   fontSize: 18,
                 ),
               ),
-              actions: [
-                if (state.selectedUserIds.isNotEmpty)
-                  TextButton(
+            ),
+            floatingActionButton: selectedCount > 0
+                ? FloatingActionButton.extended(
                     onPressed: state.submitStatus == AddMembersSubmitStatus.submitting
                         ? null
                         : () {
                             context.read<AddMembersBloc>().add(SubmitSelectedFriends(widget.groupId));
                           },
-                    child: state.submitStatus == AddMembersSubmitStatus.submitting
+                    backgroundColor: AppColors.primaryTeal,
+                    elevation: 4,
+                    icon: state.submitStatus == AddMembersSubmitStatus.submitting
                         ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                           )
-                        : Text(
-                            'Done',
-                            style: GoogleFonts.outfit(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                            ),
-                          ),
-                  ),
-                const SizedBox(width: 4),
-              ],
-            ),
+                        : const Icon(Icons.check, color: Colors.white),
+                    label: Text(
+                      "Add ($selectedCount)",
+                      style: GoogleFonts.openSans(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  )
+                : null,
             body: _buildBody(context, state),
           );
         },
@@ -103,7 +99,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
 
   Widget _buildBody(BuildContext context, AddMembersState state) {
     if (state.status == AddMembersStatus.loading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const Center(child: CircularProgressIndicator(color: AppColors.primaryTeal));
     }
 
     if (state.status == AddMembersStatus.failure) {
@@ -113,7 +109,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
           child: Text(
             state.errorMessage,
             textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(fontSize: 15, color: AppColors.textGrey),
+            style: GoogleFonts.openSans(fontSize: 15, color: AppColors.textGrey),
           ),
         ),
       );
@@ -130,21 +126,29 @@ class _AddMembersPageState extends State<AddMembersPage> {
       children: [
         // Search Bar
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
           child: TextField(
             controller: _searchController,
             onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
-            style: GoogleFonts.outfit(fontSize: 15),
+            style: GoogleFonts.openSans(fontSize: 16, color: AppColors.textBlack),
             decoration: InputDecoration(
-              hintText: 'Search friends...',
-              hintStyle: GoogleFonts.outfit(fontSize: 15, color: AppColors.iconGrey),
-              prefixIcon: const Icon(Icons.search, color: AppColors.iconGrey, size: 22),
+              hintText: 'Search friends by name...',
+              hintStyle: GoogleFonts.openSans(fontSize: 16, color: AppColors.textGrey.withValues(alpha: 0.6)),
+              prefixIcon: Icon(Icons.search, color: AppColors.textGrey.withValues(alpha: 0.6), size: 24),
               filled: true,
-              fillColor: const Color(0xFFF5F5F5),
-              contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              fillColor: AppColors.backgroundLightGrey,
+              contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: AppColors.primaryTeal, width: 1.5),
               ),
             ),
           ),
@@ -153,7 +157,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
         // Friend Lists
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.only(bottom: 24),
+            padding: const EdgeInsets.only(bottom: 100), // Space for FAB
             children: [
               // Already in group section
               if (filteredInGroup.isNotEmpty) ...[
@@ -168,6 +172,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
 
               // Friends section
               if (filteredNotInGroup.isNotEmpty) ...[
+                if (filteredInGroup.isNotEmpty) const SizedBox(height: 16),
                 _buildSectionHeader('Friends on SplitEase'),
                 ...filteredNotInGroup.map((f) => _buildFriendTile(
                       context,
@@ -179,12 +184,16 @@ class _AddMembersPageState extends State<AddMembersPage> {
 
               if (filteredInGroup.isEmpty && filteredNotInGroup.isEmpty)
                 Padding(
-                  padding: const EdgeInsets.only(top: 48),
-                  child: Center(
-                    child: Text(
-                      _searchQuery.isNotEmpty ? 'No friends match your search' : 'No friends found',
-                      style: GoogleFonts.outfit(fontSize: 15, color: AppColors.iconGrey),
-                    ),
+                  padding: const EdgeInsets.only(top: 64),
+                  child: Column(
+                    children: [
+                      Icon(Icons.search_off_rounded, size: 48, color: AppColors.textGrey.withValues(alpha: 0.3)),
+                      const SizedBox(height: 16),
+                      Text(
+                        _searchQuery.isNotEmpty ? 'No friends match "$_searchQuery"' : 'No friends found',
+                        style: GoogleFonts.openSans(fontSize: 16, color: AppColors.textGrey),
+                      ),
+                    ],
                   ),
                 ),
             ],
@@ -204,13 +213,14 @@ class _AddMembersPageState extends State<AddMembersPage> {
 
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       child: Text(
-        title,
-        style: GoogleFonts.outfit(
-          fontSize: 14,
+        title.toUpperCase(),
+        style: GoogleFonts.openSans(
+          fontSize: 12,
           fontWeight: FontWeight.w700,
           color: AppColors.textGrey,
+          letterSpacing: 1.0,
         ),
       ),
     );
@@ -222,88 +232,97 @@ class _AddMembersPageState extends State<AddMembersPage> {
     required bool isSelected,
     required bool isDisabled,
   }) {
-    return InkWell(
-      onTap: isDisabled
-          ? null
-          : () => context.read<AddMembersBloc>().add(ToggleFriendSelection(friend.userId)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Row(
-          children: [
-            // Avatar
-            CircleAvatar(
-              radius: 22,
-              backgroundImage: friend.avatarUrl != null ? NetworkImage(friend.avatarUrl!) : null,
-              backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-              child: friend.avatarUrl == null
-                  ? Text(
-                      friend.fullName.isNotEmpty ? friend.fullName[0].toUpperCase() : '?',
-                      style: GoogleFonts.outfit(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
-                      ),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 14),
-
-            // Name + subtitle
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    friend.fullName,
-                    style: GoogleFonts.outfit(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textBlack,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (isDisabled) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      'Already in group',
-                      style: GoogleFonts.outfit(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.iconGrey,
-                      ),
-                    ),
-                  ],
-                ],
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: isDisabled
+            ? null
+            : () => context.read<AddMembersBloc>().add(ToggleFriendSelection(friend.userId)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Row(
+            children: [
+              // Avatar
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.backgroundLightGrey,
+                  image: friend.avatarUrl != null
+                      ? DecorationImage(
+                          image: CachedNetworkImageProvider(friend.avatarUrl!),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: friend.avatarUrl == null
+                    ? Center(
+                        child: Text(
+                          friend.fullName.isNotEmpty ? friend.fullName[0].toUpperCase() : '?',
+                          style: GoogleFonts.openSans(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryTeal,
+                          ),
+                        ),
+                      )
+                    : null,
               ),
-            ),
+              const SizedBox(width: 16),
 
-            // Checkmark / Circle
-            _buildSelectionIndicator(isSelected, isDisabled),
-          ],
-        ),
-      ),
-    );
-  }
+              // Name + subtitle
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      friend.fullName,
+                      style: GoogleFonts.openSans(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isDisabled ? AppColors.textGrey : AppColors.textBlack,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (isDisabled) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        'Already in group',
+                        style: GoogleFonts.openSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textGrey.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
 
-  Widget _buildSelectionIndicator(bool isSelected, bool isDisabled) {
-    if (isSelected) {
-      return Container(
-        width: 26,
-        height: 26,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: isDisabled ? AppColors.primary.withValues(alpha: 0.5) : AppColors.primary,
+              // Selection Indicator
+              if (!isDisabled)
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isSelected ? AppColors.primaryTeal : Colors.transparent,
+                    border: Border.all(
+                      color: isSelected ? AppColors.primaryTeal : AppColors.borderGrey,
+                      width: 2,
+                    ),
+                  ),
+                  child: isSelected
+                      ? const Icon(Icons.check, color: Colors.white, size: 16)
+                      : null,
+                )
+              else
+                 Icon(Icons.check_circle, color: AppColors.textGrey.withValues(alpha: 0.3), size: 24),
+            ],
+          ),
         ),
-        child: const Icon(Icons.check, color: Colors.white, size: 16),
-      );
-    }
-    return Container(
-      width: 26,
-      height: 26,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: AppColors.borderGrey, width: 2),
       ),
     );
   }

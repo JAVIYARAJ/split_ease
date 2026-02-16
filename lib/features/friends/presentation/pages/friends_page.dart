@@ -41,79 +41,12 @@ class _FriendsPageState extends State<FriendsPage> {
   Widget build(BuildContext context) {
     return BaseScreen(
       backgroundColor: AppColors.backgroundWhite,
-      appBar: AppBar(
-        title: const SizedBox(),
-        backgroundColor: AppColors.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.search, color: Colors.black, size: 28),
-          onPressed: () {},
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: BlocBuilder<FriendsBloc, FriendsState>(
-              buildWhen: (previous, current) => previous.unreadRequestCount != current.unreadRequestCount,
-              builder: (context, state) {
-                return InkWell(
-                  onTap: _navigateToRequests,
-                  borderRadius: BorderRadius.circular(24),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: AppColors.primary.withOpacity(0.1)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.mark_email_unread_outlined, color: AppColors.primary, size: 18),
-                        const SizedBox(width: 6),
-                        Text(
-                          "Requests",
-                          style: GoogleFonts.outfit(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 14),
-                        ),
-                        if (state.unreadRequestCount > 0) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              state.unreadRequestCount > 99 ? '99+' : '${state.unreadRequestCount}',
-                              style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 11),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          IconButton(
-            onPressed: () async {
-              final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const QrScannerPage()));
-              if (result != null && result is String && context.mounted) {
-                context.read<FriendsBloc>().add(FriendQrJoinEvent(friendId: result));
-              }
-            },
-            icon: const Icon(Icons.qr_code_scanner, color: Colors.black),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 90.0), // Raise FAB above custom bottom nav
         child: FloatingActionButton.extended(
           heroTag: "friends_fab",
           onPressed: () {},
-          backgroundColor: const Color(0xFF00A99D),
-          // Teal/Green shade from image
+          backgroundColor: AppColors.primaryTealDark,
           icon: const Icon(Icons.receipt_long, color: Colors.white),
           label: Text(
             "Add expense",
@@ -133,73 +66,233 @@ class _FriendsPageState extends State<FriendsPage> {
             AppAlerts.showError(context, state.joinErrorMessage);
           }
         },
-        child: Column(
-          children: [
-            // Overall Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      text: 'Overall, you owe ',
-                      style: GoogleFonts.openSans(fontSize: 18, color: AppColors.textBlack, fontWeight: FontWeight.w500),
-                      children: [
-                        TextSpan(
-                          text: '₹0',
-                          style: GoogleFonts.openSans(fontSize: 18, color: AppColors.warningOrange, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.tune, color: Colors.black), // Filter icon
-                  ),
-                ],
-              ),
-            ),
-
-            // Friends List
-            Expanded(
-              child: BlocBuilder<FriendsBloc, FriendsState>(
-                builder: (context, state) {
-                  if (state.status == FriendsStatus.loading) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (state.status == FriendsStatus.success) {
-                    if (state.friends.isEmpty) {
-                      return const Center(child: Text("No friends found"));
-                    }
-                    return CustomRefreshIndicator(
-                      onRefresh: () async {
-                        context.read<FriendsBloc>().add(LoadFriends());
-                      },
-                      child: ListView.separated(
-                        itemCount: state.friends.length,
-                        separatorBuilder: (context, index) => Divider(color: Colors.grey.shade100, height: 1, indent: 80, endIndent: 24),
-                        itemBuilder: (context, index) {
-                          final friend = state.friends[index];
-                          return FriendListItem(
-                            friend: friend,
-                            onTap: () {
-                              // Navigate to friend details
-                            },
-                          );
-                        },
-                        padding: const EdgeInsets.only(bottom: 100), // Add padding for FAB + Nav Bar
-                      ),
-                    );
-                  } else if (state.status == FriendsStatus.failure) {
-                    return Center(child: Text(state.errorMessage));
-                  }
-                  return const SizedBox();
-                },
-              ),
-            ),
+        child: CustomScrollView(
+          slivers: [
+            _buildSliverAppBar(context),
+            _buildSummarySection(context),
+            _buildFriendsList(context),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSliverAppBar(BuildContext context) {
+    return SliverAppBar(
+      pinned: true,
+      floating: true,
+      centerTitle: false,
+      titleSpacing: 24,
+      automaticallyImplyLeading: false,
+      backgroundColor: AppColors.backgroundWhite,
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
+      title: Text(
+        "Friends",
+        style: GoogleFonts.openSans(
+          color: AppColors.textBlack,
+          fontWeight: FontWeight.bold,
+          fontSize: 28,
+        ),
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: BlocBuilder<FriendsBloc, FriendsState>(
+            buildWhen: (previous, current) => previous.unreadRequestCount != current.unreadRequestCount,
+            builder: (context, state) {
+              return InkWell(
+                onTap: _navigateToRequests,
+                borderRadius: BorderRadius.circular(24),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryTeal.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: AppColors.primaryTeal.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.mark_email_unread_outlined, color: AppColors.primaryTeal, size: 18),
+                      const SizedBox(width: 6),
+                      Text(
+                        "Requests",
+                        style: GoogleFonts.openSans(color: AppColors.primaryTeal, fontWeight: FontWeight.w600, fontSize: 13),
+                      ),
+                      if (state.unreadRequestCount > 0) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.warningOrange,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            state.unreadRequestCount > 99 ? '99+' : '${state.unreadRequestCount}',
+                            style: GoogleFonts.openSans(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 10),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        IconButton(
+          onPressed: () async {
+            final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const QrScannerPage()));
+            if (result != null && result is String && context.mounted) {
+              context.read<FriendsBloc>().add(FriendQrJoinEvent(friendId: result));
+            }
+          },
+          icon: const Icon(Icons.qr_code_scanner, color: AppColors.textBlack),
+        ),
+         IconButton(
+          icon: const Icon(Icons.search, color: AppColors.textBlack, size: 28),
+          onPressed: () {},
+        ),
+        const SizedBox(width: 16),
+      ],
+    );
+  }
+
+  Widget _buildSummarySection(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: Padding(
+         padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+         child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AppColors.primaryTeal, AppColors.primaryTealDark],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primaryTeal.withValues(alpha: 0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Total Balance",
+                style: GoogleFonts.openSans(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                       Text(
+                        "You owe",
+                        style: GoogleFonts.openSans(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        "₹0.00", // Placeholder or dynamic if available
+                        style: GoogleFonts.openSans(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      "Details >",
+                      style: GoogleFonts.openSans(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFriendsList(BuildContext context) {
+    return BlocBuilder<FriendsBloc, FriendsState>(
+      builder: (context, state) {
+        if (state.status == FriendsStatus.loading) {
+          return const SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
+          );
+        } else if (state.status == FriendsStatus.success) {
+          if (state.friends.isEmpty) {
+            return SliverFillRemaining(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.person_off_outlined, size: 60, color: Colors.grey.shade300),
+                    const SizedBox(height: 16),
+                    Text(
+                      "No friends found", 
+                      style: GoogleFonts.openSans(
+                        color: Colors.grey.shade500,
+                        fontSize: 16,
+                      )
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+          return SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final friend = state.friends[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                  child: FriendListItem(
+                    friend: friend,
+                    onTap: () {
+                      // Navigate to friend details
+                    },
+                  ),
+                );
+              },
+              childCount: state.friends.length,
+            ),
+          );
+        } else if (state.status == FriendsStatus.failure) {
+          return SliverFillRemaining(
+            child: Center(child: Text(state.errorMessage)),
+          );
+        }
+        return const SliverToBoxAdapter(child: SizedBox());
+      },
     );
   }
 }

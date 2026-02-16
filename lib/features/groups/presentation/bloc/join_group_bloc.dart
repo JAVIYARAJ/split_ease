@@ -11,11 +11,29 @@ class JoinGroupBloc extends Bloc<JoinGroupEvent, JoinGroupState> {
 
   JoinGroupBloc({required this.joinGroup}) : super(const JoinGroupState()) {
     on<JoinGroupCodeChanged>(_onCodeChanged);
+    on<JoinGroupQrScanned>(_onQrScanned);
     on<JoinGroupSubmitted>(_onSubmitted);
   }
 
   void _onCodeChanged(JoinGroupCodeChanged event, Emitter<JoinGroupState> emit) {
     emit(state.copyWith(code: event.code, status: JoinGroupStatus.initial));
+  }
+
+  Future<void> _onQrScanned(JoinGroupQrScanned event, Emitter<JoinGroupState> emit) async {
+    emit(state.copyWith(status: JoinGroupStatus.loading));
+
+    final result = await joinGroup(event.qrCode);
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: JoinGroupStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (group) => emit(state.copyWith(
+        status: JoinGroupStatus.success,
+        joinedGroupId: group,
+      )),
+    );
   }
 
   Future<void> _onSubmitted(JoinGroupSubmitted event, Emitter<JoinGroupState> emit) async {

@@ -14,11 +14,17 @@ class GroupListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
       decoration: BoxDecoration(
         color: AppColors.backgroundWhite,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 10, offset: const Offset(0, 4))],
+        border: Border.all(color: Colors.grey.shade200, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          )
+        ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -26,46 +32,93 @@ class GroupListItem extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(12.0),
             child: Row(
               children: [
                 // Group Icon
                 Hero(
-                  tag: group.id!,
+                  tag: group.id ?? "group_${group.name}",
                   child: Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: Colors.white),
-                    child: group.groupIcon != null
-                        ? AppImageView(url: group.groupIcon, height: 50, width: 50, radius: 12, fit: BoxFit.cover)
-                        : Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              gradient: const LinearGradient(
-                                colors: [AppColors.primaryTeal, AppColors.primaryTealDark],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.grey.shade50,
+                    ),
+                    child: ClipOval(
+                      child: group.groupIcon != null
+                          ? AppImageView(
+                              url: group.groupIcon,
+                              height: 56,
+                              width: 56,
+                              fit: BoxFit.cover,
+                            )
+                          : Container(
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [AppColors.primaryTeal, AppColors.primaryTealDark],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                              ),
+                              child: Icon(
+                                _getIconData(group.groupType),
+                                color: Colors.white,
+                                size: 28,
                               ),
                             ),
-                            child: Icon(_getIconData(group.groupType), color: Colors.white, size: 24),
-                          ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
 
-                // Name
+                // Name and Info
                 Expanded(
-                  child: Text(
-                    group.name ?? "Unnamed Group",
-                    style: GoogleFonts.openSans(fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.textBlack),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        group.name ?? "Unnamed Group",
+                        style: GoogleFonts.openSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textBlack,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                       Row(
+                        children: [
+                          Icon(
+                            _getIconData(group.groupType),
+                            size: 14,
+                            color: Colors.grey.shade500,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            group.groupType?.isNotEmpty == true ? (group.groupType![0].toUpperCase() + group.groupType!.substring(1)) : "Group",
+                            style: GoogleFonts.openSans(
+                              fontSize: 13,
+                              color: Colors.grey.shade500,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
 
-                // Forward Icon
-                const SizedBox(width: 8),
-                Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textBlack.withAlpha(155)),
+                // Settlement Status (Placeholder for now)
+                Container(
+                   decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                   ),
+                   padding: const EdgeInsets.all(8),
+                   child: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey.shade400),
+                ),
               ],
             ),
           ),
