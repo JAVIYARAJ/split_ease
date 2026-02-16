@@ -4,6 +4,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:split_ease/core/error/exception.dart';
 import 'package:split_ease/core/error/failure.dart';
 import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
+import 'package:split_ease/features/groups/domain/entities/group_friend_entity.dart';
 
 import '../../domain/repository/group_repository.dart';
 import '../datasources/group_remote_data_source.dart';
@@ -98,6 +99,26 @@ class GroupRepositoryImpl implements GroupRepository {
      try {
       var response = await dataSource.updateGroup(id, name, type, icon,inviteCode);
       return right(response);
+    } on ServerException catch (error) {
+      return left(Failure(message: error.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<GroupFriendEntity>>> getFriendsWithGroupStatus(String groupId) async {
+    try {
+      final models = await dataSource.getFriendsWithGroupStatus(groupId);
+      return right(models);
+    } on ServerException catch (error) {
+      return left(Failure(message: error.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> addMultipleFriendsToGroup(String groupId, List<String> userIds) async {
+    try {
+      await dataSource.addMultipleFriendsToGroup(groupId, userIds);
+      return right(null);
     } on ServerException catch (error) {
       return left(Failure(message: error.message));
     }

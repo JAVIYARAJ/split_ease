@@ -8,7 +8,6 @@ import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/core/utils/clipboard_utils.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
 import '../../../../../core/widgets/auth_field.dart';
-import '../widgets/group_type_card.dart';
 import '../bloc/create_group_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../domain/entities/group_type.dart';
@@ -68,28 +67,30 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
             elevation: 0,
             leadingWidth: 80,
             leading: TextButton(
-              onPressed: () {
-                NavigationService.pop();
-              },
+              onPressed: () => NavigationService.pop(),
               child: Text(
                 "Cancel",
                 style: GoogleFonts.openSans(
-                  color: AppColors.successGreen, // Green
+                  color: AppColors.textGrey,
                   fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
             ),
             centerTitle: true,
             title: Text(
-              state.isEditMode ? "Edit Group" : "Create a group",
-              style: GoogleFonts.openSans(color: AppColors.textBlack, fontSize: 18, fontWeight: FontWeight.w600),
+              state.isEditMode ? "Edit Group" : "New Group",
+              style: GoogleFonts.openSans(
+                color: AppColors.textBlack,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             actions: [
               Padding(
                 padding: const EdgeInsets.only(right: 8.0),
                 child: TextButton(
-                  onPressed: () {
+                  onPressed: state.status == CreateGroupStatus.loading ? null : () {
                     if (state.isEditMode) {
                       context.read<CreateGroupBloc>().add(UpdateGroupSubmitted(
                         groupId: state.createdGroupId!, 
@@ -103,11 +104,11 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                   child: state.status == CreateGroupStatus.loading
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                       : Text(
-                          state.isEditMode ? "Save" : "Done",
+                          state.isEditMode ? "Save" : "Create",
                           style: GoogleFonts.openSans(
-                            color: AppColors.successGreen, // Green
+                            color: AppColors.primaryTeal,
                             fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                 ),
@@ -115,150 +116,218 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
             ],
           ),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            padding: const EdgeInsets.all(24),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // 1. Header Section: Photo + Name
-                // 1. Header Section: Photo + Name
-                IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                const SizedBox(height: 20),
+                // 1. Centered Image Picker
+                GestureDetector(
+                  onTap: () {
+                    context.read<CreateGroupBloc>().add(const PickGroupImage());
+                  },
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
                     children: [
-                      // Camera Icon Container
-                      GestureDetector(
-                        onTap: () {
-                          context.read<CreateGroupBloc>().add(const PickGroupImage());
-                        },
-                        child: AspectRatio(
-                          aspectRatio: 1.0,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: AppColors.backgroundLightGrey, // Light grey background
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppColors.borderGreyLight, width: 1, style: BorderStyle.solid),
-                              image: state.groupImage != null 
-                                  ? DecorationImage(image: FileImage(state.groupImage!), fit: BoxFit.cover) 
-                                  : (state.existingIconUrl != null 
-                                      ? DecorationImage(image: CachedNetworkImageProvider(state.existingIconUrl!), fit: BoxFit.cover)
-                                      : null),
+                      Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.backgroundLightGrey,
+                          image: state.groupImage != null 
+                              ? DecorationImage(image: FileImage(state.groupImage!), fit: BoxFit.cover) 
+                              : (state.existingIconUrl != null 
+                                  ? DecorationImage(image: CachedNetworkImageProvider(state.existingIconUrl!), fit: BoxFit.cover)
+                                  : null),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
                             ),
-                            child: state.groupImage == null && state.existingIconUrl == null
-                                ? const Center(child: Icon(Icons.camera_alt_outlined, color: AppColors.textGrey, size: 28))
-                                : null,
-                          ),
+                          ],
                         ),
+                        child: state.groupImage == null && state.existingIconUrl == null
+                            ? Icon(Icons.camera_alt_outlined, color: AppColors.textGrey.withValues(alpha: 0.5), size: 40)
+                            : null,
                       ),
-                      const SizedBox(width: 16),
-                      // Group Name Input
-                      Expanded(
-                        child: AuthField(hint: "Enter your group name", controller: _groupNameController),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                          color: AppColors.primaryTeal,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.edit, color: Colors.white, size: 16),
                       ),
                     ],
                   ),
                 ),
-
+                
                 const SizedBox(height: 32),
 
-                // 2. Type Section
-                Text(
-                  "Type",
-                  style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                // 2. Group Name Input
+                AuthField(
+                  hint: "Group Name",
+                  controller: _groupNameController,
+                  // Since AuthField might not support centered text directly via property, we rely on its default. 
+                  // If we need centered, we might need to modify AuthField or wrap/replace it.
+                  // For now, let's stick to standard left align but clean look.
+                ),
+
+                const SizedBox(height: 40),
+
+                // 3. Group Type Selection
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Group Type",
+                    style: GoogleFonts.openSans(
+                      fontSize: 14, 
+                      fontWeight: FontWeight.w600, 
+                      color: AppColors.textGrey,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GroupTypeCard(
-                      icon: Icons.flight_takeoff,
-                      label: "Trip",
-                      isSelected: state.selectedType == GroupType.trip,
-                      onTap: () => context.read<CreateGroupBloc>().add(const SelectGroupType(GroupType.trip)),
-                    ),
-                    GroupTypeCard(
-                      icon: Icons.home_outlined,
-                      label: "Home",
-                      isSelected: state.selectedType == GroupType.home,
-                      onTap: () => context.read<CreateGroupBloc>().add(const SelectGroupType(GroupType.home)),
-                    ),
-                    GroupTypeCard(
-                      icon: Icons.favorite_border,
-                      label: "Couple",
-                      isSelected: state.selectedType == GroupType.couple,
-                      onTap: () => context.read<CreateGroupBloc>().add(const SelectGroupType(GroupType.couple)),
-                    ),
-                    GroupTypeCard(
-                      icon: Icons.list_alt,
-                      label: "Other",
-                      isSelected: state.selectedType == GroupType.other,
-                      onTap: () => context.read<CreateGroupBloc>().add(const SelectGroupType(GroupType.other)),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 32),
-
-                // Invite Code Section
-                Text(
-                  "Invite Code",
-                  style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textBlack),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "Share this code with your friends to join the group",
-                  style: GoogleFonts.openSans(fontSize: 12, color: Colors.grey),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                SizedBox(
+                  width: double.infinity,
+                  child: Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    alignment: WrapAlignment.start,
                     children: [
-                      Text(
-                        state.inviteCode,
-                        style: GoogleFonts.openSans(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
-                          color: AppColors.textBlack,
-                        ),
-                      ),
+                      _buildTypeChip(context, state, GroupType.trip, Icons.flight_takeoff, "Trip"),
+                      _buildTypeChip(context, state, GroupType.home, Icons.home_outlined, "Home"),
+                      _buildTypeChip(context, state, GroupType.couple, Icons.favorite_border, "Couple"),
+                      _buildTypeChip(context, state, GroupType.other, Icons.list_alt, "Other"),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 40),
+
+                // 4. Invite Code Section
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryTeal.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.primaryTeal.withValues(alpha: 0.2)),
+                  ),
+                  child: Column(
+                    children: [
                       Row(
-                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          IconButton(
-                            onPressed: () {
-                              ClipboardUtils.copyToClipboard(context, state.inviteCode, successMessage: "Invite code copied!");
-                            },
-                            icon: const Icon(Icons.copy_rounded, color: AppColors.primaryTeal),
-                            tooltip: "Copy Code",
+                          Text(
+                            "Invite Code",
+                            style: GoogleFonts.openSans(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primaryTeal,
+                            ),
                           ),
-                          IconButton(
+                           IconButton(
                             onPressed: state.isGeneratingCode
                                 ? null
                                 : () {
                               context.read<CreateGroupBloc>().add(const GenerateInviteCode());
                             },
                             icon: state.isGeneratingCode
-                                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                                : const Icon(Icons.refresh, color: AppColors.primaryTeal),
+                                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                : const Icon(Icons.refresh, color: AppColors.primaryTeal, size: 20),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              state.inviteCode,
+                              style: GoogleFonts.robotoMono( 
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 2,
+                                color: AppColors.textBlack,
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                ClipboardUtils.copyToClipboard(context, state.inviteCode, successMessage: "Invite code copied!");
+                              },
+                              icon: const Icon(Icons.copy_rounded, color: AppColors.textGrey, size: 20),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              tooltip: "Copy Code",
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Share this code with friends to let them join.",
+                        style: GoogleFonts.openSans(fontSize: 12, color: AppColors.textGrey),
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
                 ),
-
               ],
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildTypeChip(BuildContext context, CreateGroupState state, GroupType type, IconData icon, String label) {
+    final isSelected = state.selectedType == type;
+    return GestureDetector(
+      onTap: () => context.read<CreateGroupBloc>().add(SelectGroupType(type)),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primaryTeal : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isSelected ? AppColors.primaryTeal : Colors.grey.shade300,
+          ),
+          boxShadow: isSelected 
+              ? [BoxShadow(color: AppColors.primaryTeal.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))]
+              : [],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: isSelected ? Colors.white : AppColors.textGrey,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: GoogleFonts.openSans(
+                color: isSelected ? Colors.white : AppColors.textGrey,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
