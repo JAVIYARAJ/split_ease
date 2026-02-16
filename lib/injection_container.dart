@@ -36,6 +36,9 @@ import 'package:split_ease/features/groups/presentation/bloc/group_settings_bloc
 import 'package:split_ease/features/groups/domain/usecases/leave_group.dart';
 import 'package:split_ease/features/groups/domain/usecases/delete_group.dart';
 import 'package:split_ease/features/groups/presentation/bloc/join_group_bloc.dart';
+import 'package:split_ease/features/groups/domain/usecases/get_friends_with_group_status.dart';
+import 'package:split_ease/features/groups/domain/usecases/add_friends_to_group.dart';
+import 'package:split_ease/features/groups/presentation/bloc/add_members_bloc.dart';
 import 'package:split_ease/features/splash/data/datasources/splash_remote_data_source.dart';
 import 'package:split_ease/features/splash/data/repository/splash_repository_impl.dart';
 import 'package:split_ease/features/splash/domain/repository/splash_repository.dart';
@@ -160,6 +163,13 @@ void _group() {
     getGroupDetail: sl<GetGroupDetail>(),
     deleteGroup: sl<DeleteGroup>(),
     authRepository: sl<AuthRepository>(),
+  ));
+
+  sl.registerFactory(() => GetFriendsWithGroupStatus(groupRepository: sl<GroupRepository>()));
+  sl.registerFactory(() => AddFriendsToGroup(groupRepository: sl<GroupRepository>()));
+  sl.registerFactory(() => AddMembersBloc(
+    getFriendsWithGroupStatus: sl<GetFriendsWithGroupStatus>(),
+    addFriendsToGroup: sl<AddFriendsToGroup>(),
   ));
 }
 

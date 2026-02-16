@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:split_ease/core/utils/error_message_utils.dart';
+import 'package:split_ease/features/groups/data/models/group_friend_model.dart';
 import 'package:split_ease/features/groups/data/models/group_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
@@ -23,6 +24,10 @@ abstract interface class GroupRemoteDataSource {
   Future<bool> deleteGroup(String groupId);
 
   Future<bool> updateGroup(String id, String name, String type, String? icon,String inviteCode);
+
+  Future<List<GroupFriendModel>> getFriendsWithGroupStatus(String groupId);
+
+  Future<void> addMultipleFriendsToGroup(String groupId, List<String> userIds);
 }
 
 class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
@@ -149,6 +154,34 @@ class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
       var payload = {"name": name, "group_type": type, if(icon != null) "group_icon": icon,"invite_code":inviteCode};
       await client.from("group").update(payload).eq("id", id);
       return true;
+    } catch (error) {
+      throw ServerException(message: ErrorMessageUtils.generate(error));
+    }
+  }
+
+  @override
+  Future<List<GroupFriendModel>> getFriendsWithGroupStatus(String groupId) async {
+    try {
+      final response = await client.rpc(
+        'get_my_friends_with_group_status_rpc',
+        params: {'p_group_id': groupId},
+      );
+      return (response as List).map((e) => GroupFriendModel.fromJson(e)).toList();
+    } catch (error) {
+      throw ServerException(message: ErrorMessageUtils.generate(error));
+    }
+  }
+
+  @override
+  Future<void> addMultipleFriendsToGroup(String groupId, List<String> userIds) async {
+    try {
+      await client.rpc(
+        'add_multiple_friends_to_group_rpc',
+        params: {
+          'p_group_id': groupId,
+          'p_user_ids': userIds,
+        },
+      );
     } catch (error) {
       throw ServerException(message: ErrorMessageUtils.generate(error));
     }
