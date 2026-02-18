@@ -3,7 +3,7 @@ import 'package:split_ease/features/groups/data/models/group_member_model.dart';
 import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
 
 class GroupModel extends GroupEntity {
-  GroupModel({
+  const GroupModel({
     super.id,
     super.name,
     super.createdBy,
@@ -12,29 +12,27 @@ class GroupModel extends GroupEntity {
     super.updatedAt,
     super.createdAt,
     super.groupType,
+    super.groupIcon,
     super.inviteCode,
     super.members,
   });
 
-  GroupModel.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    name = json['name'];
-    if(json['created_by']!=null){
-      createdBy = UserModel.fromJson(json['created_by']); 
-    }
-    isActive = json['is_active'];
-    isDeleted = json['is_deleted'];
-    updatedAt = json['updated_at'];
-    createdAt = json['created_at'];
-    groupType = json['group_type'];
-    groupIcon = json['group_icon'];
-    inviteCode = json['invite_code'];
-    if (json['members'] != null) {
-      members = <GroupMemberModel>[];
-      json['members'].forEach((v) {
-        members!.add(GroupMemberModel.fromJson(v));
-      });
-    }
+  factory GroupModel.fromJson(Map<String, dynamic> json) {
+    return GroupModel(
+      id: json['id'],
+      name: json['name'],
+      createdBy: json['created_by'] != null ? UserModel.fromJson(json['created_by']) : null,
+      isActive: json['is_active'],
+      isDeleted: json['is_deleted'],
+      updatedAt: json['updated_at'],
+      createdAt: json['created_at'],
+      groupType: json['group_type'],
+      groupIcon: json['group_icon'],
+      inviteCode: json['invite_code'],
+      members: json['members'] != null
+          ? (json['members'] as List).map((v) => GroupMemberModel.fromJson(v)).toList()
+          : null,
+    );
   }
 
   Map<String, dynamic> toJson() {

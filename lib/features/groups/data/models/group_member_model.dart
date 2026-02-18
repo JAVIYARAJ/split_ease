@@ -1,7 +1,7 @@
 import 'package:split_ease/features/groups/domain/entities/group_member_entity.dart';
 
 class GroupMemberModel extends GroupMemberEntity {
-  GroupMemberModel({
+  const GroupMemberModel({
     required super.memberId,
     required super.userId,
     required super.fullName,

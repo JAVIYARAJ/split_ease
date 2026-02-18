@@ -20,6 +20,10 @@ import '../../features/groups/presentation/pages/group_detail_page.dart';
 import 'app_routes.dart';
 
 // Import pages
+import '../../features/expenses/presentation/pages/add_expense_page.dart';
+import '../../features/expenses/presentation/pages/payer_selection_page.dart';
+import '../../features/expenses/presentation/pages/split_options_page.dart';
+import '../../features/expenses/presentation/pages/date_selection_page.dart';
 
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -75,6 +79,22 @@ class RouteGenerator {
               create: (context) => sl<JoinGroupBloc>(),
               child: EnterInviteCodePage(),
             ));
+      case AppRoutes.addExpense:
+        return MaterialPageRoute(
+            builder: (_) => const AddExpensePage(),
+            settings: RouteSettings(arguments: settings.arguments, name: settings.name));
+      case AppRoutes.payerSelection:
+        return MaterialPageRoute(
+            builder: (_) => const PayerSelectionPage(),
+            settings: RouteSettings(arguments: settings.arguments, name: settings.name));
+      case AppRoutes.splitOptions:
+        return MaterialPageRoute(
+            builder: (_) => const SplitOptionsPage(),
+            settings: RouteSettings(arguments: settings.arguments, name: settings.name));
+      case AppRoutes.dateSelection:
+        return MaterialPageRoute(
+            builder: (_) => const DateSelectionPage(),
+            settings: RouteSettings(arguments: settings.arguments, name: settings.name));
       default:
         return _errorRoute();
     }

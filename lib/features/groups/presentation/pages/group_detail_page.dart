@@ -1,3 +1,4 @@
+import "package:split_ease/features/expenses/presentation/pages/add_expense_page.dart";
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,6 +8,8 @@ import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/features/groups/presentation/bloc/group_detail_bloc.dart';
 import 'package:split_ease/features/groups/presentation/pages/group_settings_page.dart';
 
+import 'package:split_ease/core/routing/app_routes.dart';
+import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
 
 
@@ -56,7 +59,15 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       useSafeArea: false,
       backgroundColor: AppColors.backgroundWhite,
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
+        onPressed: () {
+          final state = context.read<GroupDetailBloc>().state;
+          if (state.groupEntity != null) {
+            NavigationService.pushNamed(
+              AppRoutes.addExpense,
+              args: {'group': state.groupEntity},
+            );
+          }
+        },
         backgroundColor: AppColors.primaryTeal,
         icon: const Icon(Icons.receipt_long, color: Colors.white),
         label: Text(

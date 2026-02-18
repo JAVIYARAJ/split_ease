@@ -1,21 +1,22 @@
+import 'package:equatable/equatable.dart';
 import 'package:split_ease/features/auth/domain/entities/user_entity.dart';
 import 'package:split_ease/features/groups/domain/entities/group_member_entity.dart';
 
-class GroupEntity {
-  String? id;
-  String? name;
-  UserEntity? createdBy;
-  bool? isActive;
-  bool? isDeleted;
-  String? updatedAt;
-  String? createdAt;
-  String? groupType;
-  String? groupIcon;
-  String? inviteCode;
-  List<GroupMemberEntity>? members;
+class GroupEntity extends Equatable {
+  final String? id;
+  final String? name;
+  final UserEntity? createdBy;
+  final bool? isActive;
+  final bool? isDeleted;
+  final String? updatedAt;
+  final String? createdAt;
+  final String? groupType;
+  final String? groupIcon;
+  final String? inviteCode;
+  final List<GroupMemberEntity>? members;
 
 
-  GroupEntity({
+  const GroupEntity({
     this.id,
     this.name,
     this.createdBy,
@@ -28,4 +29,19 @@ class GroupEntity {
     this.inviteCode,
     this.members,
   });
+
+  @override
+  List<Object?> get props => [
+        id,
+        name,
+        createdBy,
+        isActive,
+        isDeleted,
+        updatedAt,
+        createdAt,
+        groupType,
+        groupIcon,
+        inviteCode,
+        members,
+      ];
 }

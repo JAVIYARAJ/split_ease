@@ -1,6 +1,6 @@
-import 'dart:core';
+import 'package:equatable/equatable.dart';
 
-class GroupMemberEntity {
+class GroupMemberEntity extends Equatable {
   final String? memberId;
   final String? userId;
   final String? fullName;
@@ -9,7 +9,7 @@ class GroupMemberEntity {
   final String? joinedAt;
   final String? avtar;
 
-  GroupMemberEntity({
+  const GroupMemberEntity({
     required this.memberId,
     required this.userId,
     required this.fullName,
@@ -18,4 +18,7 @@ class GroupMemberEntity {
     required this.joinedAt,
     required this.avtar,
   });
+
+  @override
+  List<Object?> get props => [memberId, userId, fullName, email, role, joinedAt, avtar];
 }

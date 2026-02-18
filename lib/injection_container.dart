@@ -51,6 +51,7 @@ import 'core/services/realtime_service.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/domain/usecases/user_login.dart';
 
+import 'features/expenses/presentation/bloc/expense_bloc.dart';
 import 'features/groups/domain/usecases/group_insert_icon.dart';
 import 'features/groups/presentation/bloc/groups_bloc.dart';
 import 'features/groups/presentation/bloc/create_group_bloc.dart';
@@ -122,6 +123,11 @@ void _features() {
   _group();
   _inviteCode();
   _profile();
+  _expense();
+}
+
+void _expense() {
+  sl.registerLazySingleton(() => ExpenseBloc());
 }
 
 void _profile() {
