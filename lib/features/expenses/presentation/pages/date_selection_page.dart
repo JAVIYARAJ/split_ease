@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:split_ease/features/expenses/presentation/bloc/expense_bloc.dart';
+import 'package:split_ease/features/expenses/presentation/bloc/date/date_bloc.dart';
 
 import '../../../../injection_container.dart';
 
@@ -12,42 +12,24 @@ class DateSelectionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: sl<ExpenseBloc>(),
-      child: BlocBuilder<ExpenseBloc, ExpenseState>(
-        builder: (context, state) {
-          final initialDate = state.date ?? DateTime.now();
-          return _DateSelectionView(
-            initialDate: initialDate,
-          );
-        },
-      ),
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final initialDate = args['initialDate'] as DateTime?;
+
+    return BlocProvider(
+      create: (context) => sl<DateBloc>()..add(InitializeDateEvent(initialDate: initialDate)),
+      child: const _DateSelectionView(),
     );
   }
 }
 
 class _DateSelectionView extends StatefulWidget {
-  final DateTime initialDate;
-
-  const _DateSelectionView({
-    required this.initialDate,
-  });
+  const _DateSelectionView();
 
   @override
   State<_DateSelectionView> createState() => _DateSelectionViewState();
 }
 
 class _DateSelectionViewState extends State<_DateSelectionView> {
-  late DateTime _focusedDay;
-  late DateTime _selectedDay;
-
-  @override
-  void initState() {
-    super.initState();
-    _focusedDay = widget.initialDate;
-    _selectedDay = widget.initialDate;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,78 +59,82 @@ class _DateSelectionViewState extends State<_DateSelectionView> {
         ),
         centerTitle: true,
         actions: [
-          TextButton(
-            onPressed: () {
-              context.read<ExpenseBloc>().add(DateChanged(_selectedDay));
-              Navigator.pop(context);
+          BlocBuilder<DateBloc, DateState>(
+            builder: (context, state) {
+              return TextButton(
+                onPressed: () {
+                  Navigator.pop(context, state.selectedDate);
+                },
+                child: Text(
+                  "Done",
+                  style: GoogleFonts.openSans(
+                    color: AppColors.primaryTeal,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+              );
             },
-            child: Text(
-              "Done",
-              style: GoogleFonts.openSans(
-                color: AppColors.primaryTeal,
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-              ),
-            ),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          TableCalendar(
-            firstDay: DateTime.utc(2020, 1, 1),
-            lastDay: DateTime.utc(2030, 12, 31),
-            focusedDay: _focusedDay,
-            currentDay: _selectedDay,
-            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-            onDaySelected: (selectedDay, focusedDay) {
-              setState(() {
-                _selectedDay = selectedDay;
-                _focusedDay = focusedDay;
-              });
-            },
-            headerStyle: HeaderStyle(
-              formatButtonVisible: false,
-              titleCentered: true,
-              titleTextStyle: GoogleFonts.openSans(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textBlack,
+      body: BlocBuilder<DateBloc, DateState>(
+        builder: (context, state) {
+          return Column(
+            children: [
+              TableCalendar(
+                firstDay: DateTime.utc(2020, 1, 1),
+                lastDay: DateTime.utc(2030, 12, 31),
+                focusedDay: state.focusedDay,
+                currentDay: state.selectedDate,
+                selectedDayPredicate: (day) => isSameDay(state.selectedDate, day),
+                onDaySelected: (selectedDay, focusedDay) {
+                  context.read<DateBloc>().add(DateSelectedEvent(selectedDate: selectedDay, focusedDay: focusedDay));
+                },
+                headerStyle: HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                  titleTextStyle: GoogleFonts.openSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textBlack,
+                  ),
+                ),
+                calendarStyle: CalendarStyle(
+                  selectedDecoration: const BoxDecoration(
+                    color: AppColors.primaryTeal,
+                    shape: BoxShape.circle,
+                  ),
+                  todayDecoration: const BoxDecoration(
+                    color: Colors.transparent,
+                    shape: BoxShape.circle,
+                  ),
+                  todayTextStyle: GoogleFonts.openSans(
+                      color: AppColors.primaryTeal, fontWeight: FontWeight.bold),
+                  defaultTextStyle: GoogleFonts.openSans(color: AppColors.textBlack),
+                  weekendTextStyle: GoogleFonts.openSans(color: AppColors.textBlack),
+                ),
               ),
-            ),
-            calendarStyle: CalendarStyle(
-              selectedDecoration: const BoxDecoration(
-                color: AppColors.primaryTeal,
-                shape: BoxShape.circle,
-              ),
-              todayDecoration: const BoxDecoration(
-                color: Colors.transparent,
-                shape: BoxShape.circle,
-              ),
-              todayTextStyle: GoogleFonts.openSans(
-                  color: AppColors.primaryTeal, fontWeight: FontWeight.bold),
-              defaultTextStyle: GoogleFonts.openSans(color: AppColors.textBlack),
-              weekendTextStyle: GoogleFonts.openSans(color: AppColors.textBlack),
-            ),
-          ),
-           const Spacer(),
-           Padding(
-             padding: const EdgeInsets.all(16.0),
-             child: Row(
-               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-               children: [
-                 Text("Repeat", style: GoogleFonts.openSans(fontSize: 16, color: AppColors.textBlack)),
-                 Row(
+               const Spacer(),
+               Padding(
+                 padding: const EdgeInsets.all(16.0),
+                 child: Row(
+                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                    children: [
-                     Text("Just this once", style: GoogleFonts.openSans(fontSize: 16, color: AppColors.textGrey)),
-                     const Icon(Icons.chevron_right, color: AppColors.iconGrey),
+                     Text("Repeat", style: GoogleFonts.openSans(fontSize: 16, color: AppColors.textBlack)),
+                     Row(
+                       children: [
+                         Text("Just this once", style: GoogleFonts.openSans(fontSize: 16, color: AppColors.textGrey)),
+                         const Icon(Icons.chevron_right, color: AppColors.iconGrey),
+                       ],
+                     )
                    ],
-                 )
-               ],
-             ),
-           ),
-           const SizedBox(height: 20),
-        ],
+                 ),
+               ),
+               const SizedBox(height: 20),
+            ],
+          );
+        },
       ),
     );
   }

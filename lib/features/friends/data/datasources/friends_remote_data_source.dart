@@ -4,6 +4,7 @@ import '../../../../core/error/exception.dart';
 import '../../../../core/utils/error_message_utils.dart';
 import '../models/friend_model.dart';
 import '../models/friend_request_model.dart';
+import '../models/friend_expense_history_model.dart';
 
 abstract interface class FriendsRemoteDataSource {
   Future<dynamic> joinFriends(String friendId);
@@ -11,6 +12,7 @@ abstract interface class FriendsRemoteDataSource {
   Future<List<FriendRequestModel>> getFriendRequests();
   Future<void> respondToFriendRequest(String friendshipId, String action);
   Future<int> getUnreadFriendRequestCount();
+  Future<FriendExpenseHistoryModel> getFriendExpenseHistory(String friendId);
 }
 
 class FriendRemoteDatSourceImpl implements FriendsRemoteDataSource {
@@ -35,7 +37,7 @@ class FriendRemoteDatSourceImpl implements FriendsRemoteDataSource {
   @override
   Future<List<FriendModel>> getMyFriends() async {
     try {
-      final response = await client.rpc('get_my_friends_rpc');
+      final response = await client.rpc('get_my_friends_rpc_v2');
       return (response as List).map((e) => FriendModel.fromJson(e)).toList();
     }catch(error){
       throw ServerException(message: ErrorMessageUtils.generate(error));
@@ -72,6 +74,19 @@ class FriendRemoteDatSourceImpl implements FriendsRemoteDataSource {
     try {
       final response = await client.rpc('get_unread_friend_request_count_rpc');
       return (response as int?) ?? 0;
+    } catch (error) {
+      throw ServerException(message: ErrorMessageUtils.generate(error));
+    }
+  }
+
+  @override
+  Future<FriendExpenseHistoryModel> getFriendExpenseHistory(String friendId) async {
+    try {
+      final response = await client.rpc(
+        'get_friend_detail_dashboard_rpc', // Using this as requested in the plan
+        params: {'p_user_id': friendId},
+      );
+      return FriendExpenseHistoryModel.fromJson(response as Map<String, dynamic>);
     } catch (error) {
       throw ServerException(message: ErrorMessageUtils.generate(error));
     }

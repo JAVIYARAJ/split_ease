@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:split_ease/core/utils/error_message_utils.dart';
+import 'package:split_ease/features/groups/data/models/group_expense_history_model.dart';
 import 'package:split_ease/features/groups/data/models/group_friend_model.dart';
 import 'package:split_ease/features/groups/data/models/group_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -28,6 +29,8 @@ abstract interface class GroupRemoteDataSource {
   Future<List<GroupFriendModel>> getFriendsWithGroupStatus(String groupId);
 
   Future<void> addMultipleFriendsToGroup(String groupId, List<String> userIds);
+
+  Future<GroupExpenseHistoryModel> getGroupExpenseHistory(String groupId);
 }
 
 class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
@@ -70,7 +73,7 @@ class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
     try {
 
       final response = await client
-          .rpc("get_my_groups");
+          .rpc("get_my_groups_dashboard_rpc");
 
       return (response as List)
           .map((e) => GroupModel.fromJson(e))
@@ -182,6 +185,19 @@ class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
           'p_user_ids': userIds,
         },
       );
+    } catch (error) {
+      throw ServerException(message: ErrorMessageUtils.generate(error));
+    }
+  }
+
+  @override
+  Future<GroupExpenseHistoryModel> getGroupExpenseHistory(String groupId) async {
+    try {
+      final response = await client.rpc(
+        'get_group_detail_dashboard_rpc',
+        params: {'p_group_id': groupId},
+      );
+      return GroupExpenseHistoryModel.fromJson(response as Map<String, dynamic>);
     } catch (error) {
       throw ServerException(message: ErrorMessageUtils.generate(error));
     }

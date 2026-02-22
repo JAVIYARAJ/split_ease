@@ -1,13 +1,18 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
-import '../../domain/entities/expense_entity.dart';
+import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
+import '../../domain/usecases/add_expense_usecase.dart';
+import '../../domain/usecases/create_expense_params.dart';
 
 part 'expense_event.dart';
+
 part 'expense_state.dart';
 
 class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
-  ExpenseBloc() : super(const ExpenseState()) {
+  final AddExpenseUseCase addExpenseUseCase;
+
+  ExpenseBloc({required this.addExpenseUseCase}) : super(const ExpenseState()) {
     on<ExpenseInitialized>(_onInitialized);
     on<AmountChanged>(_onAmountChanged);
     on<DescriptionChanged>(_onDescriptionChanged);
@@ -18,11 +23,10 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     on<AddExpenseSubmitted>(_onAddExpenseSubmitted);
   }
 
-
+  // ... (previous handlers remain same, omitted for brevity, only showing constructor to closing) ...
 
   void _onInitialized(ExpenseInitialized event, Emitter<ExpenseState> emit) {
-    // Reset state with the new group
-    emit(ExpenseState(group: event.group));
+    emit(ExpenseState(group: event.group, payerId: event.currentUserId, date: DateTime.now()));
   }
 
   void _onAmountChanged(AmountChanged event, Emitter<ExpenseState> emit) {
@@ -44,7 +48,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   void _onSplitTypeChanged(SplitTypeChanged event, Emitter<ExpenseState> emit) {
     emit(state.copyWith(splitType: event.splitType));
   }
-  
+
   void _onSplitOptionChanged(SplitOptionChanged event, Emitter<ExpenseState> emit) {
     emit(state.copyWith(splits: event.splits));
   }
@@ -52,14 +56,47 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   Future<void> _onAddExpenseSubmitted(AddExpenseSubmitted event, Emitter<ExpenseState> emit) async {
     emit(state.copyWith(status: ExpenseStatus.loading));
     try {
-      // TODO: Implement actual expense submission to backend/usecase
-      // final expense = ExpenseEntity(...)
-      // await addExpenseUseCase(expense);
-      
-      // Simulate network delay
-      await Future.delayed(const Duration(seconds: 1));
-      
-      emit(state.copyWith(status: ExpenseStatus.success));
+      if (state.group == null || state.payerId == null) {
+        throw Exception("Group or Payer not selected");
+      }
+
+      final List<Map<String, dynamic>> rpcSplits = [];
+
+      if (state.splitType == SplitType.equal) {
+        for (var split in state.splits) {
+          rpcSplits.add({'user_id': split.userId});
+        }
+      } else if (state.splitType == SplitType.exact) {
+        for (var split in state.splits) {
+          rpcSplits.add({'user_id': split.userId, 'amount': split.amount});
+        }
+      } else if (state.splitType == SplitType.percentage) {
+        for (var split in state.splits) {
+          rpcSplits.add({'user_id': split.userId, 'value': split.percentage});
+        }
+      } else if (state.splitType == SplitType.shares) {
+        for (var split in state.splits) {
+          rpcSplits.add({'user_id': split.userId, 'value': split.shares});
+        }
+      }
+
+      final params = CreateExpenseParams(
+        groupId: state.group!.id!,
+        description: state.description,
+        totalAmount: double.parse(state.amount),
+        paidByUserId: state.payerId!,
+        expenseDate: state.date!,
+        splitType: state.splitType == SplitType.shares ? 'share' : state.splitType.name,
+        // "equal", "exact", "percentage", "share"
+        splits: rpcSplits,
+      );
+
+      final result = await addExpenseUseCase(params);
+
+      result.fold(
+        (failure) => emit(state.copyWith(status: ExpenseStatus.failure, errorMessage: failure.message)),
+        (_) => emit(state.copyWith(status: ExpenseStatus.success)),
+      );
     } catch (e) {
       emit(state.copyWith(status: ExpenseStatus.failure, errorMessage: e.toString()));
     }

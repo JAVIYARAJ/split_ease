@@ -22,6 +22,8 @@ import 'package:split_ease/features/friends/domain/usecases/get_unread_friend_re
 import 'package:split_ease/features/friends/domain/usecases/respond_to_friend_request.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friends_bloc.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friend_requests_bloc.dart';
+import 'package:split_ease/features/friends/presentation/bloc/friend_detail_bloc.dart';
+import 'package:split_ease/features/friends/domain/usecases/get_friend_expense_history_usecase.dart';
 import 'package:split_ease/features/groups/data/datasources/group_remote_data_source.dart';
 import 'package:split_ease/features/groups/data/repository/group_repository_impl.dart';
 import 'package:split_ease/features/groups/domain/repository/group_repository.dart';
@@ -38,6 +40,7 @@ import 'package:split_ease/features/groups/domain/usecases/delete_group.dart';
 import 'package:split_ease/features/groups/presentation/bloc/join_group_bloc.dart';
 import 'package:split_ease/features/groups/domain/usecases/get_friends_with_group_status.dart';
 import 'package:split_ease/features/groups/domain/usecases/add_friends_to_group.dart';
+import 'package:split_ease/features/groups/domain/usecases/get_group_expense_history.dart';
 import 'package:split_ease/features/groups/presentation/bloc/add_members_bloc.dart';
 import 'package:split_ease/features/splash/data/datasources/splash_remote_data_source.dart';
 import 'package:split_ease/features/splash/data/repository/splash_repository_impl.dart';
@@ -52,6 +55,13 @@ import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/domain/usecases/user_login.dart';
 
 import 'features/expenses/presentation/bloc/expense_bloc.dart';
+import 'features/expenses/presentation/bloc/payer/payer_bloc.dart';
+import 'features/expenses/presentation/bloc/split/split_bloc.dart';
+import 'features/expenses/presentation/bloc/date/date_bloc.dart';
+import 'features/expenses/data/datasources/expense_remote_data_source.dart';
+import 'features/expenses/data/repositories/expense_repository_impl.dart';
+import 'features/expenses/domain/repositories/expense_repository.dart';
+import 'features/expenses/domain/usecases/add_expense_usecase.dart';
 import 'features/groups/domain/usecases/group_insert_icon.dart';
 import 'features/groups/presentation/bloc/groups_bloc.dart';
 import 'features/groups/presentation/bloc/create_group_bloc.dart';
@@ -101,7 +111,7 @@ Future<void> _core() async {
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton(() => sharedPreferences);
 
-  // App Settings (FTUX)
+  // App Settings
   sl.registerLazySingleton<AppSettingsLocalDataSource>(() => AppSettingsLocalDataSourceImpl(sl()));
   sl.registerLazySingleton<AppSettingsRepository>(() => AppSettingsRepositoryImpl(sl()));
   sl.registerLazySingleton(() => IsFirstTimeUser(sl()));
@@ -127,7 +137,19 @@ void _features() {
 }
 
 void _expense() {
-  sl.registerLazySingleton(() => ExpenseBloc());
+  // Use cases
+  sl.registerLazySingleton(() => AddExpenseUseCase(sl()));
+
+  // Repository
+  sl.registerLazySingleton<ExpenseRepository>(() => ExpenseRepositoryImpl(remoteDataSource: sl()));
+
+  // Data sources
+  sl.registerLazySingleton<ExpenseRemoteDataSource>(() => ExpenseRemoteDataSourceImpl(client: sl<SupabaseClient>())); // Note: explicit cast to SupabaseClient if needed, or just sl() since we registered sc.client as SupabaseClient
+
+  sl.registerFactory(() => ExpenseBloc(addExpenseUseCase: sl()));
+  sl.registerFactory(() => PayerBloc());
+  sl.registerFactory(() => SplitBloc());
+  sl.registerFactory(() => DateBloc());
 }
 
 void _profile() {
@@ -160,7 +182,12 @@ void _group() {
 
   sl.registerFactory(() => GetGroupDetail(groupRepository: sl<GroupRepository>()),);
 
-  sl.registerFactory(() => GroupDetailBloc(getGroupDetail: sl<GetGroupDetail>()),);
+  sl.registerFactory(() => GetGroupExpenseHistory(groupRepository: sl<GroupRepository>()),);
+
+  sl.registerFactory(() => GroupDetailBloc(
+    getGroupDetail: sl<GetGroupDetail>(),
+    getGroupExpenseHistory: sl<GetGroupExpenseHistory>(),
+  ),);
 
   sl.registerFactory(() => LeaveGroup(groupRepository: sl<GroupRepository>()));
   sl.registerFactory(() => DeleteGroup(groupRepository: sl<GroupRepository>()));
@@ -216,6 +243,9 @@ void _home() {
 
   sl.registerFactory(() => FriendsBloc(friendJoin: sl<FriendJoin>(), getMyFriends: sl<GetMyFriends>(), getUnreadFriendRequestCount: sl<GetUnreadFriendRequestCount>()),);
   sl.registerFactory(() => FriendRequestsBloc(getFriendRequests: sl<GetFriendRequests>(), respondToFriendRequest: sl<RespondToFriendRequest>()),);
+
+  sl.registerFactory(() => GetFriendExpenseHistoryUseCase(sl<FriendsRepository>()),);
+  sl.registerFactory(() => FriendDetailBloc(getFriendExpenseHistoryUseCase: sl<GetFriendExpenseHistoryUseCase>()),);
 
   sl.registerFactory(() => GetAllGroups(groupRepository: sl<GroupRepository>()),);
   sl.registerFactory(() => GroupsBloc(getAllGroups: sl<GetAllGroups>()),);

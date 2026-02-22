@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
-import 'package:split_ease/features/expenses/presentation/bloc/expense_bloc.dart';
+import 'package:split_ease/features/expenses/presentation/bloc/split/split_bloc.dart';
 import 'package:split_ease/features/groups/domain/entities/group_member_entity.dart';
 
 import '../../../../injection_container.dart';
@@ -14,88 +14,34 @@ class SplitOptionsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: sl<ExpenseBloc>(),
-      child: BlocBuilder<ExpenseBloc, ExpenseState>(
-        builder: (context, state) {
-          final members = state.group?.members ?? [];
-          final totalAmount = double.tryParse(state.amount) ?? 0.0;
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final members = args['members'] as List<GroupMemberEntity>;
+    final splitType = args['splitType'] as SplitType;
+    final splits = args['splits'] as List<ExpenseSplit>;
+    final totalAmount = args['totalAmount'] as double;
 
-          return _SplitOptionsView(members: members, initialSplitType: state.splitType, initialSplits: state.splits, totalAmount: totalAmount);
-        },
-      ),
+    return BlocProvider(
+      create: (context) => sl<SplitBloc>()
+        ..add(InitializeSplitEvent(
+          members: members,
+          initialSplitType: splitType,
+          initialSplits: splits,
+          totalAmount: totalAmount,
+        )),
+      child: const _SplitOptionsView(),
     );
   }
 }
 
 class _SplitOptionsView extends StatefulWidget {
-  final List<GroupMemberEntity> members;
-  final SplitType initialSplitType;
-  final List<ExpenseSplit> initialSplits;
-  final double totalAmount;
-
-  const _SplitOptionsView({required this.members, required this.initialSplitType, required this.initialSplits, required this.totalAmount});
+  const _SplitOptionsView();
 
   @override
   State<_SplitOptionsView> createState() => _SplitOptionsViewState();
 }
 
 class _SplitOptionsViewState extends State<_SplitOptionsView> {
-  late SplitType _currentSplitType;
-  late List<ExpenseSplit> _currentSplits;
   final Map<String, TextEditingController> _controllers = {};
-
-  @override
-  void initState() {
-    super.initState();
-    _currentSplitType = widget.initialSplitType;
-    _initializeSplits();
-  }
-
-  void _initializeSplits() {
-    // Determine initial splits based on state or default to all members
-    if (widget.initialSplits.isNotEmpty) {
-      _currentSplits = List.from(widget.initialSplits);
-    } else {
-      _currentSplits = widget.members.map((member) {
-        return ExpenseSplit(userId: member.userId!, amount: 0.0, percentage: 0.0, shares: 1.0);
-      }).toList();
-    }
-
-    // Initialize controllers for present splits
-    for (var split in _currentSplits) {
-      _controllers[split.userId] = TextEditingController();
-      _updateControllerValue(split.userId, split);
-    }
-  }
-
-  void _updateControllerValue(String userId, ExpenseSplit split) {
-    if (_currentSplitType == SplitType.exact) {
-      _controllers[userId]?.text = split.amount == 0 ? '' : split.amount.toStringAsFixed(2);
-    } else if (_currentSplitType == SplitType.percentage) {
-      _controllers[userId]?.text = split.percentage == 0 ? '' : split.percentage.toStringAsFixed(1);
-    } else if (_currentSplitType == SplitType.shares) {
-      _controllers[userId]?.text = split.shares.toStringAsFixed(0);
-    }
-  }
-
-  void _updateSplitsOnTypeChange() {
-    // When switching types, we ensure all members are present (unless implicit subsets are allowed, but usually other types start with all)
-    // For now, let's restore all members if we switch type, to avoid confusion.
-    final setOfCurrent = _currentSplits.map((s) => s.userId).toSet();
-    for (var member in widget.members) {
-      if (!setOfCurrent.contains(member.userId)) {
-         _currentSplits.add(ExpenseSplit(userId: member.userId!, amount: 0, percentage: 0, shares: 1));
-      }
-    }
-    // Also ensure controllers exist
-    for (var split in _currentSplits) {
-       if (!_controllers.containsKey(split.userId)) {
-          _controllers[split.userId] = TextEditingController();
-       }
-      _updateControllerValue(split.userId, split);
-    }
-  }
 
   @override
   void dispose() {
@@ -103,6 +49,41 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
       controller.dispose();
     }
     super.dispose();
+  }
+
+  void _updateControllerValue(String userId, ExpenseSplit split, SplitType splitType) {
+    if (!_controllers.containsKey(userId)) {
+      _controllers[userId] = TextEditingController();
+    }
+    
+    final controller = _controllers[userId]!;
+    String newValue = '';
+    
+    if (splitType == SplitType.exact) {
+      newValue = split.amount == 0 ? '' : split.amount.toStringAsFixed(2);
+    } else if (splitType == SplitType.percentage) {
+      newValue = split.percentage == 0 ? '' : split.percentage.toStringAsFixed(1);
+    } else if (splitType == SplitType.shares) {
+      newValue = split.shares.toStringAsFixed(0);
+    }
+
+    // Only update if the value is different to avoid cursor jumping
+    if (controller.text != newValue) {
+       // Check if the difference is just formatting (e.g. 1.0 vs 1) or user is typing
+       // Ideally we'd only set text if it comes from external change (like tab switch), 
+       // but here we are in a stateless-ish build. 
+       // To prevent overwriting user input while typing, we should probably check focus.
+       // However, since state is in Bloc now, we can just update when the state mismatch from text.
+       // A simple check:
+       final doubleVal = double.tryParse(controller.text) ?? 0.0;
+       final newDoubleVal = double.tryParse(newValue) ?? 0.0;
+       if ((doubleVal - newDoubleVal).abs() > 0.01) {
+          controller.text = newValue;
+       }
+       if (controller.text.isEmpty && newValue.isNotEmpty) {
+          controller.text = newValue;
+       }
+    }
   }
 
   @override
@@ -126,49 +107,66 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
         ),
         centerTitle: true,
         actions: [
-          TextButton(
-            onPressed: () {
-              context.read<ExpenseBloc>().add(SplitTypeChanged(_currentSplitType));
-              context.read<ExpenseBloc>().add(SplitOptionChanged(_currentSplits));
-              Navigator.pop(context);
+          BlocBuilder<SplitBloc, SplitState>(
+            builder: (context, state) {
+              return TextButton(
+                onPressed: () {
+                  Navigator.pop(context, {
+                    'splitType': state.splitType,
+                    'splits': state.splits,
+                  });
+                },
+                child: Text(
+                  "Done",
+                  style: GoogleFonts.openSans(color: AppColors.primaryTeal, fontWeight: FontWeight.w600, fontSize: 16),
+                ),
+              );
             },
-            child: Text(
-              "Done",
-              style: GoogleFonts.openSans(color: AppColors.primaryTeal, fontWeight: FontWeight.w600, fontSize: 16),
-            ),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _buildHeader(),
-          _buildTabs(),
-          const SizedBox(height: 16),
-          const Divider(height: 1, color: AppColors.borderGrey),
-          Expanded(child: _buildMembersList()),
-          _buildFooter(),
-        ],
+      body: BlocConsumer<SplitBloc, SplitState>(
+        listener: (context, state) {
+           // Sync controllers with state when type changes or initial load
+           for (var split in state.splits) {
+             _updateControllerValue(split.userId, split, state.splitType);
+           }
+        },
+        builder: (context, state) {
+          return Column(
+            children: [
+              _buildHeader(state),
+              _buildTabs(context, state),
+              const SizedBox(height: 16),
+              const Divider(height: 1, color: AppColors.borderGrey),
+              Expanded(child: _buildMembersList(context, state)),
+              _buildFooter(context, state),
+            ],
+          );
+        },
       ),
     );
   }
 
-  // ... _buildHeader ... (Same as before)
-  Widget _buildHeader() {
+  Widget _buildHeader(SplitState state) {
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 24.0),
-          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: widget.members.take(4).map((m) => _buildHeaderAvatar(m)).toList()),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center, 
+            children: state.members.take(4).map((m) => _buildHeaderAvatar(m)).toList()
+          ),
         ),
         Text(
-          _getSplitTitle(),
+          _getSplitTitle(state.splitType),
           style: GoogleFonts.openSans(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.textBlack),
         ),
         SizedBox(
           height: 60,
           child: Center(
             child: Text(
-              _getSplitDescription(),
+              _getSplitDescription(state.splitType),
               textAlign: TextAlign.center,
               style: GoogleFonts.openSans(fontSize: 14, color: AppColors.textGrey, height: 1.4),
             ),
@@ -187,7 +185,7 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white, width: 2),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(0, 2))],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))],
           image: member.avtar != null ? DecorationImage(image: CachedNetworkImageProvider(member.avtar!), fit: BoxFit.cover) : null,
           color: member.avtar == null ? AppColors.primaryTeal : null,
         ),
@@ -203,7 +201,7 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
     );
   }
 
-  Widget _buildTabs() {
+  Widget _buildTabs(BuildContext context, SplitState state) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Container(
@@ -211,27 +209,23 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
         padding: const EdgeInsets.all(4),
         child: Row(
           children: [
-            _buildTabItem("=", SplitType.equal),
-            _buildTabItem("1.23", SplitType.exact),
-            _buildTabItem("%", SplitType.percentage),
-            _buildIconTabItem(Icons.bar_chart, SplitType.shares),
-            _buildTabItem("+/-", null),
+            _buildTabItem(context, "=", SplitType.equal, state),
+            _buildTabItem(context, "1.23", SplitType.exact, state),
+            _buildTabItem(context, "%", SplitType.percentage, state),
+            _buildIconTabItem(context, Icons.bar_chart, SplitType.shares, state),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTabItem(String text, SplitType? type) {
-    final isSelected = _currentSplitType == type;
+  Widget _buildTabItem(BuildContext context, String text, SplitType? type, SplitState state) {
+    final isSelected = state.splitType == type;
     return Expanded(
       child: GestureDetector(
         onTap: () {
           if (type != null) {
-            setState(() {
-              _currentSplitType = type;
-              _updateSplitsOnTypeChange();
-            });
+            context.read<SplitBloc>().add(UpdateSplitTypeEvent(type));
           }
         },
         child: Container(
@@ -240,7 +234,7 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primaryTeal : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
-            boxShadow: isSelected ? [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 2, offset: const Offset(0, 1))] : null,
+            boxShadow: isSelected ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 2, offset: const Offset(0, 1))] : null,
           ),
           child: Text(
             text,
@@ -251,16 +245,13 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
     );
   }
 
-  Widget _buildIconTabItem(IconData icon, SplitType? type) {
-    final isSelected = _currentSplitType == type;
+  Widget _buildIconTabItem(BuildContext context, IconData icon, SplitType? type, SplitState state) {
+    final isSelected = state.splitType == type;
     return Expanded(
       child: GestureDetector(
         onTap: () {
           if (type != null) {
-            setState(() {
-              _currentSplitType = type;
-              _updateSplitsOnTypeChange();
-            });
+            context.read<SplitBloc>().add(UpdateSplitTypeEvent(type));
           }
         },
         child: Container(
@@ -269,7 +260,7 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primaryTeal : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
-            boxShadow: isSelected ? [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 2, offset: const Offset(0, 1))] : null,
+            boxShadow: isSelected ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 2, offset: const Offset(0, 1))] : null,
           ),
           child: Icon(icon, color: isSelected ? Colors.white : AppColors.textGrey, size: 20),
         ),
@@ -277,23 +268,25 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
     );
   }
 
-  Widget _buildMembersList() {
+  Widget _buildMembersList(BuildContext context, SplitState state) {
     return ListView.builder(
-      itemCount: widget.members.length,
+      itemCount: state.members.length,
       itemBuilder: (context, index) {
-        final member = widget.members[index];
+        final member = state.members[index];
         ExpenseSplit? split;
         try {
-          split = _currentSplits.firstWhere((s) => s.userId == member.userId);
+          split = state.splits.firstWhere((s) => s.userId == member.userId);
         } catch (_) {
           split = null;
         }
-        return _buildMemberItem(member, split);
+        return _buildMemberItem(context, member, split, state);
       },
     );
   }
 
-  Widget _buildMemberItem(GroupMemberEntity member, ExpenseSplit? split) {
+  Widget _buildMemberItem(BuildContext context, GroupMemberEntity member, ExpenseSplit? split, SplitState state) {
+    bool isSelected = state.splits.any((s) => s.userId == member.userId);
+    
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       child: Row(
@@ -308,26 +301,58 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
                   member.fullName ?? "Unknown",
                   style: GoogleFonts.openSans(fontWeight: FontWeight.w600, fontSize: 16, color: AppColors.textBlack),
                 ),
-                if (_currentSplitType == SplitType.equal)
+                if (state.splitType == SplitType.equal)
                   Text(
-                    _currentSplits.any((s) => s.userId == member.userId)
-                        ? "₹${_currentSplits.isNotEmpty ? (widget.totalAmount / _currentSplits.length).toStringAsFixed(2) : '0.00'}"
+                    isSelected
+                        ? "₹${state.splits.isNotEmpty ? (state.totalAmount / state.splits.length).toStringAsFixed(2) : '0.00'}/person"
                         : "Not involved",
                     style: GoogleFonts.openSans(
                       fontSize: 13, 
-                      color: _currentSplits.any((s) => s.userId == member.userId) ? AppColors.textGrey : AppColors.textGrey.withOpacity(0.5),
+                      color: isSelected ? AppColors.textGrey : AppColors.textGrey.withOpacity(0.5),
                     ),
+                  )
+                else if (state.splitType == SplitType.shares)
+                  Builder(
+                    builder: (context) {
+                      double totalShares = state.splits.fold(0, (sum, s) => sum + s.shares);
+                      double memberShares = split?.shares ?? 0;
+                      double amount = totalShares > 0 ? (state.totalAmount * memberShares / totalShares) : 0;
+                      return Text(
+                         "₹${amount.toStringAsFixed(2)}",
+                         style: GoogleFonts.openSans(fontSize: 13, color: AppColors.textGrey),
+                      );
+                    }
+                  )
+                else if (state.splitType == SplitType.percentage)
+                  Builder(
+                    builder: (context) {
+                       double memberPercentage = split?.percentage ?? 0;
+                       double amount = (state.totalAmount * memberPercentage / 100);
+                       return Text(
+                          "₹${amount.toStringAsFixed(2)}",
+                          style: GoogleFonts.openSans(fontSize: 13, color: AppColors.textGrey),
+                       );
+                    }
                   ),
               ],
             ),
           ),
-          _buildSplitInput(member.userId!, split),
+          if (state.splitType == SplitType.equal)
+             Checkbox(
+               value: isSelected,
+               activeColor: AppColors.primaryTeal,
+               onChanged: (_) {
+                 context.read<SplitBloc>().add(ToggleMemberSelectionEvent(member.userId!));
+               },
+               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+             )
+          else
+            _buildSplitInput(context, member.userId!, split, state),
         ],
       ),
     );
   }
 
-  // ... _buildListAvatar ... (Same as before)
   Widget _buildListAvatar(GroupMemberEntity member) {
     return Container(
       width: 40,
@@ -348,146 +373,173 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
     );
   }
 
-  Widget _buildSplitInput(String userId, ExpenseSplit? split) {
-    if (_currentSplitType == SplitType.equal) {
-      return const SizedBox(); // Nothing for equal
+  Widget _buildSplitInput(BuildContext context, String userId, ExpenseSplit? split, SplitState state) {
+    if (state.splitType == SplitType.equal) {
+      return const SizedBox(); 
     }
 
+    if (!_controllers.containsKey(userId)) {
+      _controllers[userId] = TextEditingController();
+    }
     final controller = _controllers[userId];
 
     return SizedBox(
-      width: 80,
+      width: 100,
       child: TextField(
         controller: controller,
         textAlign: TextAlign.end,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         decoration: InputDecoration(
-          hintText: _currentSplitType == SplitType.percentage ? "0" : "0.00",
+          hintText: state.splitType == SplitType.percentage ? "0" : "0.00",
           border: InputBorder.none,
           isDense: true,
-          hintStyle: GoogleFonts.openSans(color: AppColors.textGrey.withValues(alpha: 0.5)),
-          suffixText: _currentSplitType == SplitType.percentage ? "%" : null,
+          hintStyle: GoogleFonts.openSans(color: AppColors.textGrey.withOpacity(0.5)),
+          suffixText: state.splitType == SplitType.percentage ? "%" : null,
         ),
         style: GoogleFonts.openSans(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textBlack),
         onChanged: (value) {
           final doubleVal = double.tryParse(value) ?? 0.0;
-          setState(() {
-            final index = _currentSplits.indexWhere((s) => s.userId == userId);
-            if (index != -1) {
-              if (_currentSplitType == SplitType.exact) {
-                _currentSplits[index] = _currentSplits[index].copyWith(amount: doubleVal);
-              } else if (_currentSplitType == SplitType.percentage) {
-                _currentSplits[index] = _currentSplits[index].copyWith(percentage: doubleVal);
-              } else if (_currentSplitType == SplitType.shares) {
-                _currentSplits[index] = _currentSplits[index].copyWith(shares: doubleVal);
-              }
-            }
-          });
+          if (state.splitType == SplitType.exact) {
+             context.read<SplitBloc>().add(UpdateSplitAmountEvent(userId: userId, amount: doubleVal));
+          } else if (state.splitType == SplitType.percentage) {
+             context.read<SplitBloc>().add(UpdateSplitPercentageEvent(userId: userId, percentage: doubleVal));
+          } else if (state.splitType == SplitType.shares) {
+             context.read<SplitBloc>().add(UpdateSplitSharesEvent(userId: userId, shares: doubleVal));
+          }
         },
       ),
     );
   }
 
-  Widget _buildFooter() {
-    String footerText;
-    Color footerColor = AppColors.textBlack;
+  Widget _buildFooter(BuildContext context, SplitState state) {
+    if (state.splitType == SplitType.equal) {
+       final amountPerPerson = state.splits.isNotEmpty ? state.totalAmount / state.splits.length : 0.0;
+       final isAllSelected = state.splits.length == state.members.length;
+       
+       return Container(
+        padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0, bottom: 40.0), // Added bottom padding
+        decoration: const BoxDecoration(
+          color: AppColors.backgroundWhite,
+          border: Border(top: BorderSide(color: AppColors.borderGrey)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center, // Center the text
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "₹${amountPerPerson.toStringAsFixed(2)}/person",
+                    style: GoogleFonts.openSans(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textBlack),
+                  ),
+                  Text(
+                    "(${state.splits.length} people)",
+                    style: GoogleFonts.openSans(fontSize: 14, color: AppColors.textGrey),
+                  ),
+                ],
+              ),
+            ),
+            Row(
+              children: [
+                Text(
+                  "All",
+                  style: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textBlack),
+                ),
+                Checkbox(
+                  value: isAllSelected,
+                  activeColor: AppColors.primaryTeal,
+                  onChanged: (_) {
+                    context.read<SplitBloc>().add(const ToggleAllSelectionEvent());
+                  },
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                ),
+              ],
+            )
+          ],
+        ),
+      );
+    }
 
-    if (_currentSplitType == SplitType.equal) {
-      footerText = "${_currentSplits.length} people selected";
-    } else if (_currentSplitType == SplitType.exact) {
-      double currentTotal = _currentSplits.fold(0, (sum, item) => sum + item.amount);
-      double remaining = widget.totalAmount - currentTotal;
+    String mainText = "";
+    String subText = "";
+    Color subTextColor = AppColors.textGrey;
+
+    if (state.splitType == SplitType.exact) {
+      double currentTotal = state.splits.fold(0, (sum, item) => sum + item.amount);
+      double remaining = state.totalAmount - currentTotal;
+      
+      mainText = "₹${currentTotal.toStringAsFixed(2)} of ₹${state.totalAmount.toStringAsFixed(2)}";
       if (remaining.abs() < 0.01) {
-        footerText = "₹$currentTotal • Perfect match";
-        footerColor = AppColors.primaryTeal;
+        subText = "Perfect match"; // Or leave empty?
+        subTextColor = AppColors.primaryTeal;
       } else if (remaining > 0) {
-        footerText = "₹$currentTotal • ₹${remaining.toStringAsFixed(2)} remaining";
-        footerColor = Colors.red;
+        subText = "₹${remaining.toStringAsFixed(2)} left";
+        subTextColor = AppColors.textBlack; // Or red?
       } else {
-        footerText = "₹$currentTotal • ₹${(-remaining).toStringAsFixed(2)} over";
-        footerColor = Colors.red;
+        subText = "₹${(-remaining).toStringAsFixed(2)} over";
+        subTextColor = Colors.red;
       }
-    } else if (_currentSplitType == SplitType.percentage) {
-      double currentTotal = _currentSplits.fold(0, (sum, item) => sum + item.percentage);
+    } else if (state.splitType == SplitType.percentage) {
+      double currentTotal = state.splits.fold(0, (sum, item) => sum + item.percentage);
       double remaining = 100 - currentTotal;
+      
+      mainText = "${currentTotal.toStringAsFixed(1)}% of 100%";
+      
       if (remaining.abs() < 0.1) {
-        footerText = "$currentTotal% • Perfect match";
-        footerColor = AppColors.primaryTeal;
+         // Perfect match
+         subTextColor = AppColors.primaryTeal;
       } else if (remaining > 0) {
-        footerText = "$currentTotal% • ${remaining.toStringAsFixed(1)}% remaining";
-        footerColor = Colors.red;
+        subText = "${remaining.toStringAsFixed(1)}% left";
+        subTextColor = AppColors.textBlack;
       } else {
-        footerText = "$currentTotal% • ${(-remaining).toStringAsFixed(1)}% over";
-        footerColor = Colors.red;
+        subText = "${(-remaining).toStringAsFixed(1)}% over";
+        subTextColor = Colors.red;
       }
-    } else if (_currentSplitType == SplitType.shares) {
-      double totalShares = _currentSplits.fold(0, (sum, item) => sum + item.shares);
-      footerText = "${totalShares.toStringAsFixed(0)} total shares";
-    } else {
-      footerText = "";
+    } else if (state.splitType == SplitType.shares) {
+      double totalShares = state.splits.fold(0, (sum, item) => sum + item.shares);
+      mainText = "${totalShares.toStringAsFixed(0)} total shares";
     }
 
     return Container(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0, bottom: 40.0), // Added bottom padding
       decoration: const BoxDecoration(
         color: AppColors.backgroundWhite,
         border: Border(top: BorderSide(color: AppColors.borderGrey)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
-            footerText,
-            style: GoogleFonts.openSans(fontWeight: FontWeight.bold, fontSize: 16, color: footerColor),
+            mainText,
+            style: GoogleFonts.openSans(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textBlack),
           ),
-          if (_currentSplitType == SplitType.equal) ...[
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  if (_currentSplits.length == widget.members.length) {
-                     _currentSplits.clear();
-                  } else {
-                    _currentSplits = widget.members.map((m) => ExpenseSplit(userId: m.userId!, amount: 0, percentage: 0, shares: 1)).toList();
-                  }
-                });
-              },
-              child: Text(
-                _currentSplits.length == widget.members.length ? "Deselect All" : "Select All",
-                style: GoogleFonts.openSans(color: AppColors.primaryTeal, fontWeight: FontWeight.bold),
-              ),
+          if (subText.isNotEmpty)
+            Text(
+              subText,
+              style: GoogleFonts.openSans(fontWeight: FontWeight.bold, fontSize: 14, color: subTextColor),
             ),
-          ]
         ],
       ),
     );
   }
 
-  // ... _getSplitTitle ... (Same as before)
-  String _getSplitTitle() {
-    switch (_currentSplitType) {
-      case SplitType.equal:
-        return "Split equally";
-      case SplitType.exact:
-        return "Split by exact amount";
-      case SplitType.percentage:
-        return "Split by percentage";
-      case SplitType.shares:
-        return "Split by shares";
+  String _getSplitTitle(SplitType type) {
+    switch (type) {
+      case SplitType.equal: return "Split equally";
+      case SplitType.exact: return "Split by exact amount";
+      case SplitType.percentage: return "Split by percentage";
+      case SplitType.shares: return "Split by shares";
     }
   }
 
-  // ... _getSplitDescription ... (Same as before)
-  String _getSplitDescription() {
-    switch (_currentSplitType) {
-      case SplitType.equal:
-        return "Everyone pays the same amount.";
-      case SplitType.exact:
-        return "Specify exactly how much each person pays.";
-      case SplitType.percentage:
-        return "Enter the percentage of the total amount each person pays.";
-      case SplitType.shares:
-        return "Great for time-based splitting (2 nights → 2 shares) or splitting across families.";
+  String _getSplitDescription(SplitType type) {
+    switch (type) {
+      case SplitType.equal: return "Everyone pays the same amount.";
+      case SplitType.exact: return "Specify exactly how much each person pays.";
+      case SplitType.percentage: return "Enter the percentage of the total amount each person pays.";
+      case SplitType.shares: return "Great for time-based splitting (2 nights → 2 shares) or splitting across families.";
     }
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:split_ease/core/presentation/widgets/custom_refresh_indicator.dart';
 import 'package:split_ease/core/presentation/widgets/success_dialog.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,9 +9,9 @@ import '../../../../../core/presentation/widgets/base_screen.dart';
 import '../../../../../core/theme/app_colors.dart';
 import 'package:split_ease/features/groups/presentation/pages/qr_scanner_page.dart';
 import 'friend_requests_page.dart';
-
 import '../widgets/friend_list_item.dart';
 import '../bloc/friends_bloc.dart';
+import 'package:split_ease/core/routing/app_routes.dart';
 
 class FriendsPage extends StatefulWidget {
   const FriendsPage({super.key});
@@ -29,11 +30,10 @@ class _FriendsPageState extends State<FriendsPage> {
 
   void _navigateToRequests() async {
     final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const FriendRequestsPage()));
-    if (context.mounted) {
-      context.read<FriendsBloc>().add(LoadUnreadFriendRequestCount());
-      if (result == true) {
-        context.read<FriendsBloc>().add(LoadFriends());
-      }
+    if (!mounted) return;
+    context.read<FriendsBloc>().add(LoadUnreadFriendRequestCount());
+    if (result == true) {
+      context.read<FriendsBloc>().add(LoadFriends());
     }
   }
 
@@ -66,12 +66,17 @@ class _FriendsPageState extends State<FriendsPage> {
             AppAlerts.showError(context, state.joinErrorMessage);
           }
         },
-        child: CustomScrollView(
-          slivers: [
-            _buildSliverAppBar(context),
-            _buildSummarySection(context),
-            _buildFriendsList(context),
-          ],
+        child: CustomRefreshIndicator(
+          onRefresh: () async{
+            context.read<FriendsBloc>().add(LoadFriends());
+          },
+          child: CustomScrollView(
+            slivers: [
+              _buildSliverAppBar(context),
+              _buildSummarySection(context),
+              _buildFriendsList(context),
+            ],
+          ),
         ),
       ),
     );
@@ -161,82 +166,101 @@ class _FriendsPageState extends State<FriendsPage> {
 
   Widget _buildSummarySection(BuildContext context) {
     return SliverToBoxAdapter(
-      child: Padding(
-         padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-         child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.primaryTeal, AppColors.primaryTealDark],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primaryTeal.withValues(alpha: 0.3),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Total Balance",
-                style: GoogleFonts.openSans(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+      child: BlocBuilder<FriendsBloc, FriendsState>(
+        builder: (context, state) {
+          double totalYouOwe = 0;
+          double totalOwesYou = 0;
+          if (state.status == FriendsStatus.success) {
+            for (var friend in state.friends) {
+              if (friend.overallBalance < 0) {
+                totalYouOwe += friend.overallBalance.abs();
+              } else if (friend.overallBalance > 0) {
+                totalOwesYou += friend.overallBalance;
+              }
+            }
+          }
+          
+          final netBalance = totalOwesYou - totalYouOwe;
+          final isOwe = netBalance < 0;
+
+          return Padding(
+             padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+             child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppColors.primaryTeal, AppColors.primaryTealDark],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primaryTeal.withValues(alpha: 0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.end,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Text(
+                    "Total Balance",
+                    style: GoogleFonts.openSans(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                       Text(
-                        "You owe",
-                        style: GoogleFonts.openSans(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                           Text(
+                            isOwe ? "You owe" : "You are owed",
+                            style: GoogleFonts.openSans(
+                              color: Colors.white.withValues(alpha: 0.8),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            "₹${netBalance.abs().toStringAsFixed(2)}",
+                            style: GoogleFonts.openSans(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        "₹0.00", // Placeholder or dynamic if available
-                        style: GoogleFonts.openSans(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          "Details >",
+                          style: GoogleFonts.openSans(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      "Details >",
-                      style: GoogleFonts.openSans(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
                 ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -245,9 +269,7 @@ class _FriendsPageState extends State<FriendsPage> {
     return BlocBuilder<FriendsBloc, FriendsState>(
       builder: (context, state) {
         if (state.status == FriendsStatus.loading) {
-          return const SliverFillRemaining(
-            child: Center(child: CircularProgressIndicator()),
-          );
+          return _FriendsShimmerList();
         } else if (state.status == FriendsStatus.success) {
           if (state.friends.isEmpty) {
             return SliverFillRemaining(
@@ -258,11 +280,11 @@ class _FriendsPageState extends State<FriendsPage> {
                     Icon(Icons.person_off_outlined, size: 60, color: Colors.grey.shade300),
                     const SizedBox(height: 16),
                     Text(
-                      "No friends found", 
+                      "No friends found",
                       style: GoogleFonts.openSans(
                         color: Colors.grey.shade500,
                         fontSize: 16,
-                      )
+                      ),
                     ),
                   ],
                 ),
@@ -278,7 +300,11 @@ class _FriendsPageState extends State<FriendsPage> {
                   child: FriendListItem(
                     friend: friend,
                     onTap: () {
-                      // Navigate to friend details
+                      Navigator.pushNamed(
+                        context,
+                        AppRoutes.friendDetail,
+                        arguments: {'friend': friend},
+                      );
                     },
                   ),
                 );
@@ -293,6 +319,62 @@ class _FriendsPageState extends State<FriendsPage> {
         }
         return const SliverToBoxAdapter(child: SizedBox());
       },
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shimmer skeleton for the friends list
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _FriendsShimmerList extends StatelessWidget {
+  const _FriendsShimmerList();
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+          child: Skeletonizer(
+            enabled: true,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    // Circle avatar
+                    Bone.circle(size: 50),
+                    const SizedBox(width: 16),
+                    // Name
+                    Expanded(
+                      child: Bone.text(width: 130, fontSize: 16),
+                    ),
+                    // Balance chip placeholder
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Bone.text(width: 55, fontSize: 12),
+                        const SizedBox(height: 4),
+                        Bone.text(width: 70, fontSize: 16),
+                      ],
+                    ),
+                    const SizedBox(width: 8),
+                    // Chevron
+                    Bone.icon(size: 20),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        childCount: 7,
+      ),
     );
   }
 }

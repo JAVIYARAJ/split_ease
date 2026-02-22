@@ -4,6 +4,7 @@ import 'package:split_ease/features/auth/presentation/login/bloc/login_bloc.dart
 import 'package:split_ease/features/auth/presentation/login/pages/login_page.dart';
 import 'package:split_ease/features/auth/presentation/register/bloc/register_bloc.dart';
 import 'package:split_ease/features/auth/presentation/register/pages/register_page.dart';
+import 'package:split_ease/features/expenses/presentation/bloc/expense_bloc.dart';
 import 'package:split_ease/features/groups/presentation/bloc/group_detail_bloc.dart';
 import 'package:split_ease/features/groups/presentation/bloc/join_group_bloc.dart';
 import 'package:split_ease/features/home/presentation/pages/home_page.dart';
@@ -17,6 +18,8 @@ import '../../injection_container.dart';
 import '../../features/groups/presentation/pages/create_group_page.dart';
 import '../../features/groups/presentation/pages/enter_invite_code_page.dart';
 import '../../features/groups/presentation/pages/group_detail_page.dart';
+import '../../features/friends/presentation/bloc/friend_detail_bloc.dart';
+import '../../features/friends/presentation/pages/friend_detail_page.dart';
 import 'app_routes.dart';
 
 // Import pages
@@ -64,12 +67,20 @@ class RouteGenerator {
             BlocProvider(
               create: (context) => sl<CreateGroupBloc>(),
               child: const CreateGroupPage(),
-            ),settings: RouteSettings(name: settings.name,arguments: settings.arguments));
+            ), settings: RouteSettings(name: settings.name, arguments: settings.arguments));
       case AppRoutes.groupDetail:
         return MaterialPageRoute(builder: (_) =>
             BlocProvider(
               create: (context) => sl<GroupDetailBloc>(),
               child: GroupDetailPage(),
+            ),
+            settings: RouteSettings(arguments: settings.arguments, name: settings.name)
+        );
+      case AppRoutes.friendDetail:
+        return MaterialPageRoute(builder: (_) =>
+            BlocProvider(
+              create: (context) => sl<FriendDetailBloc>(),
+              child: const FriendDetailPage(),
             ),
             settings: RouteSettings(arguments: settings.arguments, name: settings.name)
         );
@@ -81,7 +92,11 @@ class RouteGenerator {
             ));
       case AppRoutes.addExpense:
         return MaterialPageRoute(
-            builder: (_) => const AddExpensePage(),
+            builder: (_) =>
+                BlocProvider(
+                  create: (context) => sl<ExpenseBloc>(),
+                  child: AddExpensePage(),
+                ),
             settings: RouteSettings(arguments: settings.arguments, name: settings.name));
       case AppRoutes.payerSelection:
         return MaterialPageRoute(

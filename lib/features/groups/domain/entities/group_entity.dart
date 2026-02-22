@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:split_ease/features/auth/domain/entities/user_entity.dart';
 import 'package:split_ease/features/groups/domain/entities/group_member_entity.dart';
+import 'package:split_ease/features/groups/domain/entities/group_balance_preview_entity.dart';
 
 class GroupEntity extends Equatable {
   final String? id;
@@ -14,6 +15,10 @@ class GroupEntity extends Equatable {
   final String? groupIcon;
   final String? inviteCode;
   final List<GroupMemberEntity>? members;
+  final String? status;
+  final double? overallBalance;
+  final int? totalActiveBalances;
+  final List<GroupBalancePreviewEntity>? balancePreview;
 
 
   const GroupEntity({
@@ -28,6 +33,10 @@ class GroupEntity extends Equatable {
     this.groupIcon,
     this.inviteCode,
     this.members,
+    this.status,
+    this.overallBalance,
+    this.totalActiveBalances,
+    this.balancePreview,
   });
 
   @override
@@ -43,5 +52,9 @@ class GroupEntity extends Equatable {
         groupIcon,
         inviteCode,
         members,
+        status,
+        overallBalance,
+        totalActiveBalances,
+        balancePreview,
       ];
 }

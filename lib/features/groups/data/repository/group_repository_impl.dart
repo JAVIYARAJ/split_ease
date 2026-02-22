@@ -4,6 +4,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:split_ease/core/error/exception.dart';
 import 'package:split_ease/core/error/failure.dart';
 import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
+import 'package:split_ease/features/groups/domain/entities/group_expense_history_entity.dart';
 import 'package:split_ease/features/groups/domain/entities/group_friend_entity.dart';
 
 import '../../domain/repository/group_repository.dart';
@@ -122,5 +123,15 @@ class GroupRepositoryImpl implements GroupRepository {
     } on ServerException catch (error) {
       return left(Failure(message: error.message));
     }
+  }
+
+  @override
+  Future<Either<Failure, GroupExpenseHistoryEntity>> getGroupExpenseHistory(String groupId) async {
+    //try {
+      final model = await dataSource.getGroupExpenseHistory(groupId);
+      return right(model);
+    // } on ServerException catch (error) {
+    //   return left(Failure(message: error.message));
+    // }
   }
 }

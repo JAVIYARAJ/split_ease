@@ -11,4 +11,5 @@ class AppRoutes {
   static const String payerSelection = '/payerSelection';
   static const String splitOptions = '/splitOptions';
   static const String dateSelection = '/dateSelection';
+  static const String friendDetail = '/friendDetail';
 }

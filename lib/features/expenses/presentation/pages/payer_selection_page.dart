@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
-import 'package:split_ease/features/expenses/presentation/bloc/expense_bloc.dart';
+import 'package:split_ease/features/expenses/presentation/bloc/payer/payer_bloc.dart';
+import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
 
 
 import '../../../../injection_container.dart';
@@ -13,8 +14,13 @@ class PayerSelectionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: sl<ExpenseBloc>(),
+    // Extract arguments
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final group = args['group'] as GroupEntity;
+    final currentPayerId = args['currentPayerId'] as String?;
+
+    return BlocProvider(
+      create: (context) => sl<PayerBloc>()..add(LoadPayerEvent(group: group, initialPayerId: currentPayerId)),
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
@@ -42,10 +48,10 @@ class PayerSelectionPage extends StatelessWidget {
           ),
           centerTitle: true,
         ),
-        body: BlocBuilder<ExpenseBloc, ExpenseState>(
+        body: BlocBuilder<PayerBloc, PayerState>(
           builder: (context, state) {
             final members = state.group?.members ?? [];
-            final selectedUserId = state.payerId ?? (members.isNotEmpty ? members.first.userId : '');
+            final selectedUserId = state.selectedPayerId ?? (members.isNotEmpty ? members.first.userId : '');
 
             return ListView.builder(
               itemCount: members.length + 1, // +1 for "Multiple people"
@@ -58,8 +64,8 @@ class PayerSelectionPage extends StatelessWidget {
                 return InkWell(
                   onTap: () {
                     if (member.userId != null) {
-                      context.read<ExpenseBloc>().add(PayerChanged(member.userId!));
-                      Navigator.pop(context);
+                      context.read<PayerBloc>().add(SelectPayerEvent(member.userId!));
+                      Navigator.pop(context, member.userId); // Return result
                     }
                   },
                   child: Padding(

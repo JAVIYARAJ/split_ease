@@ -6,7 +6,8 @@ sealed class ExpenseEvent {
 
 class ExpenseInitialized extends ExpenseEvent {
   final GroupEntity group;
-  const ExpenseInitialized(this.group);
+  final String? currentUserId;
+  const ExpenseInitialized(this.group, {this.currentUserId});
 
 
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:split_ease/core/presentation/widgets/app_image_view.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
@@ -64,7 +65,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                 },
                 builder: (context, state) {
                   if (state is GroupSettingsLoading) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const _GroupSettingsShimmer();
                   } else if (state is GroupSettingsLoaded) {
                     return _GroupSettingsContent(group: state.group, onBack: () => _onBack(context));
                   }
@@ -440,3 +441,137 @@ class _GroupSettingsContent extends StatelessWidget {
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shimmer skeleton for Group Settings Page
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _GroupSettingsShimmer extends StatelessWidget {
+  const _GroupSettingsShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    return Skeletonizer(
+      enabled: true,
+      child: CustomScrollView(
+        slivers: [
+          // Simulated App Bar
+          SliverAppBar(
+            expandedHeight: 250,
+            pinned: true,
+            backgroundColor: AppColors.backgroundLightGrey,
+            elevation: 0,
+            leading: IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                child: const Icon(Icons.arrow_back_ios_new, size: 18, color: AppColors.textBlack),
+              ),
+              onPressed: () => Navigator.pop(context),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              collapseMode: CollapseMode.parallax,
+              background: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 50),
+                  Bone.square(
+                    size: 90,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  const SizedBox(height: 16),
+                  Bone.text(width: 140, fontSize: 24),
+                  const SizedBox(height: 8),
+                  Bone.text(width: 80, fontSize: 16),
+                ],
+              ),
+            ),
+          ),
+          SliverList(
+            delegate: SliverChildListDelegate([
+              // General Section
+              const Padding(
+                padding: EdgeInsets.fromLTRB(28, 0, 24, 8),
+                child: Bone.text(width: 80, fontSize: 13),
+              ),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    _buildFakeSettingsTile(),
+                    Divider(height: 1, thickness: 1, color: AppColors.borderGrey.withValues(alpha: 0.2), indent: 84, endIndent: 0),
+                    _buildFakeSettingsTile(),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // Members Section
+              const Padding(
+                padding: EdgeInsets.fromLTRB(28, 0, 24, 8),
+                child: Bone.text(width: 80, fontSize: 13),
+              ),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    for (int i = 0; i < 3; i++) ...[
+                      _buildFakeMemberTile(),
+                      if (i < 2) Divider(height: 1, thickness: 1, color: AppColors.borderGrey.withValues(alpha: 0.2), indent: 84, endIndent: 0),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 40),
+            ]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFakeSettingsTile() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Row(
+        children: [
+          Bone.square(size: 40, borderRadius: BorderRadius.circular(10)),
+          const SizedBox(width: 16),
+          Expanded(child: Bone.text(width: 150, fontSize: 16)),
+          Bone.icon(size: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFakeMemberTile() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      child: Row(
+        children: [
+          Bone.square(size: 48, borderRadius: BorderRadius.circular(14)),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Bone.text(width: 120, fontSize: 16),
+                SizedBox(height: 6),
+                Bone.text(width: 180, fontSize: 13),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

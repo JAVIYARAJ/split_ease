@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import '../../../../../core/utils/navigation_utils.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
@@ -9,6 +10,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../widgets/group_list_item.dart';
 import '../bloc/groups_bloc.dart';
 import '../../../../../core/routing/app_routes.dart';
+import 'package:intl/intl.dart';
 
 class GroupsPage extends StatelessWidget {
   const GroupsPage({super.key});
@@ -33,12 +35,20 @@ class GroupsPage extends StatelessWidget {
           ),
         ),
       ),
-      child: CustomScrollView(
-        slivers: [
-          _buildSliverAppBar(context),
-          _buildSummarySection(context),
-          _buildGroupsList(context),
-        ],
+      child: CustomRefreshIndicator(
+        onRefresh: () async{
+          context.read<GroupsBloc>().add(LoadGroups());
+        },
+        child: CustomScrollView(
+          slivers: [
+            _buildSliverAppBar(context),
+            _buildSummarySection(context),
+            _buildGroupsList(context),
+            SliverToBoxAdapter(child: SizedBox(
+              height: 100,
+            ),)
+          ],
+        ),
       ),
     );
   }
@@ -92,67 +102,90 @@ class GroupsPage extends StatelessWidget {
   }
 
   Widget _buildSummarySection(BuildContext context) {
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.primaryTeal, AppColors.primaryTealDark],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [BoxShadow(color: AppColors.primaryTeal.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8))],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Total Balance",
-                style: GoogleFonts.openSans(color: Colors.white.withValues(alpha: 0.9), fontSize: 14, fontWeight: FontWeight.w600),
+    return BlocBuilder<GroupsBloc, GroupsState>(
+      builder: (context, state) {
+        double totalBalance = 0.0;
+        if (state.status == GroupsStatus.success || (state.status == GroupsStatus.failure && state.groups.isNotEmpty)) {
+          for (final group in state.groups) {
+            if (group.overallBalance != null) {
+               if (group.status == "you_are_owed") {
+                 totalBalance += group.overallBalance!;
+               } else if (group.status == "you_owe") {
+                 totalBalance -= group.overallBalance!;
+               }
+            }
+          }
+        }
+
+        final formatter = NumberFormat('#,##0.00', 'en_IN');
+        final isOwed = totalBalance >= 0;
+        final absoluteBalance = totalBalance.abs();
+        final label = totalBalance == 0 ? "Settled up" : (isOwed ? "You are owed" : "You owe");
+        
+        return SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppColors.primaryTeal, AppColors.primaryTealDark],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [BoxShadow(color: AppColors.primaryTeal.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8))],
               ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.end,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Text(
+                    "Total Balance",
+                    style: GoogleFonts.openSans(color: Colors.white.withValues(alpha: 0.9), fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(
-                        "You owe",
-                        style: GoogleFonts.openSans(color: Colors.white.withValues(alpha: 0.8), fontSize: 12, fontWeight: FontWeight.w500),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            label,
+                            style: GoogleFonts.openSans(color: Colors.white.withValues(alpha: 0.8), fontSize: 12, fontWeight: FontWeight.w500),
+                          ),
+                          Text(
+                            "₹${formatter.format(absoluteBalance)}",
+                            style: GoogleFonts.openSans(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
-                      Text(
-                        "₹4,131.68",
-                        style: GoogleFonts.openSans(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(20)),
+                        child: Text(
+                          "Details >",
+                          style: GoogleFonts.openSans(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                        ),
                       ),
                     ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(20)),
-                    child: Text(
-                      "Details >",
-                      style: GoogleFonts.openSans(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
-                    ),
-                  ),
                 ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      }
     );
   }
+
 
   Widget _buildGroupsList(BuildContext context) {
     return BlocBuilder<GroupsBloc, GroupsState>(
       builder: (context, state) {
         if (state.status == GroupsStatus.loading) {
-          return const SliverFillRemaining(child: Center(child: CircularProgressIndicator()));
+          return _GroupsShimmerList();
         } else if (state.status == GroupsStatus.success || (state.status == GroupsStatus.failure && state.groups.isNotEmpty)) {
           if (state.groups.isEmpty) {
             return SliverFillRemaining(
@@ -182,7 +215,7 @@ class GroupsPage extends StatelessWidget {
                   onTap: () {
                     NavigationUtils.handleResult(
                       context: context,
-                      navigation: NavigationService.pushNamed(AppRoutes.groupDetail, args: {"group_id": group.id, "preview_group": group}),
+                      navigation: NavigationService.pushNamed(AppRoutes.groupDetail, args: {"group_id": group.id}),
                       onRefresh: () => context.read<GroupsBloc>().add(LoadGroups()),
                     );
                   },
@@ -195,6 +228,59 @@ class GroupsPage extends StatelessWidget {
         }
         return const SliverToBoxAdapter(child: SizedBox());
       },
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shimmer skeleton for the groups list
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _GroupsShimmerList extends StatelessWidget {
+  const _GroupsShimmerList();
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+          child: Skeletonizer(
+            enabled: true,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Row(
+                  children: [
+                    // Circle avatar placeholder
+                    Bone.circle(size: 56),
+                    const SizedBox(width: 16),
+                    // Name + type
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Bone.text(width: 140, fontSize: 16),
+                          const SizedBox(height: 6),
+                          Bone.text(width: 80, fontSize: 13),
+                        ],
+                      ),
+                    ),
+                    // Arrow icon placeholder
+                    Bone.square(size: 36, borderRadius: BorderRadius.circular(8)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        childCount: 6,
+      ),
     );
   }
 }
