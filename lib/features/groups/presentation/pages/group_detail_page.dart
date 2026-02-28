@@ -659,69 +659,74 @@ class _TransactionItem extends StatelessWidget {
     final String balanceLabel = youLent ? 'you lent' : 'you owe';
     final formatter = NumberFormat('#,##0.##', 'en_IN');
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      child: Row(
-        children: [
-          // Date column
-          SizedBox(
-            width: 36,
-            child: Column(
-              children: [
-                Text(month, style: GoogleFonts.openSans(fontSize: 12, color: AppColors.textGrey)),
-                Text(
-                  day,
-                  style: GoogleFonts.openSans(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textGrey),
-                ),
-              ],
+    return GestureDetector(
+      onTap: () {
+        NavigationService.pushNamed(AppRoutes.expanseDetail,args: {"expanse_id":expense.expenseId});
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        child: Row(
+          children: [
+            // Date column
+            SizedBox(
+              width: 36,
+              child: Column(
+                children: [
+                  Text(month, style: GoogleFonts.openSans(fontSize: 12, color: AppColors.textGrey)),
+                  Text(
+                    day,
+                    style: GoogleFonts.openSans(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textGrey),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 16),
-          // Icon
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(8)),
-            child: const Icon(Icons.receipt_long_outlined, color: AppColors.textGrey),
-          ),
-          const SizedBox(width: 16),
-          // Description + paid by
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  expense.description,
-                  style: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  "${expense.paidByName} paid ₹${formatter.format(expense.totalAmount)}",
-                  style: GoogleFonts.openSans(fontSize: 12, color: AppColors.textGrey),
-                ),
-              ],
+            const SizedBox(width: 16),
+            // Icon
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(8)),
+              child: const Icon(Icons.receipt_long_outlined, color: AppColors.textGrey),
             ),
-          ),
-          // Balance effect
-          if (expense.yourBalanceEffect == 0)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text("Not involved", style: GoogleFonts.openSans(fontSize: 12, color: AppColors.textGrey, fontStyle: FontStyle.italic)),
-              ],
-            )
-          else
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(balanceLabel, style: GoogleFonts.openSans(fontSize: 12, color: balanceColor)),
-                Text(
-                  "₹${formatter.format(expense.yourBalanceEffect)}",
-                  style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.bold, color: balanceColor),
-                ),
-              ],
+            const SizedBox(width: 16),
+            // Description + paid by
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    expense.description,
+                    style: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    "${expense.paidByName} paid ₹${formatter.format(expense.totalAmount)}",
+                    style: GoogleFonts.openSans(fontSize: 12, color: AppColors.textGrey),
+                  ),
+                ],
+              ),
             ),
-        ],
+            // Balance effect
+            if (expense.yourBalanceEffect == 0)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text("Not involved", style: GoogleFonts.openSans(fontSize: 12, color: AppColors.textGrey, fontStyle: FontStyle.italic)),
+                ],
+              )
+            else
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(balanceLabel, style: GoogleFonts.openSans(fontSize: 12, color: balanceColor)),
+                  Text(
+                    "₹${formatter.format(expense.yourBalanceEffect)}",
+                    style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.bold, color: balanceColor),
+                  ),
+                ],
+              ),
+          ],
+        ),
       ),
     );
   }

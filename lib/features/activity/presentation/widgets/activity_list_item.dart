@@ -25,22 +25,41 @@ class ActivityListItem extends StatelessWidget {
           children: [
             // Icon
             _buildIcon(),
-            const SizedBox(width: 16),
+            const SizedBox(width: 18),
             
             // Content
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title
-                  Text(
-                    activity.title,
-                    style: GoogleFonts.openSans(
-                      fontSize: 16,
-                      color: AppColors.textBlack,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title
+                      Expanded(
+                        child: Text(
+                          activity.title,
+                          style: GoogleFonts.outfit(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textBlack,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      
+                      // Timestamp (Right Aligned)
+                      Text(
+                        _formatDate(activity.timestamp),
+                        style: GoogleFonts.outfit(
+                          fontSize: 13,
+                          color: AppColors.iconGrey,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   
@@ -48,20 +67,10 @@ class ActivityListItem extends StatelessWidget {
                   if (activity.subtitle != null)
                     Text(
                       activity.subtitle!,
-                      style: GoogleFonts.openSans(
+                      style: GoogleFonts.outfit(
                         fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                         color: activity.isPositive ? AppColors.successGreen : AppColors.warningOrange,
-                      ),
-                    ),
-                  
-                   const SizedBox(height: 4),
-                   // Timestamp
-                    Text(
-                      _formatDate(activity.timestamp),
-                      style: GoogleFonts.openSans(
-                        fontSize: 12,
-                        color: AppColors.textGrey,
                       ),
                     ),
                 ],
@@ -76,27 +85,33 @@ class ActivityListItem extends StatelessWidget {
   Widget _buildIcon() {
     IconData iconData;
     Color iconColor;
+    Color bgColor;
     
     switch (activity.type) {
       case ActivityType.settlement:
-        iconData = Icons.balance_rounded; // Scales icon
-        iconColor = Colors.grey.shade700;
+        iconData = Icons.account_balance_wallet_rounded;
+        iconColor = AppColors.primary;
+        bgColor = AppColors.primary.withValues(alpha: 0.1);
         break;
       case ActivityType.expense:
-        iconData = Icons.receipt_long_rounded; // Receipt icon
-        iconColor = Colors.grey.shade700;
+        iconData = Icons.receipt_long_rounded;
+        iconColor = AppColors.warningOrange;
+        bgColor = AppColors.warningOrange.withValues(alpha: 0.1);
         break;
       case ActivityType.payment:
-        iconData = Icons.payments_rounded; // Banknote/Payment icon
-        iconColor = const Color(0xFF009688);
+        iconData = Icons.payments_rounded;
+        iconColor = AppColors.successGreen;
+        bgColor = AppColors.successGreen.withValues(alpha: 0.1);
         break;
       case ActivityType.modification:
         iconData = Icons.edit_note_rounded;
-        iconColor = Colors.grey.shade700;
+        iconColor = Colors.blue.shade600;
+        bgColor = Colors.blue.shade600.withValues(alpha: 0.1);
         break;
       case ActivityType.addToGroup:
         iconData = Icons.group_add_rounded;
-        iconColor = Colors.grey.shade700;
+        iconColor = Colors.purple.shade500;
+        bgColor = Colors.purple.shade500.withValues(alpha: 0.1);
         break;
     }
 
@@ -104,25 +119,23 @@ class ActivityListItem extends StatelessWidget {
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: iconColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        color: bgColor,
+        shape: BoxShape.circle,
       ),
       child: Stack(
         children: [
           Center(
-            child: Icon(iconData, color: iconColor, size: 28),
+            child: Icon(iconData, color: iconColor, size: 24),
           ),
-          // Small circle overlay as seen in design (e.g. user avatar color indicator)
-          // Simplified as a colored dot for now
-          // Positioned bottom right
+          // Small circle overlay to highlight nature of activity
           Positioned(
-            right: 0,
-            bottom: 0,
+            right: -2,
+            bottom: -2,
             child: Container(
               width: 14,
               height: 14,
               decoration: BoxDecoration(
-                color: Colors.red.shade900, // Example color from image
+                color: activity.isPositive ? AppColors.successGreen : (activity.subtitle != null ? AppColors.warningOrange : iconColor),
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 2),
               ),
@@ -134,7 +147,14 @@ class ActivityListItem extends StatelessWidget {
   }
 
   String _formatDate(DateTime date) {
-    // Format: "9 Oct 2025 at 11:07 AM"
-    return DateFormat("d MMM y 'at' h:mm a").format(date);
+    final now = DateTime.now();
+    if (now.difference(date).inDays == 0 && date.day == now.day) {
+      return DateFormat('h:mm a').format(date); // e.g., 2:30 PM
+    } else if (now.year == date.year) {
+      return DateFormat("MMM d").format(date); // e.g., Oct 9
+    } else {
+      return DateFormat("MMM d, y").format(date); // e.g., Oct 9, 2024
+    }
   }
 }
+

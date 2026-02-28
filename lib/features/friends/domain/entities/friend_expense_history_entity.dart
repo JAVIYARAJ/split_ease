@@ -2,10 +2,10 @@ import 'package:equatable/equatable.dart';
 import 'package:split_ease/features/friends/domain/entities/friend_expense_entity.dart';
 
 class FriendDetailUserEntity extends Equatable {
-  final String id;
-  final String avatar;
-  final String email;
-  final String fullName;
+  final String? id;
+  final String? avatar;
+  final String? email;
+  final String? fullName;
 
   const FriendDetailUserEntity({
     required this.id,

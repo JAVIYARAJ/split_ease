@@ -15,6 +15,7 @@ class ActivityEntity {
   final bool isPositive; // For coloring (Green vs Orange)
   final DateTime timestamp;
   final String? imageUrl; // For group icon or user icon
+  final String? activityId;
 
   const ActivityEntity({
     required this.id,
@@ -25,5 +26,6 @@ class ActivityEntity {
     required this.isPositive,
     required this.timestamp,
     this.imageUrl,
+    this.activityId
   });
 }

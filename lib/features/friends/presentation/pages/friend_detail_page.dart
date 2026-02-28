@@ -5,12 +5,15 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:split_ease/core/presentation/widgets/base_screen.dart';
 import 'package:split_ease/core/presentation/widgets/custom_refresh_indicator.dart';
+import 'package:split_ease/core/routing/app_routes.dart';
+import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/features/friends/domain/entities/friend_entity.dart';
 import 'package:split_ease/features/friends/domain/entities/friend_expense_entity.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friend_detail_bloc.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friend_detail_event.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friend_detail_state.dart';
+import 'package:split_ease/features/expenses/presentation/pages/expense_detail_page.dart';
 import 'package:intl/intl.dart';
 
 class FriendDetailPage extends StatefulWidget {
@@ -48,8 +51,7 @@ class _FriendDetailPageState extends State<FriendDetailPage> {
   }
 
   Future<void> _openAddExpense() async {
-    // Add Expense logic (if needed in friend scope)
-    // Could pass friend object as argument to pre-populate payer/split
+    // Add Expense logic
   }
 
   @override
@@ -62,14 +64,14 @@ class _FriendDetailPageState extends State<FriendDetailPage> {
       },
       child: BaseScreen(
         useSafeArea: false,
-        backgroundColor: AppColors.backgroundWhite,
+        backgroundColor: Colors.white,
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _openAddExpense,
-          backgroundColor: AppColors.primaryTeal,
+          backgroundColor: AppColors.primary,
           icon: const Icon(Icons.receipt_long, color: Colors.white),
           label: Text(
             "Add expense",
-            style: GoogleFonts.openSans(color: Colors.white, fontWeight: FontWeight.w600),
+            style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w600),
           ),
         ),
         child: CustomRefreshIndicator(
@@ -79,11 +81,21 @@ class _FriendDetailPageState extends State<FriendDetailPage> {
           child: CustomScrollView(
             slivers: [
               _FriendDetailAppBar(onBack: _onBack),
-              BlocBuilder<FriendDetailBloc, FriendDetailState>(
-                builder: (context, state) {
-                  if (state.friendEntity == null) return const SliverToBoxAdapter(child: SizedBox());
-                  return _FriendDetailInfo(state.friendEntity!);
-                },
+              SliverToBoxAdapter(
+                child: Container(
+                  color: Colors.white,
+                  child: Column(
+                    children: [
+                      BlocBuilder<FriendDetailBloc, FriendDetailState>(
+                        builder: (context, state) {
+                          if (state.friendEntity == null) return const SizedBox();
+                          return _FriendDetailInfo(state.friendEntity!);
+                        },
+                      ),
+                      const Divider(height: 1, thickness: 1, color: AppColors.backgroundLightGrey),
+                    ],
+                  ),
+                ),
               ),
               BlocBuilder<FriendDetailBloc, FriendDetailState>(
                 builder: (context, state) {
@@ -97,21 +109,20 @@ class _FriendDetailPageState extends State<FriendDetailPage> {
                         child: Center(
                           child: Text(
                             state.expenseErrorMessage ?? "Failed to load expenses",
-                            style: GoogleFonts.openSans(color: AppColors.errorRed, fontSize: 14),
+                            style: GoogleFonts.outfit(color: AppColors.errorRed, fontSize: 14),
                             textAlign: TextAlign.center,
                           ),
                         ),
                       ),
                     );
                   }
-                  if (state.expenseStatus == FriendDetailExpenseStatus.success &&
-                      state.expenseHistory != null) {
+                  if (state.expenseStatus == FriendDetailExpenseStatus.success && state.expenseHistory != null) {
                     return _TransactionList(expenses: state.expenseHistory?.expenses ?? []);
                   }
                   return const SliverToBoxAdapter(child: SizedBox());
                 },
               ),
-              const SliverToBoxAdapter(child: SizedBox(height: 100))
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
           ),
         ),
@@ -151,21 +162,15 @@ class _ShimmerTransactionItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
       child: Row(
         children: [
           SizedBox(
             width: 36,
-            child: Column(
-              children: [
-                Bone.text(width: 28, fontSize: 12),
-                const SizedBox(height: 4),
-                Bone.text(width: 22, fontSize: 18),
-              ],
-            ),
+            child: Column(children: [Bone.text(width: 28, fontSize: 12), const SizedBox(height: 4), Bone.text(width: 22, fontSize: 18)]),
           ),
           const SizedBox(width: 16),
-          Bone.square(size: 44, borderRadius: BorderRadius.circular(8)),
+          Bone.square(size: 40, borderRadius: BorderRadius.circular(20)),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -180,11 +185,7 @@ class _ShimmerTransactionItem extends StatelessWidget {
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Bone.text(width: 56, fontSize: 12),
-              const SizedBox(height: 4),
-              Bone.text(width: 64, fontSize: 14),
-            ],
+            children: [Bone.text(width: 56, fontSize: 12), const SizedBox(height: 4), Bone.text(width: 64, fontSize: 14)],
           ),
         ],
       ),
@@ -203,10 +204,7 @@ class _ShimmerTransactionList extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Bone.text(width: 110, fontSize: 14),
-            ),
+            Padding(padding: const EdgeInsets.fromLTRB(24, 24, 24, 8), child: Bone.text(width: 110, fontSize: 14)),
             for (int i = 0; i < 5; i++) const _ShimmerTransactionItem(),
           ],
         ),
@@ -221,24 +219,23 @@ class _ShimmerTransactionList extends StatelessWidget {
 
 class _FriendDetailAppBar extends StatelessWidget {
   final VoidCallback onBack;
+
   const _FriendDetailAppBar({required this.onBack});
 
   @override
   Widget build(BuildContext context) {
     return SliverAppBar(
-      expandedHeight: 200.0,
+      expandedHeight: 220.0,
       pinned: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.primary,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
         onPressed: onBack,
       ),
       actions: [
         IconButton(
           icon: const Icon(Icons.settings_outlined, color: Colors.white),
-          onPressed: () {
-            // Friend Settings placeholder
-          },
+          onPressed: () {},
         ),
       ],
       flexibleSpace: BlocBuilder<FriendDetailBloc, FriendDetailState>(
@@ -247,53 +244,42 @@ class _FriendDetailAppBar extends StatelessWidget {
 
           return LayoutBuilder(
             builder: (context, constraints) {
-              const double expandedHeight = 200.0;
+              const double expandedHeight = 220.0;
               final double collapsedHeight = kToolbarHeight + MediaQuery.of(context).padding.top;
               final double currentHeight = constraints.maxHeight;
-              
+
               final double t = ((currentHeight - collapsedHeight) / (expandedHeight - collapsedHeight)).clamp(0.0, 1.0);
-              
-              final double titleSizes = Tween<double>(begin: 20.0, end: 28.0).transform(t);
-              final double titleLeft = Tween<double>(begin: 50.0, end: 20.0).transform(t);
-              final double titleBottom = Tween<double>(begin: 14.0, end: 55.0).transform(t);
-              
-              // Move avatar upwards and scale
+
+              final double titleSizes = Tween<double>(begin: 20.0, end: 32.0).transform(t);
+              final double titleLeft = Tween<double>(begin: 48.0, end: 24.0).transform(t);
+              final double titleBottom = Tween<double>(begin: 14.0, end: 24.0).transform(t);
+
               final double avatarSize = Tween<double>(begin: 0.0, end: 64.0).transform(t);
-              final double avatarBottom = Tween<double>(begin: 60.0, end: 95.0).transform(t);
+              final double avatarBottom = Tween<double>(begin: 60.0, end: 68.0).transform(t);
 
               return Stack(
                 fit: StackFit.expand,
                 children: [
-                  // 1. Background geometric or solid color (match screenshot style)
-                  Container(
-                    decoration: const BoxDecoration(
-                      color: AppColors.primaryTeal,
-                      image: DecorationImage(
-                        image: AssetImage('assets/images/pattern_header.png'), // Might not exist, fallback to color
-                        fit: BoxFit.cover,
-                        opacity: 0.3,
-                      ),
-                    ),
-                  ),
-                  
-                  // 2. Title Animation
+                  // Dark Teal solid background 
+                  Container(color: AppColors.primary),
+                  // Subtle Grid/Gradient Overlay
                   Positioned(
-                    left: titleLeft,
-                    bottom: titleBottom,
-                    child: Text(
-                      friendEntity?.name ?? "",
-                      style: GoogleFonts.openSans(
-                        color: Colors.white,
-                        fontSize: titleSizes,
-                        fontWeight: FontWeight.bold,
+                    left: -100,
+                    top: -100,
+                    child: Container(
+                      width: 300,
+                      height: 300,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.05),
                       ),
                     ),
                   ),
 
-                  // 3. Avatar Animation
-                  if (t > 0.1) // hide when collapsed
+                  // Avatar
+                  if (t > 0.1)
                     Positioned(
-                      left: 20,
+                      left: 24,
                       bottom: avatarBottom,
                       child: Hero(
                         tag: friendEntity?.id ?? 'friend_avatar',
@@ -302,21 +288,25 @@ class _FriendDetailAppBar extends StatelessWidget {
                           height: avatarSize,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: AppColors.warningOrange, // From screenshot
-                            border: Border.all(color: Colors.white, width: 3),
+                            color: Colors.white.withValues(alpha: 0.2),
                             image: friendEntity?.imageUrl != null
-                                ? DecorationImage(
-                                    image: CachedNetworkImageProvider(friendEntity!.imageUrl!),
-                                    fit: BoxFit.cover,
-                                  )
+                                ? DecorationImage(image: CachedNetworkImageProvider(friendEntity!.imageUrl!), fit: BoxFit.cover)
                                 : null,
                           ),
-                          child: friendEntity?.imageUrl == null
-                              ? Icon(Icons.person, color: Colors.white, size: avatarSize * 0.5)
-                              : null,
+                          child: friendEntity?.imageUrl == null ? Icon(Icons.person, color: Colors.white, size: avatarSize * 0.5) : null,
                         ),
                       ),
                     ),
+
+                  // Title
+                  Positioned(
+                    left: titleLeft,
+                    bottom: titleBottom,
+                    child: Text(
+                      friendEntity?.name ?? "",
+                      style: GoogleFonts.outfit(color: Colors.white, fontSize: titleSizes, fontWeight: FontWeight.w700, letterSpacing: -0.5),
+                    ),
+                  ),
                 ],
               );
             },
@@ -334,18 +324,15 @@ class _FriendDetailInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const _BalanceSummary(),
-            const SizedBox(height: 24),
-            const _ActionButtons(),
-            const SizedBox(height: 16),
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _BalanceSummary(), 
+          const SizedBox(height: 24), 
+          const _ActionButtons(),
+        ],
       ),
     );
   }
@@ -367,93 +354,152 @@ class _BalanceSummary extends StatelessWidget {
         }
 
         final formatter = NumberFormat('#,##0.##', 'en_IN');
-        
+
         // Overall
         final bool youAreOwed = state.expenseHistory?.status == 'you_are_owed';
         final double absOverall = friend.overallBalance.abs();
         final Color overallColor = youAreOwed ? AppColors.successGreen : AppColors.errorRed;
-        String overallLabel = friend.overallBalance == 0 ? "You are settled up" : (youAreOwed ? "You are owed" : "You owe");
+        String overallLabel = friend.overallBalance == 0 ? "You are settled up" : (youAreOwed ? "Gets back" : "Owes");
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            RichText(
-              text: TextSpan(
-                style: GoogleFonts.openSans(fontSize: 16, color: AppColors.textBlack),
-                children: [
-                  if (friend.overallBalance != 0) ...[
-                    TextSpan(text: "$overallLabel ", style: GoogleFonts.openSans(color: overallColor, fontWeight: FontWeight.bold)),
-                    TextSpan(
-                      text: "₹${formatter.format(absOverall)}",
-                      style: GoogleFonts.openSans(fontWeight: FontWeight.bold, color: overallColor),
-                    ),
-                    TextSpan(text: " overall", style: GoogleFonts.openSans(color: overallColor, fontWeight: FontWeight.bold)),
-                  ] else ...[
-                     TextSpan(text: overallLabel, style: GoogleFonts.openSans(color: AppColors.textGrey, fontWeight: FontWeight.bold)),
-                  ],
-                ],
+            if (friend.overallBalance != 0) ...[
+               Text(
+                 "Overall Balance",
+                 style: GoogleFonts.outfit(color: AppColors.iconGrey, fontSize: 13, fontWeight: FontWeight.w500),
+               ),
+               const SizedBox(height: 4),
+               Row(
+                 crossAxisAlignment: CrossAxisAlignment.center,
+                 children: [
+                   Text(
+                     "₹${formatter.format(absOverall)}",
+                     style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w700, color: overallColor, letterSpacing: -1),
+                   ),
+                   const SizedBox(width: 8),
+                   Container(
+                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                     decoration: BoxDecoration(
+                       color: overallColor.withValues(alpha: 0.1),
+                       borderRadius: BorderRadius.circular(8),
+                     ),
+                     child: Text(
+                       overallLabel,
+                       style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: overallColor),
+                     ),
+                   ),
+                 ],
+               ),
+            ] else ...[
+               Text(
+                 "Overall Balance",
+                 style: GoogleFonts.outfit(color: AppColors.iconGrey, fontSize: 13, fontWeight: FontWeight.w500),
+               ),
+               const SizedBox(height: 4),
+               Text(
+                 overallLabel,
+                 style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+               ),
+            ],
+            
+            if (friend.groupBreakdown.isNotEmpty || friend.nonGroupBalance != 0) ...[
+              const SizedBox(height: 24),
+              Text(
+                "Breakdown",
+                style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textGrey, letterSpacing: 0.5),
               ),
-            ),
-            const SizedBox(height: 8),
+              const SizedBox(height: 12),
+            ],
 
             // Nested group breakdowns
             ...friend.groupBreakdown.take(3).map((g) {
               final bool gOwed = g.balance > 0;
-              final Color gColor = gOwed ? AppColors.successGreen : AppColors.warningOrange; // Matching screenshot orange for owe
+              final Color gColor = gOwed ? AppColors.successGreen : AppColors.warningOrange;
               final String? name = friend.name.split(' ').firstOrNull;
               final String gText = gOwed ? "$name owes you" : "You owe $name";
 
               return Padding(
-                padding: const EdgeInsets.only(bottom: 4.0),
-                child: RichText(
-                  text: TextSpan(
-                    style: GoogleFonts.openSans(fontSize: 14, color: AppColors.textBlack),
-                    children: [
-                      TextSpan(text: "$gText "),
-                      TextSpan(
-                        text: "₹${formatter.format(g.balance.abs())} ",
-                        style: GoogleFonts.openSans(fontWeight: FontWeight.w600, color: gColor),
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.backgroundLightGrey,
                       ),
-                      TextSpan(text: 'in "${g.groupName}"', style: GoogleFonts.openSans(color: AppColors.textGrey)),
-                    ],
-                  ),
+                      child: const Icon(Icons.groups_rounded, size: 16, color: AppColors.iconGrey),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(g.groupName, style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textBlack)),
+                          Text(gText, style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      "₹${formatter.format(g.balance.abs())}",
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 15, color: gColor),
+                    ),
+                  ],
                 ),
               );
             }),
 
             // Non-group breakdown
             if (friend.nonGroupBalance != 0) ...[
-              Builder(builder: (context) {
-                final bool ngOwed = friend.nonGroupBalance > 0;
-                final Color ngColor = ngOwed ? AppColors.successGreen : AppColors.warningOrange;
-                final String name = friend.name.split(' ').first;
-                final String ngText = ngOwed ? "$name owes you" : "You owe $name";
+              Builder(
+                builder: (context) {
+                  final bool ngOwed = friend.nonGroupBalance > 0;
+                  final Color ngColor = ngOwed ? AppColors.successGreen : AppColors.warningOrange;
+                  final String name = friend.name.split(' ').first;
+                  final String ngText = ngOwed ? "$name owes you" : "You owe $name";
 
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 4.0),
-                  child: RichText(
-                    text: TextSpan(
-                      style: GoogleFonts.openSans(fontSize: 14, color: AppColors.textBlack),
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: Row(
                       children: [
-                        TextSpan(text: "$ngText "),
-                        TextSpan(
-                          text: "₹${formatter.format(friend.nonGroupBalance.abs())} ",
-                          style: GoogleFonts.openSans(fontWeight: FontWeight.w600, color: ngColor),
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.backgroundLightGrey,
+                          ),
+                          child: const Icon(Icons.person_rounded, size: 16, color: AppColors.iconGrey),
                         ),
-                        TextSpan(text: 'in non-group expenses', style: GoogleFonts.openSans(color: AppColors.textGrey)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Non-group", style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textBlack)),
+                              Text(ngText, style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          "₹${formatter.format(friend.nonGroupBalance.abs())}",
+                          style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 15, color: ngColor),
+                        ),
                       ],
                     ),
-                  ),
-                );
-              }),
+                  );
+                },
+              ),
             ],
 
-             if (friend.groupBreakdown.length > 3)
+            if (friend.groupBreakdown.length > 3)
               Padding(
-                padding: const EdgeInsets.only(top: 4.0),
+                padding: const EdgeInsets.only(top: 8.0),
                 child: Text(
-                   "Plus ${friend.groupBreakdown.length - 3} more balances",
-                   style: GoogleFonts.openSans(fontSize: 14, color: AppColors.textGrey),
+                  "+ ${friend.groupBreakdown.length - 3} more balances",
+                  style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textGrey),
                 ),
               ),
           ],
@@ -471,44 +517,40 @@ class _ActionButtons extends StatelessWidget {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       physics: const BouncingScrollPhysics(),
+      clipBehavior: Clip.none,
       child: Row(
         children: [
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.warningOrange,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: Text("Settle up", style: GoogleFonts.openSans(fontWeight: FontWeight.w600, fontSize: 16)),
-          ),
-          const SizedBox(width: 8),
-          OutlinedButton(
-            onPressed: () {},
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.textBlack,
-              side: const BorderSide(color: Colors.black12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: Text("Remind...", style: GoogleFonts.openSans(fontWeight: FontWeight.w600, fontSize: 16)),
-          ),
-          const SizedBox(width: 8),
-          OutlinedButton(
-            onPressed: () {},
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.textBlack,
-              side: const BorderSide(color: Colors.black12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.pie_chart, color: Colors.purple, size: 18),
-                const SizedBox(width: 6),
-                Text("Charts", style: GoogleFonts.openSans(fontWeight: FontWeight.w600, fontSize: 16)),
-              ],
-            ),
-          ),
+          _buildPillBtn("Settle up", AppColors.warningOrange, Colors.white, () {}, isSolid: true),
+          const SizedBox(width: 12),
+          _buildPillBtn("Remind...", Colors.transparent, AppColors.textBlack, () {}, isSolid: false),
+          const SizedBox(width: 12),
+          _buildPillBtn("Charts", Colors.transparent, AppColors.textBlack, () {}, isSolid: false, icon: Icons.pie_chart_rounded, iconColor: AppColors.primary),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPillBtn(String label, Color bgColor, Color textColor, VoidCallback onTap, {required bool isSolid, IconData? icon, Color? iconColor}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(20),
+          border: isSolid ? null : Border.all(color: AppColors.borderGreyLight),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+               Icon(icon, color: iconColor ?? textColor, size: 16),
+               const SizedBox(width: 6),
+            ],
+            Text(label, style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 14, color: textColor)),
+          ],
+        ),
       ),
     );
   }
@@ -530,35 +572,20 @@ class _TransactionList extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(28),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryTeal.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.receipt_long_rounded,
-                    size: 72,
-                    color: AppColors.primaryTeal,
-                  ),
+                  padding: const EdgeInsets.all(24),
+                  decoration: const BoxDecoration(color: AppColors.backgroundLightGrey, shape: BoxShape.circle),
+                  child: const Icon(Icons.receipt_long_rounded, size: 48, color: AppColors.iconGrey),
                 ),
                 const SizedBox(height: 24),
                 Text(
                   "No expenses yet",
-                  style: GoogleFonts.openSans(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textBlack,
-                  ),
+                  style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textBlack),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Text(
                   "Add a new expense with this friend to start splitting!",
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.openSans(
-                    fontSize: 15,
-                    color: AppColors.textGrey,
-                    height: 1.5,
-                  ),
+                  style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textGrey, height: 1.5),
                 ),
               ],
             ),
@@ -582,14 +609,10 @@ class _TransactionList extends StatelessWidget {
     for (final entry in grouped.entries) {
       children.add(
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 8),
           child: Text(
-            entry.key,
-            style: GoogleFonts.openSans(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textBlack,
-            ),
+            entry.key.toUpperCase(),
+            style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.iconGrey, letterSpacing: 1.0),
           ),
         ),
       );
@@ -598,9 +621,7 @@ class _TransactionList extends StatelessWidget {
       }
     }
 
-    return SliverList(
-      delegate: SliverChildListDelegate(children),
-    );
+    return SliverList(delegate: SliverChildListDelegate(children));
   }
 }
 
@@ -621,76 +642,91 @@ class _TransactionItem extends StatelessWidget {
     } catch (_) {}
 
     final bool youAreOwed = expense.type == 'you_are_owed';
-    final Color balanceColor = youAreOwed ? AppColors.successGreen : AppColors.errorRed; 
-    final String balanceLabel = youAreOwed ? 'you are owed' : 'you owe';
+    final Color balanceColor = youAreOwed ? AppColors.successGreen : AppColors.textGrey; 
+    final String balanceLabel = youAreOwed ? 'Gets back' : 'Owes';
     final formatter = NumberFormat('#,##0.##', 'en_IN');
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 36,
-            child: Column(
-              children: [
-                Text(month, style: GoogleFonts.openSans(fontSize: 12, color: AppColors.textGrey)),
-                Text(
-                  day,
-                  style: GoogleFonts.openSans(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textGrey),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Icon
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: AppColors.backgroundLightGrey, 
-              borderRadius: BorderRadius.circular(8),
-              image: expense.groupIcon != null
-                  ? DecorationImage(
-                      image: CachedNetworkImageProvider(expense.groupIcon!),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
-            ),
-            child: expense.groupIcon == null
-                ? const Icon(Icons.receipt_long_outlined, color: AppColors.textGrey)
-                : null,
-          ),
-          const SizedBox(width: 16),
-          // Description + group info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  expense.description,
-                  style: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  expense.groupName != null ? "Shared group" : "Non-group expense",
-                  style: GoogleFonts.openSans(fontSize: 12, color: AppColors.textGrey),
-                ),
-              ],
-            ),
-          ),
-          // Balance effect
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(balanceLabel, style: GoogleFonts.openSans(fontSize: 12, color: balanceColor)),
-              Text(
-                "₹${formatter.format(expense.balanceEffect.abs())}",
-                style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.bold, color: balanceColor),
+    return InkWell(
+      onTap: () {
+        NavigationService.pushNamed(AppRoutes.expanseDetail,args: {"expanse_id":expense.expenseId});
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 36,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    month.toUpperCase(),
+                    style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.iconGrey),
+                  ),
+                  Text(
+                    day,
+                    style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(width: 12),
+            // Icon
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.backgroundLightGrey,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.borderGreyLight, width: 0.5),
+                image: expense.groupIcon != null
+                    ? DecorationImage(image: CachedNetworkImageProvider(expense.groupIcon!), fit: BoxFit.cover)
+                    : null,
+              ),
+              child: expense.groupIcon == null ? const Icon(Icons.receipt_long_rounded, color: AppColors.textGrey, size: 20) : null,
+            ),
+            const SizedBox(width: 16),
+            // Description + group info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    expense.description,
+                    style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    expense.groupName != null ? 'in "${expense.groupName}"' : "Non-group expense",
+                    style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w400, color: AppColors.textGrey),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Balance effect
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  balanceLabel,
+                  style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w500, color: balanceColor),
+                ),
+                Text(
+                  "₹${formatter.format(expense.balanceEffect.abs())}",
+                  style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w700, color: balanceColor),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

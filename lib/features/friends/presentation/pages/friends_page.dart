@@ -4,6 +4,7 @@ import 'package:split_ease/core/presentation/widgets/custom_refresh_indicator.da
 import 'package:split_ease/core/presentation/widgets/success_dialog.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -67,16 +68,10 @@ class _FriendsPageState extends State<FriendsPage> {
           }
         },
         child: CustomRefreshIndicator(
-          onRefresh: () async{
+          onRefresh: () async {
             context.read<FriendsBloc>().add(LoadFriends());
           },
-          child: CustomScrollView(
-            slivers: [
-              _buildSliverAppBar(context),
-              _buildSummarySection(context),
-              _buildFriendsList(context),
-            ],
-          ),
+          child: CustomScrollView(slivers: [_buildSliverAppBar(context), _buildSummarySection(context), _buildFriendsList(context)]),
         ),
       ),
     );
@@ -94,11 +89,7 @@ class _FriendsPageState extends State<FriendsPage> {
       surfaceTintColor: Colors.transparent,
       title: Text(
         "Friends",
-        style: GoogleFonts.openSans(
-          color: AppColors.textBlack,
-          fontWeight: FontWeight.bold,
-          fontSize: 28,
-        ),
+        style: GoogleFonts.openSans(color: AppColors.textBlack, fontWeight: FontWeight.bold, fontSize: 28),
       ),
       actions: [
         Padding(
@@ -129,10 +120,7 @@ class _FriendsPageState extends State<FriendsPage> {
                         const SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.warningOrange,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                          decoration: BoxDecoration(color: AppColors.warningOrange, borderRadius: BorderRadius.circular(10)),
                           child: Text(
                             state.unreadRequestCount > 99 ? '99+' : '${state.unreadRequestCount}',
                             style: GoogleFonts.openSans(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 10),
@@ -155,7 +143,7 @@ class _FriendsPageState extends State<FriendsPage> {
           },
           icon: const Icon(Icons.qr_code_scanner, color: AppColors.textBlack),
         ),
-         IconButton(
+        IconButton(
           icon: const Icon(Icons.search, color: AppColors.textBlack, size: 28),
           onPressed: () {},
         ),
@@ -179,13 +167,13 @@ class _FriendsPageState extends State<FriendsPage> {
               }
             }
           }
-          
+
           final netBalance = totalOwesYou - totalYouOwe;
           final isOwe = netBalance < 0;
 
           return Padding(
-             padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-             child: Container(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+            child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
@@ -194,24 +182,14 @@ class _FriendsPageState extends State<FriendsPage> {
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryTeal.withValues(alpha: 0.3),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
+                boxShadow: [BoxShadow(color: AppColors.primaryTeal.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8))],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     "Total Balance",
-                    style: GoogleFonts.openSans(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: GoogleFonts.openSans(color: Colors.white.withValues(alpha: 0.9), fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -221,37 +199,22 @@ class _FriendsPageState extends State<FriendsPage> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                           Text(
+                          Text(
                             isOwe ? "You owe" : "You are owed",
-                            style: GoogleFonts.openSans(
-                              color: Colors.white.withValues(alpha: 0.8),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style: GoogleFonts.openSans(color: Colors.white.withValues(alpha: 0.8), fontSize: 12, fontWeight: FontWeight.w500),
                           ),
                           Text(
                             "₹${netBalance.abs().toStringAsFixed(2)}",
-                            style: GoogleFonts.openSans(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: GoogleFonts.openSans(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
+                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(20)),
                         child: Text(
                           "Details >",
-                          style: GoogleFonts.openSans(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: GoogleFonts.openSans(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ],
@@ -279,43 +242,28 @@ class _FriendsPageState extends State<FriendsPage> {
                   children: [
                     Icon(Icons.person_off_outlined, size: 60, color: Colors.grey.shade300),
                     const SizedBox(height: 16),
-                    Text(
-                      "No friends found",
-                      style: GoogleFonts.openSans(
-                        color: Colors.grey.shade500,
-                        fontSize: 16,
-                      ),
-                    ),
+                    Text("No friends found", style: GoogleFonts.openSans(color: Colors.grey.shade500, fontSize: 16)),
                   ],
                 ),
               ),
             );
           }
           return SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final friend = state.friends[index];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-                  child: FriendListItem(
-                    friend: friend,
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppRoutes.friendDetail,
-                        arguments: {'friend': friend},
-                      );
-                    },
-                  ),
-                );
-              },
-              childCount: state.friends.length,
-            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final friend = state.friends[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                child: FriendListItem(
+                  friend: friend,
+                  onTap: () {
+                    NavigationService.pushNamed(AppRoutes.friendDetail, args: {'friend': friend});
+                  },
+                ),
+              );
+            }, childCount: state.friends.length),
           );
         } else if (state.status == FriendsStatus.failure) {
-          return SliverFillRemaining(
-            child: Center(child: Text(state.errorMessage)),
-          );
+          return SliverFillRemaining(child: Center(child: Text(state.errorMessage)));
         }
         return const SliverToBoxAdapter(child: SizedBox());
       },
@@ -352,17 +300,11 @@ class _FriendsShimmerList extends StatelessWidget {
                     Bone.circle(size: 50),
                     const SizedBox(width: 16),
                     // Name
-                    Expanded(
-                      child: Bone.text(width: 130, fontSize: 16),
-                    ),
+                    Expanded(child: Bone.text(width: 130, fontSize: 16)),
                     // Balance chip placeholder
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Bone.text(width: 55, fontSize: 12),
-                        const SizedBox(height: 4),
-                        Bone.text(width: 70, fontSize: 16),
-                      ],
+                      children: [Bone.text(width: 55, fontSize: 12), const SizedBox(height: 4), Bone.text(width: 70, fontSize: 16)],
                     ),
                     const SizedBox(width: 8),
                     // Chevron

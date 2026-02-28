@@ -6,6 +6,10 @@ import 'package:split_ease/features/account/domain/repository/account_repository
 import 'package:split_ease/features/account/domain/usecases/account_logout.dart';
 
 import 'package:split_ease/features/account/presentation/bloc/account_bloc.dart';
+import 'package:split_ease/features/activity/data/datasources/activity_remote_data_source.dart';
+import 'package:split_ease/features/activity/data/repositories/activity_repository_impl.dart';
+import 'package:split_ease/features/activity/domain/repositories/activity_repository.dart';
+import 'package:split_ease/features/activity/domain/usecases/get_activity_feed_usecase.dart';
 import 'package:split_ease/features/activity/presentation/bloc/activity_bloc.dart';
 import 'package:split_ease/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:split_ease/features/auth/data/repositories/auth_repository_impl.dart';
@@ -58,10 +62,12 @@ import 'features/expenses/presentation/bloc/expense_bloc.dart';
 import 'features/expenses/presentation/bloc/payer/payer_bloc.dart';
 import 'features/expenses/presentation/bloc/split/split_bloc.dart';
 import 'features/expenses/presentation/bloc/date/date_bloc.dart';
+import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_bloc.dart';
 import 'features/expenses/data/datasources/expense_remote_data_source.dart';
 import 'features/expenses/data/repositories/expense_repository_impl.dart';
 import 'features/expenses/domain/repositories/expense_repository.dart';
 import 'features/expenses/domain/usecases/add_expense_usecase.dart';
+import 'package:split_ease/features/expenses/domain/usecases/get_expense_detail_usecase.dart';
 import 'features/groups/domain/usecases/group_insert_icon.dart';
 import 'features/groups/presentation/bloc/groups_bloc.dart';
 import 'features/groups/presentation/bloc/create_group_bloc.dart';
@@ -139,6 +145,7 @@ void _features() {
 void _expense() {
   // Use cases
   sl.registerLazySingleton(() => AddExpenseUseCase(sl()));
+  sl.registerLazySingleton(() => GetExpenseDetailUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<ExpenseRepository>(() => ExpenseRepositoryImpl(remoteDataSource: sl()));
@@ -147,6 +154,7 @@ void _expense() {
   sl.registerLazySingleton<ExpenseRemoteDataSource>(() => ExpenseRemoteDataSourceImpl(client: sl<SupabaseClient>())); // Note: explicit cast to SupabaseClient if needed, or just sl() since we registered sc.client as SupabaseClient
 
   sl.registerFactory(() => ExpenseBloc(addExpenseUseCase: sl()));
+  sl.registerFactory(() => ExpenseDetailBloc(sl()));
   sl.registerFactory(() => PayerBloc());
   sl.registerFactory(() => SplitBloc());
   sl.registerFactory(() => DateBloc());
@@ -249,7 +257,10 @@ void _home() {
 
   sl.registerFactory(() => GetAllGroups(groupRepository: sl<GroupRepository>()),);
   sl.registerFactory(() => GroupsBloc(getAllGroups: sl<GetAllGroups>()),);
-  sl.registerFactory(() => ActivityBloc(),);
+  sl.registerFactory<ActivityRemoteDataSource>(() => ActivityRemoteDataSourceImpl(client: sl<SupabaseClient>()));
+  sl.registerFactory<ActivityRepository>(() => ActivityRepositoryImpl(remoteDataSource: sl<ActivityRemoteDataSource>()));
+  sl.registerFactory(() => GetActivityFeedUseCase(sl<ActivityRepository>()));
+  sl.registerFactory(() => ActivityBloc(getActivityFeedUseCase: sl<GetActivityFeedUseCase>()));
 
   sl.registerFactory<AccountRemoteDataSource>(() => AccountRemoteDataSourceImpl(sl<SupabaseClient>()),);
 

@@ -5,6 +5,8 @@ import 'package:split_ease/features/auth/presentation/login/pages/login_page.dar
 import 'package:split_ease/features/auth/presentation/register/bloc/register_bloc.dart';
 import 'package:split_ease/features/auth/presentation/register/pages/register_page.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_bloc.dart';
+import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_bloc.dart';
+import 'package:split_ease/features/expenses/presentation/pages/expense_detail_page.dart';
 import 'package:split_ease/features/groups/presentation/bloc/group_detail_bloc.dart';
 import 'package:split_ease/features/groups/presentation/bloc/join_group_bloc.dart';
 import 'package:split_ease/features/home/presentation/pages/home_page.dart';
@@ -110,6 +112,14 @@ class RouteGenerator {
         return MaterialPageRoute(
             builder: (_) => const DateSelectionPage(),
             settings: RouteSettings(arguments: settings.arguments, name: settings.name));
+      case AppRoutes.expanseDetail:
+        return MaterialPageRoute(builder: (_) =>
+            BlocProvider(
+              create: (context) => sl<ExpenseDetailBloc>(),
+              child: const ExpenseDetailPage(),
+            ),
+            settings: RouteSettings(arguments: settings.arguments, name: settings.name)
+        );
       default:
         return _errorRoute();
     }

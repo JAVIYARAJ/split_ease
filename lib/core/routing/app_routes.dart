@@ -12,4 +12,5 @@ class AppRoutes {
   static const String splitOptions = '/splitOptions';
   static const String dateSelection = '/dateSelection';
   static const String friendDetail = '/friendDetail';
+  static const String expanseDetail = '/expanseDetail';
 }

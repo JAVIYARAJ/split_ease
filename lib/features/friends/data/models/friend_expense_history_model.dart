@@ -11,10 +11,10 @@ class FriendDetailUserModel extends FriendDetailUserEntity {
 
   factory FriendDetailUserModel.fromJson(Map<String, dynamic> json) {
     return FriendDetailUserModel(
-      id: json['id'] as String,
-      avatar: json['avtar'] as String, // Typo in given JSON 'avtar'
-      email: json['email'] as String,
-      fullName: json['full_name'] as String,
+      id: json['id'] as String?,
+      avatar: json['avtar'] as String?, // Typo in given JSON 'avtar'
+      email: json['email'] as String?,
+      fullName: json['full_name'] as String?,
     );
   }
 }
