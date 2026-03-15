@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 class CreateExpenseParams extends Equatable {
-  final String groupId;
+  final String? groupId;
   final String description;
   final double totalAmount;
   final String paidByUserId;
@@ -10,7 +10,7 @@ class CreateExpenseParams extends Equatable {
   final List<Map<String, dynamic>> splits;
 
   const CreateExpenseParams({
-    required this.groupId,
+    this.groupId,
     required this.description,
     required this.totalAmount,
     required this.paidByUserId,

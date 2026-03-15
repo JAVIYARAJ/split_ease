@@ -76,7 +76,7 @@ class _GroupPickerSheet extends StatelessWidget {
                     shrinkWrap: true,
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                     itemCount: groups.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
                       final group = groups[index];
                       return _GroupTile(group: group, onTap: () => Navigator.pop(context, group));
@@ -127,20 +127,72 @@ class _GroupTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    group.name ?? "Unnamed Group",
+                    group.name ?? "Non-group",
                     style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (group.members != null)
+                  if (group.memberCount != null)
                     Text(
-                      "${group.members!.length} member${group.members!.length == 1 ? '' : 's'}",
+                      "${group.memberCount} member${group.memberCount == 1 ? '' : 's'}",
                       style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey, fontWeight: FontWeight.w500),
                     ),
+                    if(group.memberCount ==1)...[
+                      Text(
+                        "You're the only member in this group. Add members to start splitting expenses.",
+                        style: GoogleFonts.outfit(fontSize: 12, color: AppColors.errorRed, fontWeight: FontWeight.w500),
+                      ),
+                    ]
                 ],
               ),
             ),
             const Icon(Icons.chevron_right_rounded, color: AppColors.textGrey),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NonGroupTile extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _NonGroupTile({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.backgroundLightGrey,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.borderGreyLight),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: AppColors.surfaceWhite,
+              ),
+              child: const Icon(Icons.person_outline,
+                  color: AppColors.textGrey, size: 24),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                "Non-group",
+                style: GoogleFonts.outfit(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textBlack),
+              ),
+            ),
           ],
         ),
       ),

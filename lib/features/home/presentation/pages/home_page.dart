@@ -8,7 +8,8 @@ import 'package:split_ease/core/common/cubit/app_user_cubit.dart';
 import 'package:split_ease/core/services/realtime_service.dart';
 import 'package:split_ease/features/account/presentation/bloc/account_bloc.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
-import '../../../../core/theme/app_colors.dart';
+import 'package:split_ease/core/theme/app_colors.dart';
+import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import '../../../../injection_container.dart';
 import '../../../friends/presentation/pages/friends_page.dart';
 import '../../../groups/presentation/pages/groups_page.dart';
@@ -356,23 +357,9 @@ class _FriendRequestNotificationState extends State<_FriendRequestNotification>
                     child: Row(
                       children: [
                         // Avatar
-                        CircleAvatar(
+                        AppAvatar(
+                          url: widget.avatarUrl,
                           radius: 22,
-                          backgroundImage: widget.avatarUrl != null
-                              ? NetworkImage(widget.avatarUrl!)
-                              : null,
-                          backgroundColor:
-                              AppColors.primary.withValues(alpha: 0.15),
-                          child: widget.avatarUrl == null
-                              ? Text(
-                                  widget.name[0].toUpperCase(),
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.primary,
-                                  ),
-                                )
-                              : null,
                         ),
                         const SizedBox(width: 12),
                         // Name + Message

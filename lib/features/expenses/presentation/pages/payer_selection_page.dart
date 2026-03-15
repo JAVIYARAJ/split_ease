@@ -1,8 +1,8 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
+import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/payer/payer_bloc.dart';
 import 'package:split_ease/features/groups/domain/entities/group_member_entity.dart';
 
@@ -53,11 +53,8 @@ class PayerSelectionPage extends StatelessWidget {
             final selectedUserId = state.selectedPayerId ?? (members.isNotEmpty ? members.first.userId : '');
 
             return ListView.builder(
-              itemCount: members.length + 1, // +1 for "Multiple people"
+              itemCount: members.length,
               itemBuilder: (context, index) {
-                if (index == members.length) {
-                  return _buildMultiplePeopleOption(context);
-                }
                 final member = members[index];
                 final isSelected = member.userId == selectedUserId;
                 return InkWell(
@@ -71,27 +68,10 @@ class PayerSelectionPage extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                     child: Row(
                       children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            image: member.avtar != null
-                                ? DecorationImage(
-                                    image: CachedNetworkImageProvider(member.avtar!),
-                                    fit: BoxFit.cover,
-                                  )
-                                : null,
-                            color: member.avtar == null ? AppColors.primaryTeal : null,
-                          ),
-                          child: member.avtar == null
-                              ? Center(
-                                  child: Text(
-                                    member.fullName?.substring(0, 1).toUpperCase() ?? "?",
-                                    style: GoogleFonts.openSans(color: Colors.white, fontWeight: FontWeight.bold),
-                                  ),
-                                )
-                              : null,
+                        AppAvatar(
+                          url: member.avtar,
+                          radius: 20,
+                          backgroundColor: member.avtar == null ? AppColors.primaryTeal : null,
                         ),
                         const SizedBox(width: 12),
                         Expanded(

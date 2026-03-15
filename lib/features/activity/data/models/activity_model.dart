@@ -16,7 +16,7 @@ class ActivityModel extends ActivityEntity {
   factory ActivityModel.fromJson(Map<String, dynamic> json) {
     final rawType = json['type'] as String?;
     final actorName = json['actor_name'] as String? ?? 'Someone';
-    final groupName = json['group_name'] as String? ?? 'unknown group';
+    final groupName = json['group_name'] as String?;
     final description = json['description'] as String?;
     final amountType = json['amount_type'] as String?;
 
@@ -35,13 +35,15 @@ class ActivityModel extends ActivityEntity {
     String? subtitle;
     bool isPositive = false;
 
+    final displayGroupName = groupName ?? 'Non-group';
+
     if (rawType == 'group_member_added') {
       type = ActivityType.addToGroup;
-      title = '$actorName added a new member in "$groupName".';
+      title = '$actorName added a new member in $displayGroupName';
       isPositive = true;
     } else if (rawType == 'expense') {
       type = ActivityType.expense;
-      title = '$actorName added "${description ?? 'an expense'}" in "$groupName".';
+      title = '$actorName added "${description ?? 'an expense'}" in $displayGroupName';
       
       if (amountType == 'you_are_owed') {
         final amountStr = balanceEffect?.toStringAsFixed(2) ?? '0.00';
@@ -57,15 +59,15 @@ class ActivityModel extends ActivityEntity {
       }
     } else if (rawType == 'settlement') {
       type = ActivityType.settlement;
-      title = '$actorName added "Settle all balances" in "$groupName".';
+      title = '$actorName added "Settle all balances" in $displayGroupName';
       isPositive = true;
     } else if (rawType == 'payment') {
       type = ActivityType.payment;
-      title = '$actorName recorded a payment in "$groupName".';
+      title = '$actorName recorded a payment in $displayGroupName';
       isPositive = true;
     } else {
       type = ActivityType.modification;
-      title = '$actorName performed an action in "$groupName".';
+      title = '$actorName performed an action in $displayGroupName';
     }
 
     return ActivityModel(

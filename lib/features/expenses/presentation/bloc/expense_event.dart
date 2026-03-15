@@ -18,7 +18,7 @@ class ExpenseInitialized extends ExpenseEvent {
 }
 
 class GroupChanged extends ExpenseEvent {
-  final GroupEntity group;
+  final GroupEntity? group;
   const GroupChanged(this.group);
 }
 
@@ -66,11 +66,16 @@ class SplitOptionChanged extends ExpenseEvent {
 
 
 class AddExpenseSubmitted extends ExpenseEvent {
-  final String groupId;
-  const AddExpenseSubmitted({required this.groupId});
+  final String? groupId;
+  const AddExpenseSubmitted({this.groupId});
 }
 
 class FetchGroupMembers extends ExpenseEvent {
   final String groupId;
   const FetchGroupMembers(this.groupId);
+}
+
+class FetchCommonGroups extends ExpenseEvent {
+  final List<String> userIds;
+  const FetchCommonGroups(this.userIds);
 }

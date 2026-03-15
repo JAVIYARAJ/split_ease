@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:split_ease/core/presentation/widgets/group_picker_sheet.dart';
@@ -12,9 +13,10 @@ import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart
 import 'package:split_ease/features/expenses/presentation/bloc/expense_bloc.dart';
 import 'package:split_ease/core/common/cubit/app_user_cubit.dart';
 import 'package:split_ease/features/friends/domain/entities/friend_entity.dart';
-import 'package:split_ease/features/groups/data/models/group_member_model.dart';
 import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
 import 'package:split_ease/features/groups/domain/entities/group_member_entity.dart';
+
+import '../../../groups/data/models/group_member_model.dart';
 
 class AddExpensePage extends StatefulWidget {
   const AddExpensePage({super.key});
@@ -161,7 +163,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
               child: Column(
                 children: [
                   const SizedBox(height: 16),
-                  // ── Context Badge ──
+                  // Context Badge moved or simplified
                   if (group != null)
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -184,7 +186,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                              "With you and: ${group.name ?? "Group"}",
+                              "In: ${group.name ?? "Non-group"}",
                               style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textBlack),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -193,69 +195,27 @@ class _AddExpensePageState extends State<AddExpensePage> {
                       ),
                     )
                   else if (friend != null)
-                    GestureDetector(
-                      onTap: () async {
-                        final g = await showGroupPickerFromList(context, state.availableGroups);
-                        if (g != null && context.mounted) {
-                          context.read<ExpenseBloc>().add(GroupChanged(g));
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(20)),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 24,
-                              height: 24,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppColors.backgroundLightGrey,
-                                image: friend.imageUrl != null
-                                    ? DecorationImage(image: CachedNetworkImageProvider(friend.imageUrl!), fit: BoxFit.cover)
-                                    : null,
-                              ),
-                              child: friend.imageUrl == null ? const Icon(Icons.person, color: AppColors.textGrey, size: 16) : null,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(20)),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AppAvatar(
+                            url: friend.imageUrl,
+                            radius: 12,
+                            backgroundColor: AppColors.backgroundLightGrey,
+                            iconColor: AppColors.textGrey,
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              "With: ${friend.name}",
+                              style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                "With you and: ${friend.name}",
-                                style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textBlack),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            const Icon(Icons.chevron_right, size: 16, color: AppColors.textGrey),
-                          ],
-                        ),
-                      ),
-                    )
-                  else
-                    GestureDetector(
-                      onTap: () async {
-                        final g = await showGroupPickerFromList(context, state.availableGroups);
-                        if (g != null && context.mounted) {
-                          context.read<ExpenseBloc>().add(GroupChanged(g));
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(20)),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.group_outlined, size: 18, color: AppColors.textGrey),
-                            const SizedBox(width: 6),
-                            Text(
-                              "No group · tap to select",
-                              style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textGrey),
-                            ),
-                            const SizedBox(width: 4),
-                            const Icon(Icons.chevron_right, size: 16, color: AppColors.textGrey),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   const SizedBox(height: 20),
@@ -346,6 +306,14 @@ class _AddExpensePageState extends State<AddExpensePage> {
                             // Paid By Row
                             InkWell(
                               onTap: () async {
+                                if (state.description.isEmpty) {
+                                  AppAlerts.showError(context, "Please enter a description first");
+                                  return;
+                                }
+                                if (state.amount.isEmpty || double.tryParse(state.amount) == null || double.tryParse(state.amount)! <= 0) {
+                                  AppAlerts.showError(context, "Please enter a valid amount first");
+                                  return;
+                                }
                                 final result = await NavigationService.pushNamed(
                                   AppRoutes.payerSelection,
                                   args: {
@@ -389,6 +357,14 @@ class _AddExpensePageState extends State<AddExpensePage> {
                             // Split Row
                             InkWell(
                               onTap: () async {
+                                if (state.description.isEmpty) {
+                                  AppAlerts.showError(context, "Please enter a description first");
+                                  return;
+                                }
+                                if (state.amount.isEmpty || double.tryParse(state.amount) == null || double.tryParse(state.amount)! <= 0) {
+                                  AppAlerts.showError(context, "Please enter a valid amount first");
+                                  return;
+                                }
                                 final result = await NavigationService.pushNamed(
                                   AppRoutes.splitOptions,
                                   args: {
@@ -405,7 +381,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                                   }
                                 }
                               },
-                              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+                              borderRadius: friend == null ? const BorderRadius.vertical(bottom: Radius.circular(16)) : null,
                               child: Padding(
                                 padding: const EdgeInsets.all(16.0),
                                 child: Row(
@@ -433,6 +409,48 @@ class _AddExpensePageState extends State<AddExpensePage> {
                                 ),
                               ),
                             ),
+                            // Group Selection Row (Only if we started with a friend context or no context)
+                            if (friend != null || (group == null && friend == null)) ...[
+                              const Divider(height: 1, color: AppColors.borderGrey, indent: 16, endIndent: 16),
+                              InkWell(
+                                onTap: () async {
+                                  final selectedGroup = await showGroupPickerFromList(
+                                    context, 
+                                    friend != null ? state.commonGroups : state.availableGroups
+                                  );
+                                  // Note: showGroupPickerFromList should ideally have a "None" option.
+                                  // For now, if they pick something, we change it.
+                                  if(context.mounted) {
+                                    context.read<ExpenseBloc>().add(GroupChanged(selectedGroup));
+                                  }
+                                },
+                                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primaryTeal.withValues(alpha: 0.1),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(Icons.group_outlined, color: AppColors.primaryTeal, size: 20),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text("Group", style: GoogleFonts.openSans(fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.textBlack)),
+                                      const Spacer(),
+                                      Text(
+                                        state.group?.name ?? "Non-group",
+                                        style: GoogleFonts.openSans(fontWeight: FontWeight.w700, fontSize: 15, color: AppColors.primaryTeal),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      const Icon(Icons.chevron_right, size: 18, color: AppColors.textGrey),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -476,6 +494,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                     ),
                   ),
 
+
                   const SizedBox(height: 40),
                 ],
               ),
@@ -496,14 +515,14 @@ class _AddExpensePageState extends State<AddExpensePage> {
       AppAlerts.showError(context, "Please enter amount");
       return;
     }
-    if (state.group?.id == null) {
+    if (state.group == null && state.friend == null) {
       AppAlerts.showError(context, "Please select a group to split the expense");
       return;
     }
-    if (state.groupMembers.length <= 1) {
+    if (state.group != null && state.groupMembers.length <= 1) {
       AppAlerts.showError(context, "You need at least one other member in the group to add an expense.");
       return;
     }
-    context.read<ExpenseBloc>().add(AddExpenseSubmitted(groupId: state.group!.id!));
+    context.read<ExpenseBloc>().add(AddExpenseSubmitted(groupId: state.group?.id));
   }
 }

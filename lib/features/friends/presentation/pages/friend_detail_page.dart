@@ -14,6 +14,7 @@ import 'package:split_ease/features/friends/presentation/bloc/friend_detail_bloc
 import 'package:split_ease/features/friends/presentation/bloc/friend_detail_event.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friend_detail_state.dart';
 import 'package:intl/intl.dart';
+import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 
 class FriendDetailPage extends StatefulWidget {
   const FriendDetailPage({super.key});
@@ -228,23 +229,13 @@ class _FriendDetailProfile extends StatelessWidget {
           // Avatar
           Hero(
             tag: friend.id,
-            child: Container(
-              width: 110,
-              height: 110,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.backgroundLightGrey,
-                border: Border.all(color: Colors.white, width: 4),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, 8)),
-                ],
-                image: friend.imageUrl != null
-                    ? DecorationImage(image: CachedNetworkImageProvider(friend.imageUrl!), fit: BoxFit.cover)
-                    : null,
-              ),
-              child: friend.imageUrl == null
-                  ? const Icon(Icons.person_rounded, color: AppColors.iconGrey, size: 48)
-                  : null,
+            child: AppAvatar(
+              url: friend.imageUrl,
+              radius: 55,
+              iconSize: 48,
+              backgroundColor: AppColors.backgroundLightGrey,
+              iconColor: AppColors.iconGrey,
+              border: Border.all(color: Colors.white, width: 4),
             ),
           ),
           const SizedBox(height: 20),
@@ -658,7 +649,7 @@ class _TransactionItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    expense.groupName != null ? 'In ${expense.groupName}' : "Non-group expense",
+                    expense.groupName != null ? 'In ${expense.groupName}' : "Non-group",
                     style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.textGrey),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

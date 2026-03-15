@@ -55,8 +55,8 @@ class ExpenseGroupModel extends ExpenseGroupEntity {
 
   factory ExpenseGroupModel.fromJson(Map<String, dynamic> json) {
     return ExpenseGroupModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
+      id: json['id'] as String?,
+      name: json['name'] as String?,
       groupIcon: json['group_icon'] as String?,
     );
   }

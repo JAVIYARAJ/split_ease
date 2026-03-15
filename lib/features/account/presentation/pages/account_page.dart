@@ -9,6 +9,7 @@ import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/account/presentation/bloc/account_bloc.dart';
 import '../../../../../core/common/cubit/app_user_cubit.dart';
 import 'package:split_ease/core/presentation/widgets/app_image_view.dart';
+import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import 'package:split_ease/core/presentation/widgets/profile_picture_dialog.dart';
 import 'package:split_ease/core/presentation/widgets/feedback_sheet.dart';
 
@@ -74,22 +75,13 @@ class AccountPage extends StatelessWidget {
                             },
                             child: Hero(
                               tag: 'account_profile_pic',
-                              child: userAvatar != null
-                                  ? AppImageView(
-                                      url: userAvatar,
-                                      height: 100,
-                                      width: 100,
-                                      radius: 50,
-                                    )
-                                  : Container(
-                                      height: 100,
-                                      width: 100,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: AppColors.primaryTeal.withValues(alpha: 0.1),
-                                      ),
-                                      child: Icon(Icons.person, size: 50, color: AppColors.primaryTeal.withValues(alpha: 0.5)),
-                                    ),
+                              child: AppAvatar(
+                                url: userAvatar,
+                                radius: 50,
+                                iconSize: 50,
+                                backgroundColor: AppColors.primaryTeal.withValues(alpha: 0.1),
+                                iconColor: AppColors.primaryTeal.withValues(alpha: 0.5),
+                              ),
                             ),
                           ),
                         ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import 'package:split_ease/core/presentation/widgets/app_image_view.dart';
+import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
@@ -381,14 +381,12 @@ class _GroupSettingsContent extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       child: Row(
         children: [
-          (member.avtar == null || member.avtar!.isEmpty)
-              ? Container(
-                  height: 48,
-                  width: 48,
-                  decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(14)),
-                  child: Icon(Icons.person, color: Colors.grey.shade400, size: 24),
-                )
-              : AppImageView(url: member.avtar, height: 48, width: 48, radius: 14),
+          AppAvatar(
+            url: member.avtar,
+            radius: 24,
+            backgroundColor: AppColors.backgroundLightGrey,
+            iconColor: Colors.grey.shade400,
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(

@@ -26,7 +26,18 @@ class GroupsPage extends StatelessWidget {
           heroTag: "groups_fab",
           onPressed: () async {
             final group = await showGroupPickerSheet(context);
-            if (group != null && context.mounted) {
+            if(group == null || !context.mounted) return;
+
+            if(group.memberCount == 1){
+              NavigationService.pushNamed(
+                AppRoutes.addMembers,
+                args: {'groupId': group.id},
+              ).then((value) {
+                if (value == true) {
+                  context.read<GroupsBloc>().add(LoadGroups());
+                }
+              });
+            }else{
               NavigationService.pushNamed(AppRoutes.addExpense, args: {'group': group});
             }
           },

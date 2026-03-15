@@ -100,6 +100,8 @@ class _DateSelectionViewState extends State<_DateSelectionView> {
                     color: AppColors.textBlack,
                   ),
                 ),
+                rowHeight: 52,
+                daysOfWeekHeight: 30, // Added for more vertical space
                 calendarStyle: CalendarStyle(
                   selectedDecoration: const BoxDecoration(
                     color: AppColors.primaryTeal,

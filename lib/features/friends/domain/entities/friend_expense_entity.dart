@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 
 class FriendExpenseEntity extends Equatable {
   final String expenseId;
-  final String groupId;
+  final String? groupId;
   final String type; // "you_lent" | "you_owe" | "you_are_owed"
   final String createdAt;
   final String description;

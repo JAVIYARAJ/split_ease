@@ -20,6 +20,7 @@ class GroupModel extends GroupEntity {
     super.overallBalance,
     super.totalActiveBalances,
     super.balancePreview,
+    super.memberCount
   });
 
   factory GroupModel.fromJson(Map<String, dynamic> json) {
@@ -43,6 +44,9 @@ class GroupModel extends GroupEntity {
       balancePreview: json['balance_preview'] != null
           ? (json['balance_preview'] as List).map((v) => GroupBalancePreviewModel.fromJson(v)).toList()
           : null,
+      memberCount: json['member_count'] ?? (json['members'] != null
+          ? (json['members'] as List).map((v) => GroupMemberModel.fromJson(v)).toList().length
+          : null)
     );
   }
 

@@ -1,8 +1,8 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
+import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/split/split_bloc.dart';
 import 'package:split_ease/features/groups/domain/entities/group_member_entity.dart';
@@ -179,24 +179,11 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
   Widget _buildHeaderAvatar(GroupMemberEntity member) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4.0),
-      child: Container(
-        width: 50,
-        height: 50,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.white, width: 2),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))],
-          image: member.avtar != null ? DecorationImage(image: CachedNetworkImageProvider(member.avtar!), fit: BoxFit.cover) : null,
-          color: member.avtar == null ? AppColors.primaryTeal : null,
-        ),
-        child: member.avtar == null
-            ? Center(
-                child: Text(
-                  member.fullName?.substring(0, 1).toUpperCase() ?? "?",
-                  style: GoogleFonts.openSans(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
-                ),
-              )
-            : null,
+      child: AppAvatar(
+        url: member.avtar,
+        radius: 25,
+        border: Border.all(color: Colors.white, width: 2),
+        backgroundColor: member.avtar == null ? AppColors.primaryTeal : null,
       ),
     );
   }
@@ -354,22 +341,10 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
   }
 
   Widget _buildListAvatar(GroupMemberEntity member) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        image: member.avtar != null ? DecorationImage(image: CachedNetworkImageProvider(member.avtar!), fit: BoxFit.cover) : null,
-        color: member.avtar == null ? AppColors.primaryTeal : null,
-      ),
-      child: member.avtar == null
-          ? Center(
-              child: Text(
-                member.fullName?.substring(0, 1).toUpperCase() ?? "?",
-                style: GoogleFonts.openSans(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-            )
-          : null,
+    return AppAvatar(
+      url: member.avtar,
+      radius: 20,
+      backgroundColor: member.avtar == null ? AppColors.primaryTeal : null,
     );
   }
 

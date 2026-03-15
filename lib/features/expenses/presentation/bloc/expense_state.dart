@@ -15,6 +15,8 @@ class ExpenseState {
   final List<ExpenseSplit> splits;
   final List<GroupMemberEntity> groupMembers;
   final ExpenseStatus groupMembersStatus;
+  final List<GroupEntity> commonGroups;
+  final ExpenseStatus commonGroupsStatus;
   final String? errorMessage;
 
   const ExpenseState({
@@ -30,6 +32,8 @@ class ExpenseState {
     this.splits = const [],
     this.groupMembers = const [],
     this.groupMembersStatus = ExpenseStatus.initial,
+    this.commonGroups = const [],
+    this.commonGroupsStatus = ExpenseStatus.initial,
     this.errorMessage,
   });
 
@@ -46,6 +50,8 @@ class ExpenseState {
     List<ExpenseSplit>? splits,
     List<GroupMemberEntity>? groupMembers,
     ExpenseStatus? groupMembersStatus,
+    List<GroupEntity>? commonGroups,
+    ExpenseStatus? commonGroupsStatus,
     String? errorMessage,
   }) {
     return ExpenseState(
@@ -61,7 +67,28 @@ class ExpenseState {
       splits: splits ?? this.splits,
       groupMembers: groupMembers ?? this.groupMembers,
       groupMembersStatus: groupMembersStatus ?? this.groupMembersStatus,
+      commonGroups: commonGroups ?? this.commonGroups,
+      commonGroupsStatus: commonGroupsStatus ?? this.commonGroupsStatus,
       errorMessage: errorMessage ?? this.errorMessage,
+    );
+  }
+
+  ExpenseState clearGroup() {
+    return ExpenseState(
+      status: status,
+      friend: friend,
+      availableGroups: availableGroups,
+      amount: amount,
+      description: description,
+      payerId: payerId,
+      date: date,
+      splitType: splitType,
+      splits: splits,
+      groupMembers: const [],
+      groupMembersStatus: ExpenseStatus.initial,
+      commonGroups: commonGroups,
+      commonGroupsStatus: commonGroupsStatus,
+      errorMessage: errorMessage,
     );
   }
 }

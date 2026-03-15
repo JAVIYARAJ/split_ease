@@ -34,4 +34,6 @@ abstract interface class GroupRepository {
   Future<Either<Failure, GroupExpenseHistoryEntity>> getGroupExpenseHistory(String groupId);
 
   Future<Either<Failure, List<GroupMemberEntity>>> getGroupMembers(String groupId);
+
+  Future<Either<Failure, List<GroupEntity>>> getCommonGroupsForUsers(List<String> userIds);
 }

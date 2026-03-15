@@ -50,8 +50,8 @@ class ExpenseDetailEntity extends Equatable {
 }
 
 class ExpenseGroupEntity extends Equatable {
-  final String id;
-  final String name;
+  final String? id;
+  final String? name;
   final String? groupIcon;
 
   const ExpenseGroupEntity({

@@ -101,7 +101,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
               _GroupDetailAppBar(onBack: _onBack),
               BlocBuilder<GroupDetailBloc, GroupDetailState>(
                 builder: (context, state) {
-                  if (state.groupEntity == null || (state.groupEntity?.members?.length??0) <=1) return const SliverToBoxAdapter(child: SizedBox());
+                  if (state.groupEntity == null || (state.groupEntity?.members?.length??0) <= 1 || (state.expenseHistory?.expenses??[]).isEmpty == true) return const SliverToBoxAdapter(child: SizedBox());
                   return _GroupDetailInfo(state.groupEntity!);
                 },
               ),
@@ -467,7 +467,6 @@ class _BalanceSummary extends StatelessWidget {
         final balanceColor = youAreOwed ? AppColors.successGreen : AppColors.errorRed;
         final overallLabel = youAreOwed ? "You are owed" : "You owe";
         final memberLabel = youAreOwed ? "owes you" : "you owe";
-        final formatted = _formatCurrency(overall);
         final List<GroupMemberBalanceEntity> memberBalances = history.memberBalances ?? [];
 
         return Column(

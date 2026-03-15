@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
+import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import 'package:split_ease/features/friends/domain/entities/friend_entity.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friends_bloc.dart';
 import 'package:split_ease/features/groups/presentation/bloc/groups_bloc.dart';
@@ -49,7 +50,11 @@ class _AddExpenseSourceSheetState extends State<_AddExpenseSourceSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: 12),
-          Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.borderGreyLight, borderRadius: BorderRadius.circular(2))),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(color: AppColors.borderGreyLight, borderRadius: BorderRadius.circular(2)),
+          ),
           const SizedBox(height: 20),
           // Title
           Padding(
@@ -65,7 +70,11 @@ class _AddExpenseSourceSheetState extends State<_AddExpenseSourceSheet> {
                     ),
                   ),
                 Text(
-                  _view == 'group' ? "Select a Group" : _view == 'friend' ? "Select a Friend" : "Add Expense",
+                  _view == 'group'
+                      ? "Select a Group"
+                      : _view == 'friend'
+                      ? "Select a Friend"
+                      : "Add Expense",
                   style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textBlack),
                 ),
               ],
@@ -78,12 +87,12 @@ class _AddExpenseSourceSheetState extends State<_AddExpenseSourceSheet> {
               child: _view == 'group'
                   ? _GroupList(key: const ValueKey('group'))
                   : _view == 'friend'
-                      ? _FriendList(key: const ValueKey('friend'))
-                      : _ModeSelector(
-                          key: const ValueKey('none'),
-                          onGroupTap: () => setState(() => _view = 'group'),
-                          onFriendTap: () => setState(() => _view = 'friend'),
-                        ),
+                  ? _FriendList(key: const ValueKey('friend'))
+                  : _ModeSelector(
+                      key: const ValueKey('none'),
+                      onGroupTap: () => setState(() => _view = 'group'),
+                      onFriendTap: () => setState(() => _view = 'friend'),
+                    ),
             ),
           ),
         ],
@@ -133,13 +142,7 @@ class _OptionTile extends StatelessWidget {
   final String subtitle;
   final VoidCallback onTap;
 
-  const _OptionTile({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
+  const _OptionTile({required this.icon, required this.iconColor, required this.title, required this.subtitle, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -158,10 +161,7 @@ class _OptionTile extends StatelessWidget {
             Container(
               width: 48,
               height: 48,
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
-              ),
+              decoration: BoxDecoration(color: iconColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(14)),
               child: Icon(icon, color: iconColor, size: 24),
             ),
             const SizedBox(width: 14),
@@ -169,9 +169,15 @@ class _OptionTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack)),
+                  Text(
+                    title,
+                    style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                  ),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey, fontWeight: FontWeight.w500)),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                  ),
                 ],
               ),
             ),
@@ -211,13 +217,16 @@ class _GroupList extends StatelessWidget {
             return _RowTile(
               icon: Icons.groups_rounded,
               label: group.name ?? "Group",
-              sublabel: "${group.members?.length ?? 0} members",
+              sublabel: "${group.memberCount ?? 0} members",
               onTap: () {
                 Navigator.pop(context); // close sheet
-                NavigationService.pushNamed(AppRoutes.addExpense, args: {
-                  'group': group,
-                  'groups': state.groups, // pass for optional re-select
-                });
+                NavigationService.pushNamed(
+                  AppRoutes.addExpense,
+                  args: {
+                    'group': group,
+                    'groups': state.groups, // pass for optional re-select
+                  },
+                );
               },
             );
           },
@@ -252,16 +261,20 @@ class _FriendList extends StatelessWidget {
           itemBuilder: (ctx, i) {
             final friend = state.friends[i];
             return _RowTile(
-              icon: Icons.person_rounded,
+              avatarUrl: friend.imageUrl,
+              isFriend: true,
               label: friend.name,
               sublabel: friend.email ?? "",
               onTap: () {
                 final groups = context.read<GroupsBloc>().state.groups;
                 Navigator.pop(context); // close sheet
-                NavigationService.pushNamed(AppRoutes.addExpense, args: {
-                  'friend': friend,
-                  'groups': groups, // so AddExpensePage can show group picker
-                });
+                NavigationService.pushNamed(
+                  AppRoutes.addExpense,
+                  args: {
+                    'friend': friend,
+                    'groups': groups, // so AddExpensePage can show group picker
+                  },
+                );
               },
             );
           },
@@ -272,12 +285,14 @@ class _FriendList extends StatelessWidget {
 }
 
 class _RowTile extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? avatarUrl;
+  final bool isFriend;
   final String label;
   final String sublabel;
   final VoidCallback onTap;
 
-  const _RowTile({required this.icon, required this.label, required this.sublabel, required this.onTap});
+  const _RowTile({this.icon, this.avatarUrl, this.isFriend = false, required this.label, required this.sublabel, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -293,20 +308,28 @@ class _RowTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(color: AppColors.surfaceWhite, borderRadius: BorderRadius.circular(12)),
-              child: Icon(icon, color: AppColors.primaryTeal, size: 20),
-            ),
+            if (isFriend)
+              AppAvatar(
+                url: avatarUrl,
+                radius: 20,
+              )
+            else
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(color: AppColors.surfaceWhite, borderRadius: BorderRadius.circular(12)),
+                child: Icon(icon ?? Icons.help_outline_rounded, color: AppColors.primaryTeal, size: 20),
+              ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textBlack)),
-                  if (sublabel.isNotEmpty)
-                    Text(sublabel, style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
+                  Text(
+                    label,
+                    style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                  ),
+                  if (sublabel.isNotEmpty) Text(sublabel, style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
                 ],
               ),
             ),

@@ -19,6 +19,7 @@ class GroupEntity extends Equatable {
   final double? overallBalance;
   final int? totalActiveBalances;
   final List<GroupBalancePreviewEntity>? balancePreview;
+  final int? memberCount;
 
 
   const GroupEntity({
@@ -37,6 +38,7 @@ class GroupEntity extends Equatable {
     this.overallBalance,
     this.totalActiveBalances,
     this.balancePreview,
+    this.memberCount
   });
 
   @override
@@ -56,5 +58,6 @@ class GroupEntity extends Equatable {
         overallBalance,
         totalActiveBalances,
         balancePreview,
+        memberCount
       ];
 }

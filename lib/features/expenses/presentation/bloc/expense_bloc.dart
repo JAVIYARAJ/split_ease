@@ -4,6 +4,7 @@ import 'package:split_ease/features/groups/domain/usecases/get_group_members.dar
 import 'package:split_ease/features/friends/domain/entities/friend_entity.dart';
 import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
+import 'package:split_ease/features/groups/domain/usecases/get_common_groups_usecase.dart';
 import '../../domain/usecases/add_expense_usecase.dart';
 import '../../domain/usecases/create_expense_params.dart';
 
@@ -13,10 +14,12 @@ part 'expense_state.dart';
 class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   final AddExpenseUseCase addExpenseUseCase;
   final GetGroupMembers getGroupMembers;
+  final GetCommonGroupsUseCase getCommonGroupsUseCase;
 
   ExpenseBloc({
     required this.addExpenseUseCase,
     required this.getGroupMembers,
+    required this.getCommonGroupsUseCase,
   }) : super(const ExpenseState()) {
     on<ExpenseInitialized>(_onInitialized);
     on<GroupChanged>(_onGroupChanged);
@@ -28,6 +31,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     on<SplitTypeChanged>(_onSplitTypeChanged);
     on<SplitOptionChanged>(_onSplitOptionChanged);
     on<AddExpenseSubmitted>(_onAddExpenseSubmitted);
+    on<FetchCommonGroups>(_onFetchCommonGroups);
   }
 
   void _onInitialized(ExpenseInitialized event, Emitter<ExpenseState> emit) {
@@ -41,13 +45,19 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
 
     if (event.group?.id != null) {
       add(FetchGroupMembers(event.group!.id!));
+    } else if (event.friend != null && event.currentUserId != null) {
+      add(FetchCommonGroups([event.currentUserId!, event.friend!.id]));
     }
   }
 
   void _onGroupChanged(GroupChanged event, Emitter<ExpenseState> emit) {
-    emit(state.copyWith(group: event.group));
-    if (event.group.id != null) {
-      add(FetchGroupMembers(event.group.id!));
+    if (event.group == null) {
+      emit(state.clearGroup());
+    } else {
+      emit(state.copyWith(group: event.group));
+      if (event.group!.id != null) {
+        add(FetchGroupMembers(event.group!.id!));
+      }
     }
   }
 
@@ -63,6 +73,15 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
         groupMembersStatus: ExpenseStatus.success,
         groupMembers: members,
       )),
+    );
+  }
+
+  Future<void> _onFetchCommonGroups(FetchCommonGroups event, Emitter<ExpenseState> emit) async {
+    emit(state.copyWith(commonGroupsStatus: ExpenseStatus.loading));
+    final result = await getCommonGroupsUseCase(event.userIds);
+    result.fold(
+      (failure) => emit(state.copyWith(commonGroupsStatus: ExpenseStatus.failure, errorMessage: failure.message)),
+      (groups) => emit(state.copyWith(commonGroupsStatus: ExpenseStatus.success, commonGroups: groups)),
     );
   }
 
@@ -93,8 +112,12 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   Future<void> _onAddExpenseSubmitted(AddExpenseSubmitted event, Emitter<ExpenseState> emit) async {
     emit(state.copyWith(status: ExpenseStatus.loading));
     try {
-      if (state.group == null || state.payerId == null) {
-        throw Exception("Group or Payer not selected");
+      if (state.payerId == null) {
+        throw Exception("Payer not selected");
+      }
+      
+      if (state.group == null && state.friend == null) {
+         throw Exception("Please select a group or a friend for this expense");
       }
 
       final List<Map<String, dynamic>> rpcSplits = [];
@@ -118,7 +141,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
       }
 
       final params = CreateExpenseParams(
-        groupId: state.group!.id!,
+        groupId: state.group?.id,
         description: state.description,
         totalAmount: double.parse(state.amount),
         paidByUserId: state.payerId!,

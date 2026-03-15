@@ -34,6 +34,8 @@ abstract interface class GroupRemoteDataSource {
   Future<GroupExpenseHistoryModel> getGroupExpenseHistory(String groupId);
 
   Future<List<GroupMemberModel>> getGroupMembers(String groupId);
+  
+  Future<List<GroupModel>> getCommonGroupsForUsers(List<String> userIds);
 }
 
 class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
@@ -214,6 +216,19 @@ class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
         params: {'p_group_id': groupId},
       );
       return (response as List).map((e) => GroupMemberModel.fromJson(e)).toList();
+    } catch (error) {
+      throw ServerException(message: ErrorMessageUtils.generate(error));
+    }
+  }
+
+  @override
+  Future<List<GroupModel>> getCommonGroupsForUsers(List<String> userIds) async {
+    try {
+      final response = await client.rpc(
+        'get_common_groups_for_users_rpc',
+        params: {'p_user_ids': userIds},
+      );
+      return (response as List).map((e) => GroupModel.fromJson(e)).toList();
     } catch (error) {
       throw ServerException(message: ErrorMessageUtils.generate(error));
     }

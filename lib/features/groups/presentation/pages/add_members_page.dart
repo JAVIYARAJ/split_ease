@@ -7,6 +7,11 @@ import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/groups/domain/entities/group_friend_entity.dart';
 import 'package:split_ease/features/groups/presentation/bloc/add_members_bloc.dart';
 import 'package:split_ease/injection_container.dart';
+import 'package:split_ease/core/common/cubit/app_user_cubit.dart';
+import 'package:split_ease/core/presentation/widgets/app_empty_state.dart';
+import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
+import 'package:split_ease/core/routing/app_routes.dart';
+import 'package:split_ease/core/routing/navigation_service.dart';
 
 class AddMembersPage extends StatefulWidget {
   final String groupId;
@@ -112,6 +117,47 @@ class _AddMembersPageState extends State<AddMembersPage> {
             style: GoogleFonts.openSans(fontSize: 15, color: AppColors.textGrey),
           ),
         ),
+      );
+    }
+
+    if (state.status == AddMembersStatus.loaded && state.friends.isEmpty) {
+      return BlocBuilder<AppUserCubit, AppUserState>(
+        builder: (context, userState) {
+          return AppEmptyState(
+            icon: Icons.person_add_rounded,
+            title: 'No Friends Yet',
+            subtitle: 'You don\'t have any friends on SplitEase yet. Share your profile QR code with others to start splitting expenses!',
+            actionButton: ElevatedButton.icon(
+              onPressed: () {
+                if (userState is AppUserLoggedIn) {
+                  NavigationService.pushNamed(
+                    AppRoutes.userQr,
+                    args: {
+                      'userId': userState.user.id,
+                      'userName': userState.user.name,
+                      'userAvatar': userState.user.avatarUrl,
+                    },
+                  );
+                }
+              },
+              icon: const Icon(Icons.qr_code_rounded, color: Colors.white),
+              label: Text(
+                "Share My QR",
+                style: GoogleFonts.openSans(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryTeal,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+              ),
+            ),
+          );
+        },
       );
     }
 
@@ -243,31 +289,11 @@ class _AddMembersPageState extends State<AddMembersPage> {
           child: Row(
             children: [
               // Avatar
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.backgroundLightGrey,
-                  image: friend.avatarUrl != null
-                      ? DecorationImage(
-                          image: CachedNetworkImageProvider(friend.avatarUrl!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child: friend.avatarUrl == null
-                    ? Center(
-                        child: Text(
-                          friend.fullName.isNotEmpty ? friend.fullName[0].toUpperCase() : '?',
-                          style: GoogleFonts.openSans(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primaryTeal,
-                          ),
-                        ),
-                      )
-                    : null,
+              AppAvatar(
+                url: friend.avatarUrl,
+                radius: 25,
+                backgroundColor: AppColors.backgroundLightGrey,
+                iconColor: AppColors.primaryTeal,
               ),
               const SizedBox(width: 16),
 

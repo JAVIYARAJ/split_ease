@@ -145,4 +145,14 @@ class GroupRepositoryImpl implements GroupRepository {
        return left(Failure(message: error.message));
     }
   }
+
+  @override
+  Future<Either<Failure, List<GroupEntity>>> getCommonGroupsForUsers(List<String> userIds) async {
+    try {
+      final response = await dataSource.getCommonGroupsForUsers(userIds);
+      return right(response);
+    } on ServerException catch (error) {
+      return left(Failure(message: error.message));
+    }
+  }
 }

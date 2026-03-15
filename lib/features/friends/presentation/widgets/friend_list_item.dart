@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/theme/app_colors.dart';
+import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import '../../domain/entities/friend_entity.dart';
 
 class FriendListItem extends StatelessWidget {
@@ -65,23 +66,11 @@ class FriendListItem extends StatelessWidget {
                     // Avatar
                     Hero(
                       tag: friend.id,
-                      child: Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.backgroundLightGrey,
-                          border: Border.all(color: AppColors.borderGreyLight, width: 0.5),
-                          image: friend.imageUrl != null
-                              ? DecorationImage(
-                                  image: CachedNetworkImageProvider(friend.imageUrl!),
-                                  fit: BoxFit.cover,
-                                )
-                              : null,
-                        ),
-                        child: friend.imageUrl == null
-                            ? Icon(Icons.person, color: AppColors.textGrey.withValues(alpha: 0.7), size: 26)
-                            : null,
+                      child: AppAvatar(
+                        url: friend.imageUrl,
+                        radius: 26,
+                        backgroundColor: AppColors.backgroundLightGrey,
+                        iconColor: AppColors.textGrey.withValues(alpha: 0.7),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -149,7 +138,7 @@ class FriendListItem extends StatelessWidget {
                           ),
                         if (friend.nonGroupBalance != 0)
                           _buildNestedBalanceRow(
-                            contextName: "non-group",
+                            contextName: "Non-group",
                             balance: friend.nonGroupBalance,
                             formatter: formatter,
                             isLast: true,
@@ -219,7 +208,7 @@ class FriendListItem extends StatelessWidget {
                     ),
                   ],
                 ),
-                maxLines: 1,
+                maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
             ),

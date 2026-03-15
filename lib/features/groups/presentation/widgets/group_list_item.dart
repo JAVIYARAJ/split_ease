@@ -89,7 +89,7 @@ class GroupListItem extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.only(top: 4.0), // Align name slightly down
                         child: Text(
-                          group.name ?? "Unnamed Group",
+                          group.name ?? "Non-group",
                           style: GoogleFonts.outfit(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,

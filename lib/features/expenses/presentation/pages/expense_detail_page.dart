@@ -12,6 +12,7 @@ import 'package:split_ease/features/expenses/presentation/utils/expense_pdf_gene
 import 'package:split_ease/features/expenses/presentation/pages/expense_pdf_preview_page.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/routing/navigation_service.dart';
@@ -246,7 +247,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
           Container(width: 1, height: 32, color: AppColors.borderGreyLight),
           _buildInfoItem(Icons.person_outline_rounded, "Added By", entity.createdBy.fullName.split(' ').first),
           Container(width: 1, height: 32, color: AppColors.borderGreyLight),
-          _buildInfoItem(Icons.group_outlined, "Group", entity.group?.name ?? "Non-group"),
+          _buildInfoItem(Icons.group_outlined, "Group", (entity.group?.name??"").isNotEmpty ? entity.group?.name??"": "Non-group"),
         ],
       ),
     );
@@ -332,17 +333,11 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.backgroundLightGrey,
-              image: entity.paidBy.avatar != null
-                  ? DecorationImage(image: CachedNetworkImageProvider(entity.paidBy.avatar!), fit: BoxFit.cover)
-                  : null,
-            ),
-            child: entity.paidBy.avatar == null ? const Icon(Icons.person, color: AppColors.textGrey, size: 22) : null,
+          AppAvatar(
+            url: entity.paidBy.avatar,
+            radius: 22,
+            backgroundColor: AppColors.backgroundLightGrey,
+            iconColor: AppColors.textGrey,
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -398,15 +393,11 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
         child: Row(
           children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.backgroundLightGrey,
-                image: avatarUrl != null ? DecorationImage(image: CachedNetworkImageProvider(avatarUrl), fit: BoxFit.cover) : null,
-              ),
-              child: avatarUrl == null ? const Icon(Icons.person, size: 20, color: AppColors.textGrey) : null,
+            AppAvatar(
+              url: avatarUrl,
+              radius: 19,
+              backgroundColor: AppColors.backgroundLightGrey,
+              iconColor: AppColors.textGrey,
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -442,11 +433,10 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       padding: const EdgeInsets.all(12.0),
       child: Row(
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.primary),
-            child: const Icon(Icons.person, color: Colors.white, size: 18), // Current user avatar placeholder
+          const AppAvatar(
+            radius: 18,
+            backgroundColor: AppColors.primary,
+            iconColor: Colors.white,
           ),
           const SizedBox(width: 12),
           Expanded(

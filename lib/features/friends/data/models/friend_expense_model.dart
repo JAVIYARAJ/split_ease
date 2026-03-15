@@ -3,7 +3,7 @@ import 'package:split_ease/features/friends/domain/entities/friend_expense_entit
 class FriendExpenseModel extends FriendExpenseEntity {
   const FriendExpenseModel({
     required super.expenseId,
-    required super.groupId,
+    super.groupId,
     required super.type,
     required super.createdAt,
     required super.description,
@@ -15,7 +15,7 @@ class FriendExpenseModel extends FriendExpenseEntity {
   factory FriendExpenseModel.fromJson(Map<String, dynamic> json) {
     return FriendExpenseModel(
       expenseId: json['expense_id'] as String,
-      groupId: json['group_id'] as String,
+      groupId: json['group_id'] as String?,
       type: json['type'] as String,
       createdAt: json['created_at'] as String,
       description: json['description'] as String,
