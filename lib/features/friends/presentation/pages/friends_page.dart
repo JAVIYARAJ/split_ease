@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:split_ease/core/presentation/widgets/custom_refresh_indicator.dart';
-import 'package:split_ease/core/presentation/widgets/success_dialog.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:split_ease/core/presentation/widgets/add_expense_source_sheet.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
 import '../../../../../core/theme/app_colors.dart';
-import 'package:split_ease/features/groups/presentation/pages/qr_scanner_page.dart';
-import 'friend_requests_page.dart';
 import '../widgets/friend_list_item.dart';
 import '../bloc/friends_bloc.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
+import 'package:split_ease/core/presentation/widgets/success_dialog.dart';
 
 class FriendsPage extends StatefulWidget {
   const FriendsPage({super.key});
@@ -30,7 +29,7 @@ class _FriendsPageState extends State<FriendsPage> {
   }
 
   void _navigateToRequests() async {
-    final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const FriendRequestsPage()));
+    final result = await NavigationService.pushNamed(AppRoutes.friendRequests);
     if (!mounted) return;
     context.read<FriendsBloc>().add(LoadUnreadFriendRequestCount());
     if (result == true) {
@@ -41,17 +40,19 @@ class _FriendsPageState extends State<FriendsPage> {
   @override
   Widget build(BuildContext context) {
     return BaseScreen(
-      backgroundColor: AppColors.backgroundWhite,
+      backgroundColor: AppColors.backgroundLightGrey,
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 90.0), // Raise FAB above custom bottom nav
         child: FloatingActionButton.extended(
           heroTag: "friends_fab",
-          onPressed: () {},
-          backgroundColor: AppColors.primaryTealDark,
-          icon: const Icon(Icons.receipt_long, color: Colors.white),
+          onPressed: () {
+            showAddExpenseFromFriendsSheet(context);
+          },
+          backgroundColor: AppColors.primaryTeal,
+          icon: const Icon(Icons.add_rounded, color: Colors.white),
           label: Text(
             "Add expense",
-            style: GoogleFonts.openSans(color: Colors.white, fontWeight: FontWeight.w600),
+            style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w600),
           ),
         ),
       ),
@@ -86,10 +87,11 @@ class _FriendsPageState extends State<FriendsPage> {
       automaticallyImplyLeading: false,
       backgroundColor: AppColors.backgroundWhite,
       elevation: 0,
+      scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
       title: Text(
         "Friends",
-        style: GoogleFonts.openSans(color: AppColors.textBlack, fontWeight: FontWeight.bold, fontSize: 28),
+        style: GoogleFonts.outfit(color: AppColors.textBlack, fontWeight: FontWeight.w700, fontSize: 26, letterSpacing: -0.5),
       ),
       actions: [
         Padding(
@@ -97,37 +99,40 @@ class _FriendsPageState extends State<FriendsPage> {
           child: BlocBuilder<FriendsBloc, FriendsState>(
             buildWhen: (previous, current) => previous.unreadRequestCount != current.unreadRequestCount,
             builder: (context, state) {
-              return InkWell(
-                onTap: _navigateToRequests,
-                borderRadius: BorderRadius.circular(24),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryTeal.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: AppColors.primaryTeal.withValues(alpha: 0.2)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.mark_email_unread_outlined, color: AppColors.primaryTeal, size: 18),
-                      const SizedBox(width: 6),
-                      Text(
-                        "Requests",
-                        style: GoogleFonts.openSans(color: AppColors.primaryTeal, fontWeight: FontWeight.w600, fontSize: 13),
-                      ),
-                      if (state.unreadRequestCount > 0) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(color: AppColors.warningOrange, borderRadius: BorderRadius.circular(10)),
-                          child: Text(
-                            state.unreadRequestCount > 99 ? '99+' : '${state.unreadRequestCount}',
-                            style: GoogleFonts.openSans(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 10),
-                          ),
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: InkWell(
+                  onTap: _navigateToRequests,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceWhite,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.borderGreyLight),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.group_add_rounded, color: AppColors.primary, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          "Requests",
+                          style: GoogleFonts.outfit(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 13),
                         ),
+                        if (state.unreadRequestCount > 0) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(color: AppColors.warningOrange, borderRadius: BorderRadius.circular(10)),
+                            child: Text(
+                              state.unreadRequestCount > 99 ? '99+' : '${state.unreadRequestCount}',
+                              style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 10),
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               );
@@ -136,16 +141,19 @@ class _FriendsPageState extends State<FriendsPage> {
         ),
         IconButton(
           onPressed: () async {
-            final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const QrScannerPage()));
+            final result = await NavigationService.pushNamed(AppRoutes.qrScanner);
             if (result != null && result is String && context.mounted) {
               context.read<FriendsBloc>().add(FriendQrJoinEvent(friendId: result));
             }
           },
-          icon: const Icon(Icons.qr_code_scanner, color: AppColors.textBlack),
-        ),
-        IconButton(
-          icon: const Icon(Icons.search, color: AppColors.textBlack, size: 28),
-          onPressed: () {},
+          style: IconButton.styleFrom(
+            backgroundColor: AppColors.surfaceWhite,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: AppColors.borderGreyLight),
+            ),
+          ),
+          icon: const Icon(Icons.qr_code_scanner_rounded, color: AppColors.textBlack),
         ),
         const SizedBox(width: 16),
       ],
@@ -170,51 +178,69 @@ class _FriendsPageState extends State<FriendsPage> {
 
           final netBalance = totalOwesYou - totalYouOwe;
           final isOwe = netBalance < 0;
+          final balanceColor = netBalance == 0 ? AppColors.textBlack : (isOwe ? AppColors.warningOrange : AppColors.successGreen);
 
           return Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
             child: Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.primaryTeal, AppColors.primaryTealDark],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: AppColors.primaryTeal.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8))],
+                color: AppColors.surfaceWhite,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.borderGreyLight),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    "Total Balance",
-                    style: GoogleFonts.openSans(color: Colors.white.withValues(alpha: 0.9), fontSize: 14, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            isOwe ? "You owe" : "You are owed",
-                            style: GoogleFonts.openSans(color: Colors.white.withValues(alpha: 0.8), fontSize: 12, fontWeight: FontWeight.w500),
-                          ),
-                          Text(
-                            "₹${netBalance.abs().toStringAsFixed(2)}",
-                            style: GoogleFonts.openSans(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-                          ),
-                        ],
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.backgroundLightGrey,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.account_balance_wallet_rounded, color: AppColors.textGrey, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        "Total Balance",
+                        style: GoogleFonts.outfit(color: AppColors.textGrey, fontSize: 16, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    netBalance == 0 ? "You are settled up" : (isOwe ? "You owe overall" : "You are owed overall"),
+                    style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "₹${netBalance.abs().toStringAsFixed(2)}",
+                        style: GoogleFonts.outfit(color: balanceColor, fontSize: 36, fontWeight: FontWeight.w700, letterSpacing: -1),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(20)),
-                        child: Text(
-                          "Details >",
-                          style: GoogleFonts.openSans(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: AppColors.backgroundLightGrey,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              "Details",
+                              style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 13, fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.textBlack, size: 12),
+                          ],
                         ),
                       ),
                     ],

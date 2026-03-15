@@ -4,8 +4,9 @@ import 'package:split_ease/features/account/data/datasources/account_remote_data
 import 'package:split_ease/features/account/data/repository/account_repository_impl.dart';
 import 'package:split_ease/features/account/domain/repository/account_repository.dart';
 import 'package:split_ease/features/account/domain/usecases/account_logout.dart';
-
+import 'package:split_ease/features/account/domain/usecases/submit_app_feedback_usecase.dart';
 import 'package:split_ease/features/account/presentation/bloc/account_bloc.dart';
+import 'package:split_ease/features/account/presentation/bloc/feedback/feedback_cubit.dart';
 import 'package:split_ease/features/activity/data/datasources/activity_remote_data_source.dart';
 import 'package:split_ease/features/activity/data/repositories/activity_repository_impl.dart';
 import 'package:split_ease/features/activity/domain/repositories/activity_repository.dart';
@@ -45,6 +46,7 @@ import 'package:split_ease/features/groups/presentation/bloc/join_group_bloc.dar
 import 'package:split_ease/features/groups/domain/usecases/get_friends_with_group_status.dart';
 import 'package:split_ease/features/groups/domain/usecases/add_friends_to_group.dart';
 import 'package:split_ease/features/groups/domain/usecases/get_group_expense_history.dart';
+import 'package:split_ease/features/groups/domain/usecases/get_group_members.dart';
 import 'package:split_ease/features/groups/presentation/bloc/add_members_bloc.dart';
 import 'package:split_ease/features/splash/data/datasources/splash_remote_data_source.dart';
 import 'package:split_ease/features/splash/data/repository/splash_repository_impl.dart';
@@ -63,6 +65,7 @@ import 'features/expenses/presentation/bloc/payer/payer_bloc.dart';
 import 'features/expenses/presentation/bloc/split/split_bloc.dart';
 import 'features/expenses/presentation/bloc/date/date_bloc.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_bloc.dart';
+import 'package:split_ease/features/expenses/domain/usecases/delete_expense_usecase.dart';
 import 'features/expenses/data/datasources/expense_remote_data_source.dart';
 import 'features/expenses/data/repositories/expense_repository_impl.dart';
 import 'features/expenses/domain/repositories/expense_repository.dart';
@@ -146,6 +149,7 @@ void _expense() {
   // Use cases
   sl.registerLazySingleton(() => AddExpenseUseCase(sl()));
   sl.registerLazySingleton(() => GetExpenseDetailUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteExpenseUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<ExpenseRepository>(() => ExpenseRepositoryImpl(remoteDataSource: sl()));
@@ -153,8 +157,8 @@ void _expense() {
   // Data sources
   sl.registerLazySingleton<ExpenseRemoteDataSource>(() => ExpenseRemoteDataSourceImpl(client: sl<SupabaseClient>())); // Note: explicit cast to SupabaseClient if needed, or just sl() since we registered sc.client as SupabaseClient
 
-  sl.registerFactory(() => ExpenseBloc(addExpenseUseCase: sl()));
-  sl.registerFactory(() => ExpenseDetailBloc(sl()));
+  sl.registerFactory(() => ExpenseBloc(addExpenseUseCase: sl(), getGroupMembers: sl()));
+  sl.registerFactory(() => ExpenseDetailBloc(sl(), sl()));
   sl.registerFactory(() => PayerBloc());
   sl.registerFactory(() => SplitBloc());
   sl.registerFactory(() => DateBloc());
@@ -208,6 +212,7 @@ void _group() {
 
   sl.registerFactory(() => GetFriendsWithGroupStatus(groupRepository: sl<GroupRepository>()));
   sl.registerFactory(() => AddFriendsToGroup(groupRepository: sl<GroupRepository>()));
+  sl.registerFactory(() => GetGroupMembers(sl<GroupRepository>()));
   sl.registerFactory(() => AddMembersBloc(
     getFriendsWithGroupStatus: sl<GetFriendsWithGroupStatus>(),
     addFriendsToGroup: sl<AddFriendsToGroup>(),
@@ -267,12 +272,14 @@ void _home() {
   sl.registerFactory<AccountRepository>(() => AccountRepositoryImpl(accountRemoteDataSource: sl<AccountRemoteDataSource>()),);
 
   sl.registerFactory(() => AccountLogout(sl<AccountRepository>()),);
-
+  sl.registerFactory(() => SubmitAppFeedbackUseCase(sl<AccountRepository>()),);
 
   sl.registerFactory(() => AccountBloc(
         accountLogout: sl<AccountLogout>(),
         appUserCubit: sl<AppUserCubit>(),
       ));
+      
+  sl.registerFactory(() => FeedbackCubit(sl<SubmitAppFeedbackUseCase>()));
 }
 
 

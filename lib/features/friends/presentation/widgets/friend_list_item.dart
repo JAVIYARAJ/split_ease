@@ -44,8 +44,10 @@ class FriendListItem extends StatelessWidget {
     bool showNested = showBalance && nestedItemsCount > 0;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundWhite,
+      decoration: BoxDecoration(
+        color: AppColors.surfaceWhite,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderGreyLight),
       ),
       child: Material(
         color: Colors.transparent,
@@ -53,22 +55,23 @@ class FriendListItem extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Avatar (Keeping circle for friends, matching standard UI conventions)
+                    // Avatar
                     Hero(
                       tag: friend.id,
                       child: Container(
-                        width: 56,
-                        height: 56,
+                        width: 52,
+                        height: 52,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: AppColors.backgroundLightGrey,
+                          border: Border.all(color: AppColors.borderGreyLight, width: 0.5),
                           image: friend.imageUrl != null
                               ? DecorationImage(
                                   image: CachedNetworkImageProvider(friend.imageUrl!),
@@ -77,7 +80,7 @@ class FriendListItem extends StatelessWidget {
                               : null,
                         ),
                         child: friend.imageUrl == null
-                            ? Icon(Icons.person, color: AppColors.textGrey.withValues(alpha: 0.7), size: 28)
+                            ? Icon(Icons.person, color: AppColors.textGrey.withValues(alpha: 0.7), size: 26)
                             : null,
                       ),
                     ),
@@ -86,11 +89,11 @@ class FriendListItem extends StatelessWidget {
                     // Name
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
+                        padding: const EdgeInsets.only(top: 4.0),
                         child: Text(
                           friend.name,
-                          style: GoogleFonts.openSans(
-                            fontSize: 16,
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
                             fontWeight: FontWeight.w600,
                             color: AppColors.textBlack,
                           ),
@@ -101,27 +104,31 @@ class FriendListItem extends StatelessWidget {
                     ),
                     
                     // Overall Balance
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          statusText,
-                          style: GoogleFonts.openSans(
-                            fontSize: 12,
-                            color: statusColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        if (showBalance)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
                           Text(
-                            "₹${formatter.format(friend.overallBalance.abs())}",
-                            style: GoogleFonts.openSans(
-                              fontSize: 16,
+                            statusText,
+                            style: GoogleFonts.outfit(
+                              fontSize: 13,
                               color: statusColor,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                      ],
+                          if (showBalance)
+                            Text(
+                              "₹${formatter.format(friend.overallBalance.abs())}",
+                              style: GoogleFonts.outfit(
+                                fontSize: 18,
+                                color: statusColor,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -129,20 +136,20 @@ class FriendListItem extends StatelessWidget {
                 // Nested Breakdowns
                 if (showNested)
                   Padding(
-                    padding: const EdgeInsets.only(left: 28.0, top: 4.0), // Align under the center of the icon
+                    padding: const EdgeInsets.only(left: 26.0, top: 12.0), // Align under the center of the icon
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         for (int i = 0; i < friend.groupBreakdown.length; i++)
                           _buildNestedBalanceRow(
-                            contextName: "in ${friend.groupBreakdown[i].groupName}",
+                            contextName: friend.groupBreakdown[i].groupName,
                             balance: friend.groupBreakdown[i].balance,
                             formatter: formatter,
                             isLast: (i == friend.groupBreakdown.length - 1) && friend.nonGroupBalance == 0,
                           ),
                         if (friend.nonGroupBalance != 0)
                           _buildNestedBalanceRow(
-                            contextName: "non-group expenses",
+                            contextName: "non-group",
                             balance: friend.nonGroupBalance,
                             formatter: formatter,
                             isLast: true,
@@ -188,7 +195,7 @@ class FriendListItem extends StatelessWidget {
                   children: [
                     TextSpan(
                       text: "$textStatus ",
-                      style: GoogleFonts.openSans(
+                      style: GoogleFonts.outfit(
                         fontSize: 14,
                         color: AppColors.textGrey,
                         fontWeight: FontWeight.w500,
@@ -196,15 +203,15 @@ class FriendListItem extends StatelessWidget {
                     ),
                     TextSpan(
                       text: "₹${formatter.format(balance.abs())} ",
-                      style: GoogleFonts.openSans(
+                      style: GoogleFonts.outfit(
                         fontSize: 14,
                         color: color,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     TextSpan(
-                      text: '"$contextName"',
-                      style: GoogleFonts.openSans(
+                      text: "in $contextName",
+                      style: GoogleFonts.outfit(
                         fontSize: 14,
                         color: AppColors.textGrey,
                         fontWeight: FontWeight.w500,

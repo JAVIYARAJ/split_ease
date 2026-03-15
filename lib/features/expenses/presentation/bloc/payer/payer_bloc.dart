@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
+import 'package:split_ease/features/groups/domain/entities/group_member_entity.dart';
 
 part 'payer_event.dart';
 part 'payer_state.dart';
@@ -13,7 +13,7 @@ class PayerBloc extends Bloc<PayerEvent, PayerState> {
 
   void _onLoadPayer(LoadPayerEvent event, Emitter<PayerState> emit) {
     emit(state.copyWith(
-      group: event.group,
+      members: event.members,
       selectedPayerId: event.initialPayerId,
     ));
   }

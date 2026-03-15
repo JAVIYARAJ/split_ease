@@ -34,7 +34,9 @@ class GroupListItem extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.backgroundWhite,
+        color: AppColors.surfaceWhite,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderGreyLight),
       ),
       child: Material(
         color: Colors.transparent,
@@ -42,44 +44,39 @@ class GroupListItem extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column( // Use a column to stack main row and nested rows
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Group Icon (Square with rounded corners as per screenshot instead of circle, but keeping circle to avoid breaking existing styles if they prefer, actually let's match the screenshot which has rounded squares for group images)
+                    // Group Icon 
                     Hero(
                       tag: group.id ?? "group_${group.name}",
                       child: Container(
-                        width: 56,
-                        height: 56,
+                        width: 52,
+                        height: 52,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(14),
+                          color: AppColors.backgroundLightGrey,
+                          border: Border.all(color: AppColors.borderGreyLight, width: 0.5),
                         ),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(14),
                           child: group.groupIcon != null
                               ? AppImageView(
                                   url: group.groupIcon,
-                                  height: 56,
-                                  width: 56,
+                                  height: 52,
+                                  width: 52,
                                   fit: BoxFit.cover,
                                 )
                               : Container(
-                                  decoration: const BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [AppColors.primaryTeal, AppColors.primaryTealDark],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                  ),
+                                  color: AppColors.backgroundLightGrey,
                                   child: Icon(
                                     _getIconData(group.groupType),
-                                    color: Colors.white,
-                                    size: 28,
+                                    color: AppColors.textGrey,
+                                    size: 26,
                                   ),
                                 ),
                         ),
@@ -90,42 +87,46 @@ class GroupListItem extends StatelessWidget {
                     // Name
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 8.0), // Align name slightly down
+                        padding: const EdgeInsets.only(top: 4.0), // Align name slightly down
                         child: Text(
                           group.name ?? "Unnamed Group",
-                          style: GoogleFonts.openSans(
-                            fontSize: 16,
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
                             fontWeight: FontWeight.w600,
                             color: AppColors.textBlack,
                           ),
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
 
                     // Overall Balance
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          statusText,
-                          style: GoogleFonts.openSans(
-                            fontSize: 12,
-                            color: statusColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        if (showBalance && group.overallBalance != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
                           Text(
-                            "₹${formatter.format(group.overallBalance)}",
-                            style: GoogleFonts.openSans(
-                              fontSize: 16,
+                            statusText,
+                            style: GoogleFonts.outfit(
+                              fontSize: 13,
                               color: statusColor,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                      ],
+                          if (showBalance && group.overallBalance != null)
+                            Text(
+                              "₹${formatter.format(group.overallBalance!.abs())}",
+                              style: GoogleFonts.outfit(
+                                fontSize: 18,
+                                color: statusColor,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -133,7 +134,7 @@ class GroupListItem extends StatelessWidget {
                 // Nested Member Balances
                 if (group.balancePreview != null && group.balancePreview!.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(left: 28.0, top: 4.0), // Align under the center of the icon
+                    padding: const EdgeInsets.only(left: 26.0, top: 12.0), // Align under the center of the icon
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -193,7 +194,7 @@ class GroupListItem extends StatelessWidget {
                   children: [
                     TextSpan(
                       text: "$name $textStatus ",
-                      style: GoogleFonts.openSans(
+                      style: GoogleFonts.outfit(
                         fontSize: 14,
                         color: AppColors.textGrey,
                         fontWeight: FontWeight.w500,
@@ -201,7 +202,7 @@ class GroupListItem extends StatelessWidget {
                     ),
                     TextSpan(
                       text: "₹${formatter.format(balance.abs())}",
-                      style: GoogleFonts.openSans(
+                      style: GoogleFonts.outfit(
                         fontSize: 14,
                         color: color,
                         fontWeight: FontWeight.w600,
@@ -234,7 +235,7 @@ class GroupListItem extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 4.0),
               child: Text(
                 "Plus $count more balances",
-                style: GoogleFonts.openSans(
+                style: GoogleFonts.outfit(
                   fontSize: 14,
                   color: AppColors.textGrey,
                   fontWeight: FontWeight.w500,

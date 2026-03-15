@@ -15,3 +15,12 @@ class FetchExpenseDetailEvent extends ExpenseDetailEvent {
   @override
   List<Object> get props => [expenseId];
 }
+
+class DeleteExpenseEvent extends ExpenseDetailEvent {
+  final String expenseId;
+
+  const DeleteExpenseEvent(this.expenseId);
+
+  @override
+  List<Object> get props => [expenseId];
+}

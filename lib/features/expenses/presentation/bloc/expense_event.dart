@@ -5,11 +5,21 @@ sealed class ExpenseEvent {
 }
 
 class ExpenseInitialized extends ExpenseEvent {
-  final GroupEntity group;
+  final GroupEntity? group;
+  final FriendEntity? friend;
+  final List<GroupEntity> availableGroups;
   final String? currentUserId;
-  const ExpenseInitialized(this.group, {this.currentUserId});
+  const ExpenseInitialized({
+    this.group,
+    this.friend,
+    this.availableGroups = const [],
+    this.currentUserId,
+  });
+}
 
-
+class GroupChanged extends ExpenseEvent {
+  final GroupEntity group;
+  const GroupChanged(this.group);
 }
 
 class AmountChanged extends ExpenseEvent {
@@ -58,6 +68,9 @@ class SplitOptionChanged extends ExpenseEvent {
 class AddExpenseSubmitted extends ExpenseEvent {
   final String groupId;
   const AddExpenseSubmitted({required this.groupId});
-  
+}
 
+class FetchGroupMembers extends ExpenseEvent {
+  final String groupId;
+  const FetchGroupMembers(this.groupId);
 }

@@ -9,9 +9,8 @@ import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/features/groups/domain/entities/group_expense_entity.dart';
 import 'package:split_ease/features/groups/domain/entities/group_member_balance_entity.dart';
 import 'package:split_ease/features/groups/presentation/bloc/group_detail_bloc.dart';
-import 'package:split_ease/features/groups/presentation/pages/group_settings_page.dart';
-
 import 'package:split_ease/core/routing/app_routes.dart';
+
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
 import 'package:intl/intl.dart';
@@ -76,15 +75,22 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       },
       child: BaseScreen(
         useSafeArea: false,
-        backgroundColor: AppColors.backgroundWhite,
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _openAddExpense,
-          backgroundColor: AppColors.primaryTeal,
-          icon: const Icon(Icons.receipt_long, color: Colors.white),
-          label: Text(
-            "Add expense",
-            style: GoogleFonts.openSans(color: Colors.white, fontWeight: FontWeight.w600),
-          ),
+        backgroundColor: AppColors.backgroundLightGrey,
+        floatingActionButton: BlocBuilder<GroupDetailBloc, GroupDetailState>(
+          builder: (context, state) {
+            final hasMembers = (state.groupEntity?.members?.length ?? 0) > 1;
+            if (!hasMembers) return const SizedBox.shrink();
+            
+            return FloatingActionButton.extended(
+              onPressed: _openAddExpense,
+              backgroundColor: AppColors.primaryTeal,
+              icon: const Icon(Icons.receipt_long, color: Colors.white),
+              label: Text(
+                "Add expense",
+                style: GoogleFonts.openSans(color: Colors.white, fontWeight: FontWeight.w600),
+              ),
+            );
+          },
         ),
         child: CustomRefreshIndicator(
           onRefresh: () async {
@@ -95,7 +101,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
               _GroupDetailAppBar(onBack: _onBack),
               BlocBuilder<GroupDetailBloc, GroupDetailState>(
                 builder: (context, state) {
-                  if (state.groupEntity == null) return const SliverToBoxAdapter(child: SizedBox());
+                  if (state.groupEntity == null || (state.groupEntity?.members?.length??0) <=1) return const SliverToBoxAdapter(child: SizedBox());
                   return _GroupDetailInfo(state.groupEntity!);
                 },
               ),
@@ -120,7 +126,12 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                   }
                   if (state.expenseStatus == GroupDetailExpenseStatus.success &&
                       state.expenseHistory != null) {
-                    return _TransactionList(expenses: state.expenseHistory?.expenses??[]);
+                    final hasMembers = (state.groupEntity?.members?.length ?? 0) > 1;
+                    return _TransactionList(
+                      expenses: state.expenseHistory?.expenses ?? [],
+                      hasMembers: hasMembers,
+                      groupId: state.groupEntity?.id,
+                    );
                   }
                   return const SliverToBoxAdapter(child: SizedBox());
                 },
@@ -271,14 +282,28 @@ class _GroupDetailInfo extends StatelessWidget {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const _BalanceSummary(),
-            const SizedBox(height: 24),
-            const _ActionButtons(),
-            const SizedBox(height: 16),
-          ],
+        child: Container(
+          padding: const EdgeInsets.all(20.0),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceWhite,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.borderGreyLight),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _BalanceSummary(),
+              const SizedBox(height: 24),
+              const _ActionButtons(),
+            ],
+          ),
         ),
       ),
     );
@@ -306,11 +331,9 @@ class _GroupDetailAppBar extends StatelessWidget {
             onPressed: () {
             final state = context.read<GroupDetailBloc>().state;
             if (state.groupEntity?.id != null) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => GroupSettingsPage(groupId: state.groupEntity!.id!),
-                ),
+              NavigationService.pushNamed(
+                AppRoutes.groupSettings,
+                args: {'groupId': state.groupEntity!.id!},
               ).then((value) {
                 if(value == true && context.mounted){
                    context.read<GroupDetailBloc>().add(LoadGroupDetails( hasChanges: true));
@@ -376,10 +399,11 @@ class _GroupDetailAppBar extends StatelessWidget {
                     bottom: titleBottom,
                     child: Text(
                       groupEntity?.name ?? "",
-                      style: GoogleFonts.openSans(
+                      style: GoogleFonts.outfit(
                         color: Colors.white,
                         fontSize: titleSizes,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.5,
                       ),
                     ),
                   ),
@@ -404,7 +428,7 @@ class _GroupDetailAppBar extends StatelessWidget {
                             const SizedBox(width: 6),
                             Text(
                               "${groupEntity?.members?.length ?? 0} people",
-                              style: GoogleFonts.openSans(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                              style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
@@ -451,12 +475,12 @@ class _BalanceSummary extends StatelessWidget {
           children: [
             RichText(
               text: TextSpan(
-                style: GoogleFonts.openSans(fontSize: 16, color: AppColors.textBlack),
+                style: GoogleFonts.outfit(fontSize: 16, color: AppColors.textBlack),
                 children: [
                   TextSpan(text: "$overallLabel "),
                   TextSpan(
-                    text: formatted,
-                    style: GoogleFonts.openSans(fontWeight: FontWeight.bold, color: balanceColor),
+                    text: _formatCurrency(overall.abs()),
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.w700, color: balanceColor),
                   ),
                   const TextSpan(text: " overall"),
                 ],
@@ -466,7 +490,7 @@ class _BalanceSummary extends StatelessWidget {
             ...memberBalances.map(
               (m) => _buildBalanceLine(
                 m.fullName,
-                _formatCurrency(m.balance),
+                _formatCurrency(m.balance.abs()),
                 memberLabel,
                 balanceColor,
               ),
@@ -482,12 +506,12 @@ class _BalanceSummary extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 4.0),
       child: RichText(
         text: TextSpan(
-          style: GoogleFonts.openSans(fontSize: 14, color: AppColors.textGrey),
+          style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textGrey, fontWeight: FontWeight.w500),
           children: [
             TextSpan(text: "$name $label "),
             TextSpan(
               text: amount,
-              style: GoogleFonts.openSans(fontWeight: FontWeight.w600, color: color),
+              style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: color),
             ),
           ],
         ),
@@ -511,36 +535,58 @@ class _ActionButtons extends StatelessWidget {
       physics: const BouncingScrollPhysics(),
       child: Row(
         children: [
-          ElevatedButton(
+          _buildActionButton(
+            label: "Settle up",
+            icon: Icons.account_balance_wallet_rounded,
+            color: AppColors.primary,
             onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.warningOrange,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: Text("Settle up", style: GoogleFonts.openSans(fontWeight: FontWeight.w600, fontSize: 16)),
           ),
           const SizedBox(width: 8),
-          ElevatedButton(
+          _buildActionButton(
+            label: "Balances",
+            icon: Icons.bar_chart_rounded,
+            color: AppColors.textBlack,
             onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.warningOrange,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: Text("Balances", style: GoogleFonts.openSans(fontWeight: FontWeight.w600, fontSize: 16)),
           ),
           const SizedBox(width: 8),
-          ElevatedButton(
+          _buildActionButton(
+            label: "Totals",
+            icon: Icons.functions_rounded,
+            color: AppColors.textBlack,
             onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.warningOrange,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: Text("Totals", style: GoogleFonts.openSans(fontWeight: FontWeight.w600, fontSize: 16)),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.backgroundLightGrey,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.borderGreyLight),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 18),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: GoogleFonts.outfit(color: color, fontWeight: FontWeight.w600, fontSize: 13),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -548,11 +594,87 @@ class _ActionButtons extends StatelessWidget {
 
 class _TransactionList extends StatelessWidget {
   final List<GroupExpenseEntity> expenses;
+  final bool hasMembers;
+  final String? groupId;
 
-  const _TransactionList({required this.expenses});
+  const _TransactionList({
+    required this.expenses,
+    this.hasMembers = true,
+    this.groupId,
+  });
 
   @override
   Widget build(BuildContext context) {
+    if (!hasMembers) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 64, horizontal: 32),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(28),
+                  decoration: BoxDecoration(
+                    color: AppColors.warningOrange.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.person_add_rounded,
+                    size: 72,
+                    color: AppColors.warningOrange,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  "Only you are here!",
+                  style: GoogleFonts.outfit(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textBlack,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  "You can't add an expense because you don't have any members in the group yet.",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                    fontSize: 15,
+                    color: AppColors.textGrey,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    if (groupId != null) {
+                      NavigationService.pushNamed(
+                        AppRoutes.addMembers,
+                        args: {'groupId': groupId!},
+                      ).then((value) {
+                        if (value == true) {
+                          context.read<GroupDetailBloc>().add(LoadGroupDetails(hasChanges: true));
+                          context.read<GroupDetailBloc>().add(LoadGroupExpenseHistory());
+                        }
+                      });
+                    }
+                  },
+                  icon: const Icon(Icons.group_add_rounded, color: Colors.white),
+                  label: const Text("Add Members"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryTeal,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     if (expenses.isEmpty) {
       return SliverToBoxAdapter(
         child: Padding(
@@ -576,9 +698,9 @@ class _TransactionList extends StatelessWidget {
                 const SizedBox(height: 24),
                 Text(
                   "No expenses yet",
-                  style: GoogleFonts.openSans(
+                  style: GoogleFonts.outfit(
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.textBlack,
                   ),
                 ),
@@ -586,7 +708,7 @@ class _TransactionList extends StatelessWidget {
                 Text(
                   "This group needs some action.\nAdd a new expense to start splitting!",
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.openSans(
+                  style: GoogleFonts.outfit(
                     fontSize: 15,
                     color: AppColors.textGrey,
                     height: 1.5,
@@ -619,10 +741,11 @@ class _TransactionList extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text(
             entry.key,
-            style: GoogleFonts.openSans(
+            style: GoogleFonts.outfit(
               fontSize: 14,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w700,
               color: AppColors.textBlack,
+              letterSpacing: 0.5,
             ),
           ),
         ),
@@ -664,68 +787,79 @@ class _TransactionItem extends StatelessWidget {
         NavigationService.pushNamed(AppRoutes.expanseDetail,args: {"expanse_id":expense.expenseId});
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-        child: Row(
-          children: [
-            // Date column
-            SizedBox(
-              width: 36,
-              child: Column(
-                children: [
-                  Text(month, style: GoogleFonts.openSans(fontSize: 12, color: AppColors.textGrey)),
-                  Text(
-                    day,
-                    style: GoogleFonts.openSans(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textGrey),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.surfaceWhite,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.borderGreyLight),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                // Date column
+                SizedBox(
+                  width: 38,
+                  child: Column(
+                    children: [
+                      Text(month, style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w500)),
+                      Text(
+                        day,
+                        style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textGrey, letterSpacing: -0.5),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 16),
+                // Icon
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(12)),
+                  child: const Icon(Icons.receipt_long_rounded, color: AppColors.textGrey),
+                ),
+                const SizedBox(width: 16),
+                // Description + paid by
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        expense.description,
+                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        "${expense.paidByName} paid ₹${formatter.format(expense.totalAmount)}",
+                        style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                ),
+                // Balance effect
+                if (expense.yourBalanceEffect == 0)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text("Not involved", style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontStyle: FontStyle.italic)),
+                    ],
+                  )
+                else
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(balanceLabel, style: GoogleFonts.outfit(fontSize: 12, color: balanceColor, fontWeight: FontWeight.w500)),
+                      Text(
+                        "₹${formatter.format(expense.yourBalanceEffect.abs())}",
+                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: balanceColor, letterSpacing: -0.5),
+                      ),
+                    ],
+                  ),
+              ],
             ),
-            const SizedBox(width: 16),
-            // Icon
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(8)),
-              child: const Icon(Icons.receipt_long_outlined, color: AppColors.textGrey),
-            ),
-            const SizedBox(width: 16),
-            // Description + paid by
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    expense.description,
-                    style: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    "${expense.paidByName} paid ₹${formatter.format(expense.totalAmount)}",
-                    style: GoogleFonts.openSans(fontSize: 12, color: AppColors.textGrey),
-                  ),
-                ],
-              ),
-            ),
-            // Balance effect
-            if (expense.yourBalanceEffect == 0)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text("Not involved", style: GoogleFonts.openSans(fontSize: 12, color: AppColors.textGrey, fontStyle: FontStyle.italic)),
-                ],
-              )
-            else
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(balanceLabel, style: GoogleFonts.openSans(fontSize: 12, color: balanceColor)),
-                  Text(
-                    "₹${formatter.format(expense.yourBalanceEffect)}",
-                    style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.bold, color: balanceColor),
-                  ),
-                ],
-              ),
-          ],
+          ),
         ),
       ),
     );

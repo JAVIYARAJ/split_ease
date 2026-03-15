@@ -6,6 +6,7 @@ import 'package:split_ease/core/error/failure.dart';
 import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
 import 'package:split_ease/features/groups/domain/entities/group_expense_history_entity.dart';
 import 'package:split_ease/features/groups/domain/entities/group_friend_entity.dart';
+import 'package:split_ease/features/groups/domain/entities/group_member_entity.dart';
 
 import '../../domain/repository/group_repository.dart';
 import '../datasources/group_remote_data_source.dart';
@@ -14,6 +15,16 @@ class GroupRepositoryImpl implements GroupRepository {
   final GroupRemoteDataSource dataSource;
 
   GroupRepositoryImpl({required this.dataSource});
+
+  @override
+  Future<Either<Failure, List<GroupMemberEntity>>> getGroupMembers(String groupId) async {
+    try {
+      final response = await dataSource.getGroupMembers(groupId);
+      return right(response);
+    } on ServerException catch (error) {
+      return left(Failure(message: error.message));
+    }
+  }
 
   @override
   Future<Either<Failure, String>> insertGroupIcon(File file) async {
@@ -127,11 +138,11 @@ class GroupRepositoryImpl implements GroupRepository {
 
   @override
   Future<Either<Failure, GroupExpenseHistoryEntity>> getGroupExpenseHistory(String groupId) async {
-    //try {
+    try {
       final model = await dataSource.getGroupExpenseHistory(groupId);
       return right(model);
-    // } on ServerException catch (error) {
-    //   return left(Failure(message: error.message));
-    // }
+    } on ServerException catch (error) {
+       return left(Failure(message: error.message));
+    }
   }
 }

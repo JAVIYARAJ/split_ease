@@ -4,8 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/payer/payer_bloc.dart';
-import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
-
+import 'package:split_ease/features/groups/domain/entities/group_member_entity.dart';
 
 import '../../../../injection_container.dart';
 
@@ -16,11 +15,11 @@ class PayerSelectionPage extends StatelessWidget {
   Widget build(BuildContext context) {
     // Extract arguments
     final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-    final group = args['group'] as GroupEntity;
+    final members = args['members'] as List<GroupMemberEntity>;
     final currentPayerId = args['currentPayerId'] as String?;
 
     return BlocProvider(
-      create: (context) => sl<PayerBloc>()..add(LoadPayerEvent(group: group, initialPayerId: currentPayerId)),
+      create: (context) => sl<PayerBloc>()..add(LoadPayerEvent(members: members, initialPayerId: currentPayerId)),
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
@@ -50,7 +49,7 @@ class PayerSelectionPage extends StatelessWidget {
         ),
         body: BlocBuilder<PayerBloc, PayerState>(
           builder: (context, state) {
-            final members = state.group?.members ?? [];
+            final members = state.members;
             final selectedUserId = state.selectedPayerId ?? (members.isNotEmpty ? members.first.userId : '');
 
             return ListView.builder(

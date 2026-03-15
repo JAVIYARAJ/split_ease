@@ -8,9 +8,9 @@ import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/account/presentation/bloc/account_bloc.dart';
 import '../../../../../core/common/cubit/app_user_cubit.dart';
-import 'package:split_ease/features/profile/presentation/pages/edit_profile_page.dart';
-import 'package:split_ease/features/account/presentation/pages/user_qr_page.dart';
 import 'package:split_ease/core/presentation/widgets/app_image_view.dart';
+import 'package:split_ease/core/presentation/widgets/profile_picture_dialog.dart';
+import 'package:split_ease/core/presentation/widgets/feedback_sheet.dart';
 
 class AccountPage extends StatelessWidget {
   const AccountPage({super.key});
@@ -64,22 +64,34 @@ class AccountPage extends StatelessWidget {
                               ),
                             ],
                           ),
-                          child: userAvatar != null
-                              ? AppImageView(
-                                  url: userAvatar,
-                                  height: 100,
-                                  width: 100,
-                                  radius: 50,
-                                )
-                              : Container(
-                                  height: 100,
-                                  width: 100,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: AppColors.primaryTeal.withValues(alpha: 0.1),
-                                  ),
-                                  child: Icon(Icons.person, size: 50, color: AppColors.primaryTeal.withValues(alpha: 0.5)),
-                                ),
+                          child: GestureDetector(
+                            onTap: () {
+                              ProfilePictureDialog.show(
+                                context,
+                                avatarUrl: userAvatar,
+                                heroTag: 'account_profile_pic',
+                              );
+                            },
+                            child: Hero(
+                              tag: 'account_profile_pic',
+                              child: userAvatar != null
+                                  ? AppImageView(
+                                      url: userAvatar,
+                                      height: 100,
+                                      width: 100,
+                                      radius: 50,
+                                    )
+                                  : Container(
+                                      height: 100,
+                                      width: 100,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: AppColors.primaryTeal.withValues(alpha: 0.1),
+                                      ),
+                                      child: Icon(Icons.person, size: 50, color: AppColors.primaryTeal.withValues(alpha: 0.5)),
+                                    ),
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -103,9 +115,7 @@ class AccountPage extends StatelessWidget {
                         OutlinedButton(
                           onPressed: () {
                              if (userState is AppUserLoggedIn) {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(builder: (context) => EditProfilePage(user: userState.user)),
-                                );
+                                NavigationService.pushNamed(AppRoutes.editProfile, args: userState.user);
                              }
                           },
                           style: OutlinedButton.styleFrom(
@@ -191,15 +201,13 @@ class AccountPage extends StatelessWidget {
                         title: "My QR Code",
                         onTap: () {
                           if (userState is AppUserLoggedIn) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => UserQrPage(
-                                  userId: userState.user.id,
-                                  userName: userState.user.name,
-                                  userAvatar: userState.user.avatarUrl,
-                                ),
-                              ),
+                            NavigationService.pushNamed(
+                              AppRoutes.userQr,
+                              args: {
+                                'userId': userState.user.id,
+                                'userName': userState.user.name,
+                                'userAvatar': userState.user.avatarUrl,
+                              },
                             );
                           } else {
                             AppAlerts.showError(context, "Please log in to see your QR code.");
@@ -238,7 +246,9 @@ class AccountPage extends StatelessWidget {
                       _buildListItem(
                         icon: Icons.star_outline_rounded,
                         title: "Rate Splitwise", 
-                        onTap: () {}
+                        onTap: () {
+                          FeedbackSheet.show(context);
+                        }
                       ),
                       _buildDivider(),
                       _buildListItem(
@@ -274,7 +284,7 @@ class AccountPage extends StatelessWidget {
                       style: GoogleFonts.openSans(color: AppColors.textGrey.withValues(alpha: 0.5), fontSize: 12),
                    ),
 
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 100),
                 ],
               ),
             ),

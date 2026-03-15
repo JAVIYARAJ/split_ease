@@ -8,6 +8,7 @@ import 'package:split_ease/features/expenses/data/models/expense_detail_model.da
 abstract class ExpenseRemoteDataSource {
   Future<void> createExpense(CreateExpenseParams params);
   Future<ExpenseDetailModel> getExpenseDetail(String expenseId);
+  Future<void> deleteExpense(String expenseId);
 }
 
 class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
@@ -18,7 +19,7 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
   @override
   Future<void> createExpense(CreateExpenseParams params) async {
     try {
-      final response = await client.rpc(
+      await client.rpc(
         'create_expense_rpc',
         params: {
           'p_group_id': params.groupId,
@@ -49,6 +50,20 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
 
       // The RPC returns a JSON object.
       return ExpenseDetailModel.fromJson(response as Map<String, dynamic>);
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+
+  @override
+  Future<void> deleteExpense(String expenseId) async {
+    try {
+      await client.rpc(
+        'delete_expense_rpc',
+        params: {
+          'p_expense_id': expenseId,
+        },
+      );
     } catch (e) {
       throw ServerException(message: e.toString());
     }

@@ -8,13 +8,13 @@ sealed class PayerEvent extends Equatable {
 }
 
 class LoadPayerEvent extends PayerEvent {
-  final GroupEntity group;
+  final List<GroupMemberEntity> members;
   final String? initialPayerId;
 
-  const LoadPayerEvent({required this.group, this.initialPayerId});
+  const LoadPayerEvent({required this.members, this.initialPayerId});
 
   @override
-  List<Object> get props => [group, if (initialPayerId != null) initialPayerId!];
+  List<Object> get props => [members, if (initialPayerId != null) initialPayerId!];
 }
 
 class SelectPayerEvent extends PayerEvent {

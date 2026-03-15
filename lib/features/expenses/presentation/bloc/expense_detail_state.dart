@@ -29,3 +29,16 @@ class ExpenseDetailError extends ExpenseDetailState {
   @override
   List<Object?> get props => [message];
 }
+
+class ExpenseDeleteLoading extends ExpenseDetailState {}
+
+class ExpenseDeleted extends ExpenseDetailState {}
+
+class ExpenseDeleteError extends ExpenseDetailState {
+  final String message;
+
+  const ExpenseDeleteError(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}

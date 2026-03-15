@@ -19,7 +19,7 @@ class GroupMemberModel extends GroupMemberEntity {
       email: json['email'],
       role: json['role'],
       joinedAt: json['joined_at'],
-      avtar: json['avtar'],
+      avtar: json['avtar'] ?? json['avatar'],
     );
   }
 

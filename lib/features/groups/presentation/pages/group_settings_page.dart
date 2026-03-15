@@ -13,7 +13,6 @@ import 'package:split_ease/core/routing/app_routes.dart';
 import '../../domain/entities/group_member_entity.dart';
 import '../widgets/invite_qr_dialog.dart';
 import '../../domain/services/group_permission_service.dart';
-import '../pages/add_members_page.dart';
 
 class GroupSettingsPage extends StatefulWidget {
   final String groupId;
@@ -110,9 +109,9 @@ class _GroupSettingsContent extends StatelessWidget {
                   icon: Icons.person_add_rounded,
                   title: 'Add people to group',
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => AddMembersPage(groupId: group.id!)),
+                    NavigationService.pushNamed(
+                      AppRoutes.addMembers,
+                      args: {'groupId': group.id!},
                     ).then((value) {
                       if (value == true && context.mounted) {
                         context.read<GroupSettingsBloc>().add(LoadGroupSettings(group.id!, hasChanges: true));

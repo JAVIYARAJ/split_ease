@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:split_ease/core/presentation/widgets/group_picker_sheet.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
+import 'package:split_ease/core/routing/app_routes.dart';
 import '../../../../../core/utils/navigation_utils.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
 import '../../../../../core/presentation/widgets/custom_refresh_indicator.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../widgets/group_list_item.dart';
 import '../bloc/groups_bloc.dart';
-import '../../../../../core/routing/app_routes.dart';
 import 'package:intl/intl.dart';
 
 class GroupsPage extends StatelessWidget {
@@ -18,17 +19,22 @@ class GroupsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BaseScreen(
-      backgroundColor: AppColors.backgroundWhite,
+      backgroundColor: AppColors.backgroundLightGrey,
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 90.0),
         child: FloatingActionButton.extended(
           heroTag: "groups_fab",
-          onPressed: () {},
-          backgroundColor: AppColors.primaryTealDark,
-          icon: const Icon(Icons.receipt_long, color: Colors.white),
+          onPressed: () async {
+            final group = await showGroupPickerSheet(context);
+            if (group != null && context.mounted) {
+              NavigationService.pushNamed(AppRoutes.addExpense, args: {'group': group});
+            }
+          },
+          backgroundColor: AppColors.primaryTeal,
+          icon: const Icon(Icons.add_rounded, color: Colors.white),
           label: Text(
             "Add expense",
-            style: GoogleFonts.openSans(
+            style: GoogleFonts.outfit(
               color: Colors.white,
               fontWeight: FontWeight.w600,
             ),
@@ -62,22 +68,31 @@ class GroupsPage extends StatelessWidget {
       automaticallyImplyLeading: false,
       backgroundColor: AppColors.backgroundWhite,
       elevation: 0,
+      scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
       title: Text(
         "Groups",
-        style: GoogleFonts.openSans(
+        style: GoogleFonts.outfit(
           color: AppColors.textBlack,
-          fontWeight: FontWeight.bold,
-          fontSize: 28, // Slightly larger for "Page Title" feel
+          fontWeight: FontWeight.w700,
+          fontSize: 26, 
+          letterSpacing: -0.5,
         ),
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.search, color: AppColors.textBlack, size: 28),
           onPressed: () {},
+          style: IconButton.styleFrom(
+            backgroundColor: AppColors.surfaceWhite,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: AppColors.borderGreyLight),
+            ),
+          ),
+          icon: const Icon(Icons.search_rounded, color: AppColors.textBlack),
         ),
+        const SizedBox(width: 8),
         IconButton(
-          icon: const Icon(Icons.qr_code_scanner, color: AppColors.textBlack),
           onPressed: () {
             NavigationUtils.handleResult(
               context: context,
@@ -85,9 +100,17 @@ class GroupsPage extends StatelessWidget {
               onRefresh: () => context.read<GroupsBloc>().add(LoadGroups()),
             );
           },
+          style: IconButton.styleFrom(
+            backgroundColor: AppColors.surfaceWhite,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: AppColors.borderGreyLight),
+            ),
+          ),
+          icon: const Icon(Icons.qr_code_scanner_rounded, color: AppColors.textBlack),
         ),
+        const SizedBox(width: 8),
         IconButton(
-          icon: const Icon(Icons.group_add_outlined, color: AppColors.primaryTeal, size: 28),
           onPressed: () {
             NavigationUtils.handleResult(
               context: context,
@@ -95,8 +118,16 @@ class GroupsPage extends StatelessWidget {
               onRefresh: () => context.read<GroupsBloc>().add(LoadGroups()),
             );
           },
+          style: IconButton.styleFrom(
+            backgroundColor: AppColors.surfaceWhite,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: AppColors.borderGreyLight),
+            ),
+          ),
+          icon: const Icon(Icons.group_add_rounded, color: AppColors.primary, size: 24),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 16),
       ],
     );
   }
@@ -108,10 +139,12 @@ class GroupsPage extends StatelessWidget {
         if (state.status == GroupsStatus.success || (state.status == GroupsStatus.failure && state.groups.isNotEmpty)) {
           for (final group in state.groups) {
             if (group.overallBalance != null) {
+               // We use absolute value here because we are manually applying the sign based on status
+               final absBalance = group.overallBalance!.abs();
                if (group.status == "you_are_owed") {
-                 totalBalance += group.overallBalance!;
+                 totalBalance += absBalance;
                } else if (group.status == "you_owe") {
-                 totalBalance -= group.overallBalance!;
+                 totalBalance -= absBalance;
                }
             }
           }
@@ -120,53 +153,71 @@ class GroupsPage extends StatelessWidget {
         final formatter = NumberFormat('#,##0.00', 'en_IN');
         final isOwed = totalBalance >= 0;
         final absoluteBalance = totalBalance.abs();
-        final label = totalBalance == 0 ? "Settled up" : (isOwed ? "You are owed" : "You owe");
+        final balanceColor = totalBalance == 0 ? AppColors.textBlack : (isOwed ? AppColors.successGreen : AppColors.warningOrange);
+        final label = totalBalance == 0 ? "Settled up" : (isOwed ? "You are owed overall" : "You owe overall");
         
         return SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
             child: Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.primaryTeal, AppColors.primaryTealDark],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: AppColors.primaryTeal.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8))],
+                color: AppColors.surfaceWhite,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.borderGreyLight),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    "Total Balance",
-                    style: GoogleFonts.openSans(color: Colors.white.withValues(alpha: 0.9), fontSize: 14, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            label,
-                            style: GoogleFonts.openSans(color: Colors.white.withValues(alpha: 0.8), fontSize: 12, fontWeight: FontWeight.w500),
-                          ),
-                          Text(
-                            "₹${formatter.format(absoluteBalance)}",
-                            style: GoogleFonts.openSans(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-                          ),
-                        ],
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.backgroundLightGrey,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.account_balance_wallet_rounded, color: AppColors.textGrey, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        "Total Balance",
+                        style: GoogleFonts.outfit(color: AppColors.textGrey, fontSize: 16, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    label,
+                    style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "₹${formatter.format(absoluteBalance)}",
+                        style: GoogleFonts.outfit(color: balanceColor, fontSize: 36, fontWeight: FontWeight.w700, letterSpacing: -1),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(20)),
-                        child: Text(
-                          "Details >",
-                          style: GoogleFonts.openSans(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: AppColors.backgroundLightGrey,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              "Details",
+                              style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 13, fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.textBlack, size: 12),
+                          ],
                         ),
                       ),
                     ],

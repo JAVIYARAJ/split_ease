@@ -35,4 +35,15 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       return Left(Failure(message: e.toString()));
     }
   }
+  @override
+  Future<Either<Failure, void>> deleteExpense(String expenseId) async {
+    try {
+      await remoteDataSource.deleteExpense(expenseId);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(Failure(message: e.message));
+    } catch (e) {
+      return Left(Failure(message: e.toString()));
+    }
+  }
 }

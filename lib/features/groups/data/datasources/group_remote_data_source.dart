@@ -6,6 +6,7 @@ import 'package:split_ease/features/groups/data/models/group_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/error/exception.dart';
+import '../models/group_member_model.dart';
 
 abstract interface class GroupRemoteDataSource {
   Future<String> insertGroupImage(File file);
@@ -31,6 +32,8 @@ abstract interface class GroupRemoteDataSource {
   Future<void> addMultipleFriendsToGroup(String groupId, List<String> userIds);
 
   Future<GroupExpenseHistoryModel> getGroupExpenseHistory(String groupId);
+
+  Future<List<GroupMemberModel>> getGroupMembers(String groupId);
 }
 
 class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
@@ -198,6 +201,19 @@ class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
         params: {'p_group_id': groupId},
       );
       return GroupExpenseHistoryModel.fromJson(response as Map<String, dynamic>);
+    } catch (error) {
+      throw ServerException(message: ErrorMessageUtils.generate(error));
+    }
+  }
+
+  @override
+  Future<List<GroupMemberModel>> getGroupMembers(String groupId) async {
+    try {
+      final response = await client.rpc(
+        'get_group_members_rpc',
+        params: {'p_group_id': groupId},
+      );
+      return (response as List).map((e) => GroupMemberModel.fromJson(e)).toList();
     } catch (error) {
       throw ServerException(message: ErrorMessageUtils.generate(error));
     }

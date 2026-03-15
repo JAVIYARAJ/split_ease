@@ -13,4 +13,11 @@ class AppRoutes {
   static const String dateSelection = '/dateSelection';
   static const String friendDetail = '/friendDetail';
   static const String expanseDetail = '/expanseDetail';
+  static const String addMembers = '/addMembers';
+  static const String groupSettings = '/groupSettings';
+  static const String friendRequests = '/friendRequests';
+  static const String qrScanner = '/qrScanner';
+  static const String editProfile = '/editProfile';
+  static const String userQr = '/userQr';
+  static const String expensePdfPreview = '/expensePdfPreview';
 }

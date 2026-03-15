@@ -1,19 +1,26 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-
+import 'package:split_ease/features/groups/domain/entities/group_member_entity.dart';
+import 'package:split_ease/features/groups/domain/usecases/get_group_members.dart';
+import 'package:split_ease/features/friends/domain/entities/friend_entity.dart';
 import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 import '../../domain/usecases/add_expense_usecase.dart';
 import '../../domain/usecases/create_expense_params.dart';
 
 part 'expense_event.dart';
-
 part 'expense_state.dart';
 
 class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   final AddExpenseUseCase addExpenseUseCase;
+  final GetGroupMembers getGroupMembers;
 
-  ExpenseBloc({required this.addExpenseUseCase}) : super(const ExpenseState()) {
+  ExpenseBloc({
+    required this.addExpenseUseCase,
+    required this.getGroupMembers,
+  }) : super(const ExpenseState()) {
     on<ExpenseInitialized>(_onInitialized);
+    on<GroupChanged>(_onGroupChanged);
+    on<FetchGroupMembers>(_onFetchGroupMembers);
     on<AmountChanged>(_onAmountChanged);
     on<DescriptionChanged>(_onDescriptionChanged);
     on<PayerChanged>(_onPayerChanged);
@@ -23,10 +30,40 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     on<AddExpenseSubmitted>(_onAddExpenseSubmitted);
   }
 
-  // ... (previous handlers remain same, omitted for brevity, only showing constructor to closing) ...
-
   void _onInitialized(ExpenseInitialized event, Emitter<ExpenseState> emit) {
-    emit(ExpenseState(group: event.group, payerId: event.currentUserId, date: DateTime.now()));
+    emit(ExpenseState(
+      group: event.group,
+      friend: event.friend,
+      availableGroups: event.availableGroups,
+      payerId: event.currentUserId,
+      date: DateTime.now(),
+    ));
+
+    if (event.group?.id != null) {
+      add(FetchGroupMembers(event.group!.id!));
+    }
+  }
+
+  void _onGroupChanged(GroupChanged event, Emitter<ExpenseState> emit) {
+    emit(state.copyWith(group: event.group));
+    if (event.group.id != null) {
+      add(FetchGroupMembers(event.group.id!));
+    }
+  }
+
+  Future<void> _onFetchGroupMembers(FetchGroupMembers event, Emitter<ExpenseState> emit) async {
+    emit(state.copyWith(groupMembersStatus: ExpenseStatus.loading));
+    final result = await getGroupMembers(event.groupId);
+    result.fold(
+      (failure) => emit(state.copyWith(
+        groupMembersStatus: ExpenseStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (members) => emit(state.copyWith(
+        groupMembersStatus: ExpenseStatus.success,
+        groupMembers: members,
+      )),
+    );
   }
 
   void _onAmountChanged(AmountChanged event, Emitter<ExpenseState> emit) {

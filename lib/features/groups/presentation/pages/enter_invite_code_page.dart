@@ -180,10 +180,7 @@ class EnterInviteCodePage extends StatelessWidget {
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const QrScannerPage()),
-                    );
+                    final result = await NavigationService.pushNamed(AppRoutes.qrScanner);
                     if (result != null && result is String && context.mounted) {
                       context.read<JoinGroupBloc>().add(JoinGroupQrScanned(result));
                     }
