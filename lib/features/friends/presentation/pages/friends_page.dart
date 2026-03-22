@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:split_ease/core/presentation/widgets/custom_refresh_indicator.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,10 +9,14 @@ import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../core/presentation/widgets/success_dialog.dart';
+import '../../../../core/routing/app_routes.dart';
 import '../widgets/friend_list_item.dart';
 import '../bloc/friends_bloc.dart';
-import 'package:split_ease/core/routing/app_routes.dart';
-import 'package:split_ease/core/presentation/widgets/success_dialog.dart';
+import 'package:split_ease/core/services/data_refresh_service.dart';
+import 'package:split_ease/injection_container.dart';
+import 'package:split_ease/core/utils/navigation_utils.dart';
+import 'package:split_ease/features/activity/presentation/bloc/activity_bloc.dart';
 
 class FriendsPage extends StatefulWidget {
   const FriendsPage({super.key});
@@ -21,6 +26,11 @@ class FriendsPage extends StatefulWidget {
 }
 
 class _FriendsPageState extends State<FriendsPage> {
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -39,40 +49,90 @@ class _FriendsPageState extends State<FriendsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BaseScreen(
-      backgroundColor: AppColors.backgroundLightGrey,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 90.0), // Raise FAB above custom bottom nav
-        child: FloatingActionButton.extended(
-          heroTag: "friends_fab",
-          onPressed: () {
-            showAddExpenseFromFriendsSheet(context);
-          },
-          backgroundColor: AppColors.primaryTeal,
-          icon: const Icon(Icons.add_rounded, color: Colors.white),
-          label: Text(
-            "Add expense",
-            style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w600),
+    return BlocListener<DataRefreshCubit, DataRefreshState>(
+      listenWhen: (prev, curr) => curr.lastSignal?.type == RefreshType.friends,
+      listener: (context, state) {
+        if (context.read<DataRefreshCubit>().shouldRefresh(RefreshType.friends)) {
+          context.read<DataRefreshCubit>().clearRefresh(RefreshType.friends);
+          context.read<FriendsBloc>().add(LoadFriends());
+        }
+      },
+      child: BaseScreen(
+        backgroundColor: AppColors.backgroundLightGrey,
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.only(bottom: 90.0), // Raise FAB above custom bottom nav
+          child: BlocBuilder<FriendsBloc, FriendsState>(
+            buildWhen: (previous, current) => previous.isFabExtended != current.isFabExtended,
+            builder: (context, state) {
+              return AnimatedScale(
+                duration: const Duration(milliseconds: 500),
+                scale: state.isFabExtended ? 1.0 : 0.9,
+                curve: Curves.fastOutSlowIn,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 400),
+                  opacity: state.isFabExtended ? 1.0 : 0.9,
+                  curve: Curves.fastOutSlowIn,
+                  child: FloatingActionButton.extended(
+                    heroTag: "friends_fab",
+                    isExtended: state.isFabExtended,
+                    onPressed: () {
+                      showAddExpenseFromFriendsSheet(context);
+                    },
+                    backgroundColor: AppColors.primaryTeal,
+                    icon: const Icon(Icons.add_rounded, color: Colors.white),
+                    label: Text(
+                      "Add expense",
+                      style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
-      ),
-      child: BlocListener<FriendsBloc, FriendsState>(
-        listener: (context, state) {
-          if (state.joinStatus == FriendJoinStatus.success) {
-            showDialog(
-              context: context,
-              builder: (context) =>
-                  SuccessDialog(description: "Friend request sent successfully", buttonText: "Okay", onContinue: () => Navigator.pop(context)),
-            );
-          } else if (state.joinStatus == FriendJoinStatus.failure) {
-            AppAlerts.showError(context, state.joinErrorMessage);
-          }
-        },
-        child: CustomRefreshIndicator(
-          onRefresh: () async {
-            context.read<FriendsBloc>().add(LoadFriends());
+
+        child: BlocListener<FriendsBloc, FriendsState>(
+          listener: (context, state) {
+            if (state.joinStatus == FriendJoinStatus.success) {
+              showDialog(
+                context: context,
+                builder: (context) =>
+                    SuccessDialog(description: "Friend request sent successfully", buttonText: "Okay", onContinue: () => Navigator.pop(context)),
+              );
+            } else if (state.joinStatus == FriendJoinStatus.failure) {
+              AppAlerts.showError(context, state.joinErrorMessage);
+            }
           },
-          child: CustomScrollView(slivers: [_buildSliverAppBar(context), _buildSummarySection(context), _buildFriendsList(context)]),
+          child: NotificationListener<UserScrollNotification>(
+            onNotification: (notification) {
+              final friendsBloc = context.read<FriendsBloc>();
+              if (notification.direction == ScrollDirection.forward) {
+                if (!friendsBloc.state.isFabExtended) {
+                  friendsBloc.add(ToggleFriendsFab(true));
+                }
+              } else if (notification.direction == ScrollDirection.reverse) {
+                if (friendsBloc.state.isFabExtended) {
+                  friendsBloc.add(ToggleFriendsFab(false));
+                }
+              }
+              return false;
+            },
+
+            child: CustomRefreshIndicator(
+              onRefresh: () async {
+                context.read<FriendsBloc>().add(LoadFriends());
+                context.read<ActivityBloc>().add(LoadActivities());
+              },
+              child: CustomScrollView(
+                slivers: [
+                  _buildSliverAppBar(context),
+                  _buildSummarySection(context),
+                  _buildFriendsList(context),
+                  SliverToBoxAdapter(child: SizedBox(height: 170)),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -188,9 +248,7 @@ class _FriendsPageState extends State<FriendsPage> {
                 color: AppColors.surfaceWhite,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: AppColors.borderGreyLight),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
-                ],
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,10 +257,7 @@ class _FriendsPageState extends State<FriendsPage> {
                     children: [
                       Container(
                         padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.backgroundLightGrey,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                        decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(8)),
                         child: const Icon(Icons.account_balance_wallet_rounded, color: AppColors.textGrey, size: 20),
                       ),
                       const SizedBox(width: 12),
@@ -228,10 +283,7 @@ class _FriendsPageState extends State<FriendsPage> {
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: AppColors.backgroundLightGrey,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(12)),
                         child: Row(
                           children: [
                             Text(
@@ -282,7 +334,15 @@ class _FriendsPageState extends State<FriendsPage> {
                 child: FriendListItem(
                   friend: friend,
                   onTap: () {
-                    NavigationService.pushNamed(AppRoutes.friendDetail, args: {'friend': friend});
+                    NavigationUtils.handleResult(
+                      context: context,
+                      navigation: NavigationService.pushNamed(AppRoutes.friendDetail, args: {'friend': friend}),
+                      refreshType: RefreshType.friends,
+                      onRefresh: () {
+                        context.read<FriendsBloc>().add(LoadFriends());
+                        context.read<ActivityBloc>().add(LoadActivities());
+                      },
+                    );
                   },
                 ),
               );

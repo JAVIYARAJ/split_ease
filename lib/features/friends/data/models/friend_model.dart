@@ -27,8 +27,6 @@ class FriendModel extends FriendEntity {
     required super.status,
     required super.groupBreakdown,
     super.email,
-    super.friendSince,
-    super.friendshipId,
   });
 
   factory FriendModel.fromJson(Map<String, dynamic> json) {
@@ -37,8 +35,6 @@ class FriendModel extends FriendEntity {
       name: json['full_name'] as String,
       imageUrl: json['avtar'] as String?,
       email: json['email'] as String?,
-      friendSince: json['friend_since'] as String?,
-      friendshipId: json['friendship_id'] as String?,
       overallBalance: (json['overall_balance'] as num?)?.toDouble() ?? 0.0,
       nonGroupBalance: (json['non_group_balance'] as num?)?.toDouble() ?? 0.0,
       totalBalanceGroups: (json['total_balance_groups'] as num?)?.toInt() ?? 0,
@@ -60,8 +56,6 @@ class FriendModel extends FriendEntity {
       status: status,
       groupBreakdown: groupBreakdown,
       email: email,
-      friendSince: friendSince,
-      friendshipId: friendshipId,
     );
   }
 }

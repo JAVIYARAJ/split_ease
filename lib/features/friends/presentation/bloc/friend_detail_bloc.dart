@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:split_ease/features/friends/domain/usecases/get_friend_expense_history_usecase.dart';
+import 'package:split_ease/features/friends/domain/entities/friend_entity.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friend_detail_event.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friend_detail_state.dart';
 
@@ -42,11 +43,25 @@ class FriendDetailBloc extends Bloc<FriendDetailEvent, FriendDetailState> {
         ));
       },
       (history) {
+        final updatedFriend = state.friendEntity?.copyWith(
+          overallBalance: history.overallBalance,
+          status: history.status,
+          groupBreakdown: history.groupBreakdown
+              .map((e) => FriendGroupBreakdownEntity(
+                    balance: e.balance,
+                    groupId: e.groupId,
+                    groupName: e.groupName,
+                  ))
+              .toList(),
+        );
+
         emit(state.copyWith(
           expenseStatus: FriendDetailExpenseStatus.success,
           expenseHistory: history,
+          friendEntity: updatedFriend,
         ));
       },
+
     );
   }
 }

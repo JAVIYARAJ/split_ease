@@ -1,58 +1,132 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:split_ease/core/presentation/widgets/group_picker_sheet.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
+import 'package:split_ease/core/services/data_refresh_service.dart';
+import 'package:split_ease/injection_container.dart';
 import '../../../../../core/utils/navigation_utils.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
 import '../../../../../core/presentation/widgets/custom_refresh_indicator.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../widgets/group_list_item.dart';
-import '../bloc/groups_bloc.dart';
+import 'package:split_ease/features/groups/presentation/bloc/groups_bloc.dart';
+import 'package:split_ease/features/activity/presentation/bloc/activity_bloc.dart';
+import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 import 'package:intl/intl.dart';
 
-class GroupsPage extends StatelessWidget {
+class GroupsPage extends StatefulWidget {
   const GroupsPage({super.key});
 
   @override
+  State<GroupsPage> createState() => _GroupsPageState();
+}
+
+class _GroupsPageState extends State<GroupsPage> {
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+
+
   Widget build(BuildContext context) {
-    return BaseScreen(
+    return BlocListener<DataRefreshCubit, DataRefreshState>(
+      listenWhen: (prev, curr) => curr.lastSignal?.type == RefreshType.groups,
+      listener: (context, state) {
+        if (context.read<DataRefreshCubit>().shouldRefresh(RefreshType.groups)) {
+          context.read<DataRefreshCubit>().clearRefresh(RefreshType.groups);
+          context.read<GroupsBloc>().add(LoadGroups());
+        }
+      },
+      child: BaseScreen(
       backgroundColor: AppColors.backgroundLightGrey,
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 90.0),
-        child: FloatingActionButton.extended(
-          heroTag: "groups_fab",
-          onPressed: () async {
-            final group = await showGroupPickerSheet(context);
-            if(group == null || !context.mounted) return;
+        child: BlocBuilder<GroupsBloc, GroupsState>(
+          buildWhen: (previous, current) => previous.isFabExtended != current.isFabExtended,
+          builder: (context, state) {
+            return AnimatedScale(
+              duration: const Duration(milliseconds: 500),
+              scale: state.isFabExtended ? 1.0 : 0.9,
+              curve: Curves.fastOutSlowIn,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 400),
+                opacity: state.isFabExtended ? 1.0 : 0.9,
+                curve: Curves.fastOutSlowIn,
+                child: FloatingActionButton.extended(
 
-            if(group.memberCount == 1){
-              NavigationService.pushNamed(
-                AppRoutes.addMembers,
-                args: {'groupId': group.id},
-              ).then((value) {
-                if (value == true) {
-                  context.read<GroupsBloc>().add(LoadGroups());
-                }
-              });
-            }else{
-              NavigationService.pushNamed(AppRoutes.addExpense, args: {'group': group});
-            }
+                  heroTag: "groups_fab",
+                  isExtended: state.isFabExtended,
+                  onPressed: () async {
+                    final group = await showGroupPickerSheet(context);
+                    if(group == null || !context.mounted) return;
+
+                    if(group.memberCount == 1){
+                      NavigationService.pushNamed(
+                        AppRoutes.addMembers,
+                        args: {'groupId': group.id},
+                      ).then((value) {
+                        if (value == true) {
+                          context.read<GroupsBloc>().add(LoadGroups());
+                        }
+                      });
+                    }else{
+                      NavigationUtils.handleResult(
+                        context: context,
+                        navigation: NavigationService.pushNamed(
+                          AppRoutes.addExpense, 
+                          args: {
+                            'group': group,
+                            'origin': ExpenseOrigin.group,
+                          },
+                        ),
+                        onRefresh: () {
+                          context.read<GroupsBloc>().add(LoadGroups());
+                          context.read<ActivityBloc>().add(LoadActivities());
+                        },
+                      );
+
+                    }
+                  },
+                  backgroundColor: AppColors.primaryTeal,
+                  icon: const Icon(Icons.add_rounded, color: Colors.white),
+                  label: Text(
+                    "Add expense",
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            );
           },
-          backgroundColor: AppColors.primaryTeal,
-          icon: const Icon(Icons.add_rounded, color: Colors.white),
-          label: Text(
-            "Add expense",
-            style: GoogleFonts.outfit(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+
         ),
       ),
-      child: CustomRefreshIndicator(
+
+
+      child: NotificationListener<UserScrollNotification>(
+        onNotification: (notification) {
+          final groupsBloc = context.read<GroupsBloc>();
+          if (notification.direction == ScrollDirection.forward) {
+            if (!groupsBloc.state.isFabExtended) {
+              groupsBloc.add(ToggleGroupsFab(true));
+            }
+          } else if (notification.direction == ScrollDirection.reverse) {
+            if (groupsBloc.state.isFabExtended) {
+              groupsBloc.add(ToggleGroupsFab(false));
+            }
+          }
+          return false;
+        },
+        child: CustomRefreshIndicator(
+
         onRefresh: () async{
           context.read<GroupsBloc>().add(LoadGroups());
         },
@@ -67,8 +141,9 @@ class GroupsPage extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  ));
+}
 
   Widget _buildSliverAppBar(BuildContext context) {
     return SliverAppBar(
@@ -278,7 +353,11 @@ class GroupsPage extends StatelessWidget {
                     NavigationUtils.handleResult(
                       context: context,
                       navigation: NavigationService.pushNamed(AppRoutes.groupDetail, args: {"group_id": group.id}),
-                      onRefresh: () => context.read<GroupsBloc>().add(LoadGroups()),
+                      refreshType: RefreshType.groups,
+                      onRefresh: () {
+                        context.read<GroupsBloc>().add(LoadGroups());
+                        context.read<ActivityBloc>().add(LoadActivities());
+                      },
                     );
                   },
                 ),

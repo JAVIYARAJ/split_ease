@@ -7,15 +7,22 @@ sealed class ExpenseEvent {
 class ExpenseInitialized extends ExpenseEvent {
   final GroupEntity? group;
   final FriendEntity? friend;
-  final List<GroupEntity> availableGroups;
   final String? currentUserId;
+  final ExpenseOrigin origin;
   const ExpenseInitialized({
     this.group,
     this.friend,
-    this.availableGroups = const [],
     this.currentUserId,
+    this.origin = ExpenseOrigin.global,
   });
 }
+
+class ExpenseEditInitialized extends ExpenseEvent {
+  final ExpenseDetailEntity expense;
+  final String currentUserId;
+  const ExpenseEditInitialized({required this.expense, required this.currentUserId});
+}
+
 
 class GroupChanged extends ExpenseEvent {
   final GroupEntity? group;
@@ -65,6 +72,11 @@ class SplitOptionChanged extends ExpenseEvent {
 }
 
 
+class ValidateNavigation extends ExpenseEvent {
+  final Function() onValid;
+  const ValidateNavigation({required this.onValid});
+}
+
 class AddExpenseSubmitted extends ExpenseEvent {
   final String? groupId;
   const AddExpenseSubmitted({this.groupId});
@@ -73,6 +85,12 @@ class AddExpenseSubmitted extends ExpenseEvent {
 class FetchGroupMembers extends ExpenseEvent {
   final String groupId;
   const FetchGroupMembers(this.groupId);
+}
+
+class FetchParticipants extends ExpenseEvent {
+  final String? groupId;
+  final String? friendUserId;
+  const FetchParticipants({this.groupId, this.friendUserId});
 }
 
 class FetchCommonGroups extends ExpenseEvent {

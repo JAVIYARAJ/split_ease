@@ -7,6 +7,12 @@ part 'split_event.dart';
 part 'split_state.dart';
 
 class SplitBloc extends Bloc<SplitEvent, SplitState> {
+  /// Logic Coordinator for the Split Options Page.
+  /// 
+  /// This Bloc manages:
+  /// - Initialization of splits for provided members.
+  /// - Updates to split values (exact, percentage, shares).
+  /// - Automatic recalculation of 'equal' split amounts.
   SplitBloc() : super(const SplitState()) {
     on<InitializeSplitEvent>(_onInitializeSplit);
     on<UpdateSplitTypeEvent>(_onUpdateSplitType);
@@ -17,6 +23,8 @@ class SplitBloc extends Bloc<SplitEvent, SplitState> {
     on<ToggleMemberSelectionEvent>(_onToggleMemberSelection);
   }
 
+  /// Initializes the split list. Logic Moved from UI: Default shares and 
+  /// base split entries are now handled here.
   void _onInitializeSplit(InitializeSplitEvent event, Emitter<SplitState> emit) {
     List<ExpenseSplit> currentSplits;
     if (event.initialSplits.isNotEmpty) {
@@ -49,7 +57,14 @@ class SplitBloc extends Bloc<SplitEvent, SplitState> {
   }
 
   void _ensureSplitsExistForMembers(Emitter<SplitState> emit) {
-    // Logic from the original page: ensure all members have a split entry when type changes
+    // In EQUAL mode, the splits list acts as a set of SELECTED members. 
+    // We should NOT auto-add members who aren't in the list, as that would 
+    // select them by default. For other modes, we want everyone in the list 
+    // to allow entering amounts/percentages.
+    if (state.splitType == SplitType.equal) {
+      return;
+    }
+
     final currentSplits = List<ExpenseSplit>.from(state.splits);
     final setOfCurrent = currentSplits.map((s) => s.userId).toSet();
     
@@ -70,6 +85,7 @@ class SplitBloc extends Bloc<SplitEvent, SplitState> {
       emit(state.copyWith(splits: currentSplits));
     }
   }
+
 
   void _onUpdateSplitAmount(UpdateSplitAmountEvent event, Emitter<SplitState> emit) {
      final index = state.splits.indexWhere((s) => s.userId == event.userId);

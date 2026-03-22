@@ -24,57 +24,66 @@ class GroupSettingsPage extends StatefulWidget {
 }
 
 class _GroupSettingsPageState extends State<GroupSettingsPage> {
-  bool _canPop = false;
+  final ValueNotifier<bool> _canPop = ValueNotifier<bool>(false);
+
+  @override
+  void dispose() {
+    _canPop.dispose();
+    super.dispose();
+  }
 
   void _onBack(BuildContext context) {
-    setState(() {
-      _canPop = true;
-    });
+    _canPop.value = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         final state = context.read<GroupSettingsBloc>().state;
         final hasChanges = state is GroupSettingsLoaded ? state.hasChanges : false;
-        Navigator.pop(context, hasChanges);
+        NavigationService.pop(arg: hasChanges);
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => sl<GroupSettingsBloc>()..add(LoadGroupSettings(widget.groupId)),
-      child: Builder(
-        builder: (context) {
-          return PopScope(
-            canPop: _canPop,
-            onPopInvokedWithResult: (didPop, result) {
-              if (didPop) return;
-              _onBack(context);
+    return ValueListenableBuilder<bool>(
+      valueListenable: _canPop,
+      builder: (context, canPop, child) {
+        return BlocProvider(
+          create: (context) => sl<GroupSettingsBloc>()..add(LoadGroupSettings(widget.groupId)),
+          child: Builder(
+            builder: (context) {
+              return PopScope(
+                canPop: canPop,
+                onPopInvokedWithResult: (didPop, result) {
+                  if (didPop) return;
+                  _onBack(context);
+                },
+                child: Scaffold(
+                  backgroundColor: AppColors.backgroundLightGrey, // Modern grey background
+                  body: BlocConsumer<GroupSettingsBloc, GroupSettingsState>(
+                    listener: (context, state) {
+                      if (state is GroupSettingsError) {
+                        AppAlerts.showError(context, state.message);
+                      } else if (state is GroupActionSuccess) {
+                        AppAlerts.showSuccess(context, state.message);
+                        NavigationService.pop(arg: true);
+                      }
+                    },
+                    builder: (context, state) {
+                      if (state is GroupSettingsLoading) {
+                        return const _GroupSettingsShimmer();
+                      } else if (state is GroupSettingsLoaded) {
+                        return _GroupSettingsContent(group: state.group, onBack: () => _onBack(context));
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ),
+              );
             },
-            child: Scaffold(
-              backgroundColor: AppColors.backgroundLightGrey, // Modern grey background
-              body: BlocConsumer<GroupSettingsBloc, GroupSettingsState>(
-                listener: (context, state) {
-                  if (state is GroupSettingsError) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
-                  } else if (state is GroupActionSuccess) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
-                    Navigator.pop(context, true);
-                  }
-                },
-                builder: (context, state) {
-                  if (state is GroupSettingsLoading) {
-                    return const _GroupSettingsShimmer();
-                  } else if (state is GroupSettingsLoaded) {
-                    return _GroupSettingsContent(group: state.group, onBack: () => _onBack(context));
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
-            ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -102,55 +111,60 @@ class _GroupSettingsContent extends StatelessWidget {
           delegate: SliverChildListDelegate([
             
             // General Settings Section
-            _buildSectionHeader('General'),
-            _buildInsetGroup(
-              children: [
-                _buildSettingsTile(
-                  icon: Icons.person_add_rounded,
-                  title: 'Add people to group',
-                  onTap: () {
-                    NavigationService.pushNamed(
-                      AppRoutes.addMembers,
-                      args: {'groupId': group.id!},
-                    ).then((value) {
-                      if (value == true && context.mounted) {
-                        context.read<GroupSettingsBloc>().add(LoadGroupSettings(group.id!, hasChanges: true));
-                      }
-                    });
-                  },
-                  iconBgColor: AppColors.primary.withValues(alpha: 0.1),
-                  iconColor: AppColors.primary,
-                ),
-                
-                // Invite QR - Permission Check
-                if (GroupPermissionService.hasPermission(userRole, GroupPermission.inviteMembers)) ...[
-                  _buildDivider(),
-                  _buildSettingsTile(
-                    icon: Icons.qr_code_rounded,
-                    title: 'Invite by QR',
-                    onTap: () {
-                      if (group.inviteCode != null) {
-                        showDialog(
-                          context: context,
-                          builder: (context) => InviteQrDialog(
-                            inviteCode: group.inviteCode!,
-                            groupName: group.name ?? "Group",
-                          ),
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("No invite code available")),
-                        );
-                      }
-                    },
-                    iconBgColor: AppColors.primary.withValues(alpha: 0.1),
-                    iconColor: AppColors.primary,
-                  ),
+            if (GroupPermissionService.hasPermission(userRole, GroupPermission.addMembers) || 
+                GroupPermissionService.hasPermission(userRole, GroupPermission.inviteMembers)) ...[
+              _buildSectionHeader('General'),
+              _buildInsetGroup(
+                children: [
+                  if (GroupPermissionService.hasPermission(userRole, GroupPermission.addMembers)) ...[
+                    _buildSettingsTile(
+                      icon: Icons.person_add_rounded,
+                      title: 'Add people to group',
+                      onTap: () {
+                        NavigationService.pushNamed(
+                          AppRoutes.addMembers,
+                          args: {'groupId': group.id!},
+                        ).then((value) {
+                          if (value == true && context.mounted) {
+                            context.read<GroupSettingsBloc>().add(LoadGroupSettings(group.id!, hasChanges: true));
+                          }
+                        });
+                      },
+                      iconBgColor: AppColors.primary.withValues(alpha: 0.1),
+                      iconColor: AppColors.primary,
+                    ),
+                    if (GroupPermissionService.hasPermission(userRole, GroupPermission.inviteMembers))
+                       _buildDivider(),
+                  ],
+                  
+                  // Invite QR - Permission Check
+                  if (GroupPermissionService.hasPermission(userRole, GroupPermission.inviteMembers)) ...[
+                    _buildSettingsTile(
+                      icon: Icons.qr_code_rounded,
+                      title: 'Invite by QR',
+                      onTap: () {
+                        if (group.inviteCode != null) {
+                          showDialog(
+                            context: context,
+                            builder: (context) => InviteQrDialog(
+                              inviteCode: group.inviteCode!,
+                              groupName: group.name ?? "Group",
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("No invite code available")),
+                          );
+                        }
+                      },
+                      iconBgColor: AppColors.primary.withValues(alpha: 0.1),
+                      iconColor: AppColors.primary,
+                    ),
+                  ],
                 ],
-              ],
-            ),
-
-            const SizedBox(height: 24),
+              ),
+              const SizedBox(height: 24),
+            ],
             
             // Members Section
             _buildSectionHeader('Members'),
@@ -160,40 +174,116 @@ class _GroupSettingsContent extends StatelessWidget {
 
             const SizedBox(height: 24),
             
-            // Danger Zone - Permission Check
-             if (GroupPermissionService.hasPermission(userRole, GroupPermission.deleteGroup)) ...[
+            // Danger Zone Section
+            if (GroupPermissionService.hasPermission(userRole, GroupPermission.exitGroup) || 
+                GroupPermissionService.hasPermission(userRole, GroupPermission.deleteGroup)) ...[
               _buildSectionHeader('Danger Zone', color: AppColors.errorRed),
               _buildInsetGroup(
                 children: [
-                  _buildSettingsTile(
-                    icon: Icons.exit_to_app_rounded,
-                    title: 'Leave Group',
-                    onTap: () {
-                      AppAlerts.showError(context, "Cannot leave group with outstanding debts.");
-                    },
-                    iconBgColor: const Color(0xFFFFF3E0),
-                    iconColor: const Color(0xFFFB8C00),
-                  ),
-                  _buildDivider(),
-                  _buildSettingsTile(
-                    icon: Icons.delete_outline_rounded,
-                    title: 'Delete Group',
-                    titleColor: AppColors.errorRed,
-                    onTap: () {
-                      //context.read<GroupSettingsBloc>().add(DeleteGroupEvent(group.id!));
-                    },
-                    iconBgColor: const Color(0xFFFFEBEE),
-                    iconColor: const Color(0xFFE53935),
-                  ),
+                   if (GroupPermissionService.hasPermission(userRole, GroupPermission.exitGroup)) ...[
+                    _buildSettingsTile(
+                      icon: Icons.exit_to_app_rounded,
+                      title: 'Leave Group',
+                      onTap: () {
+                        AppAlerts.showError(context, "Cannot leave group with outstanding debts.");
+                      },
+                      iconBgColor: const Color(0xFFFFF3E0),
+                      iconColor: const Color(0xFFFB8C00),
+                    ),
+                    if (GroupPermissionService.hasPermission(userRole, GroupPermission.deleteGroup))
+                      _buildDivider(),
+                  ],
+
+                  if (GroupPermissionService.hasPermission(userRole, GroupPermission.deleteGroup))
+                    _buildSettingsTile(
+                      icon: Icons.delete_outline_rounded,
+                      title: 'Delete Group',
+                      titleColor: AppColors.errorRed,
+                      onTap: () {
+                         _showDeleteConfirmation(context);
+                      },
+                      iconBgColor: const Color(0xFFFFEBEE),
+                      iconColor: const Color(0xFFE53935),
+                    ),
                 ],
               ),
-             ],
+            ],
             const SizedBox(height: 40),
           ]),
         ),
       ],
     );
   }
+
+  void _showDeleteConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.errorRed.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.delete_forever_rounded, color: AppColors.errorRed, size: 32),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                "Delete Group?",
+                style: GoogleFonts.openSans(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textBlack),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "Are you sure you want to delete \"${group.name}\"? This will permanently remove all expenses, settlements, and member history. This action cannot be undone.",
+                style: GoogleFonts.openSans(fontSize: 14, color: AppColors.textGrey, height: 1.5),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        side: const BorderSide(color: AppColors.borderGrey),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: Text("Cancel", style: GoogleFonts.openSans(fontWeight: FontWeight.w700, color: AppColors.textBlack)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        context.read<GroupSettingsBloc>().add(DeleteGroupEvent(group.id!));
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.errorRed,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        elevation: 0,
+                      ),
+                      child: Text("Delete", style: GoogleFonts.openSans(fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
 
   Widget _buildSliverAppBar(BuildContext context, String? userRole) {
     return SliverAppBar(

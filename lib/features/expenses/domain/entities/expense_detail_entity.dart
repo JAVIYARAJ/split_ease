@@ -11,9 +11,6 @@ class ExpenseDetailEntity extends Equatable {
   final ExpenseUserEntity paidBy;
   final ExpenseUserEntity createdBy;
   final List<ExpenseSplitEntity> splits;
-  final ExpenseSummaryEntity yourSummary;
-  final List<ExpenseTrendEntity> monthlyTrends;
-  final List<ExpenseCommentEntity> comments;
 
   const ExpenseDetailEntity({
     required this.id,
@@ -26,9 +23,6 @@ class ExpenseDetailEntity extends Equatable {
     required this.paidBy,
     required this.createdBy,
     required this.splits,
-    required this.yourSummary,
-    required this.monthlyTrends,
-    required this.comments,
   });
 
   @override
@@ -43,9 +37,6 @@ class ExpenseDetailEntity extends Equatable {
         paidBy,
         createdBy,
         splits,
-        yourSummary,
-        monthlyTrends,
-        comments,
       ];
 }
 
@@ -98,39 +89,3 @@ class ExpenseSplitEntity extends Equatable {
   List<Object?> get props => [type, avatar, amount, userId, fullName];
 }
 
-class ExpenseSummaryEntity extends Equatable {
-  final double youOwe;
-  final double youPaid;
-  final double netEffect;
-
-  const ExpenseSummaryEntity({
-    required this.youOwe,
-    required this.youPaid,
-    required this.netEffect,
-  });
-
-  @override
-  List<Object?> get props => [youOwe, youPaid, netEffect];
-}
-
-class ExpenseTrendEntity extends Equatable {
-  final String month;
-  final double total;
-
-  const ExpenseTrendEntity({
-    required this.month,
-    required this.total,
-  });
-
-  @override
-  List<Object?> get props => [month, total];
-}
-
-class ExpenseCommentEntity extends Equatable {
-  // Structure TBD based on API, will use an empty class for now
-  // Assuming typically id, user_id, message, created_at
-  const ExpenseCommentEntity();
-
-  @override
-  List<Object?> get props => [];
-}

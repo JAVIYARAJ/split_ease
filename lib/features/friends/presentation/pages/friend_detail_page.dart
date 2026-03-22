@@ -13,6 +13,10 @@ import 'package:split_ease/features/friends/domain/entities/friend_expense_entit
 import 'package:split_ease/features/friends/presentation/bloc/friend_detail_bloc.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friend_detail_event.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friend_detail_state.dart';
+import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
+import 'package:split_ease/core/services/data_refresh_service.dart';
+import 'package:split_ease/core/utils/navigation_utils.dart';
+import 'package:split_ease/injection_container.dart';
 import 'package:intl/intl.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 
@@ -24,12 +28,16 @@ class FriendDetailPage extends StatefulWidget {
 }
 
 class _FriendDetailPageState extends State<FriendDetailPage> {
-  bool _canPop = false;
+  final ValueNotifier<bool> _canPop = ValueNotifier<bool>(false);
+
+  @override
+  void dispose() {
+    _canPop.dispose();
+    super.dispose();
+  }
 
   void _onBack() {
-    setState(() {
-      _canPop = true;
-    });
+    _canPop.value = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         final state = context.read<FriendDetailBloc>().state;
@@ -53,26 +61,53 @@ class _FriendDetailPageState extends State<FriendDetailPage> {
   Future<void> _openAddExpense() async {
     final state = context.read<FriendDetailBloc>().state;
     if (state.friendEntity != null) {
-      final result = await NavigationService.pushNamed(
-        AppRoutes.addExpense,
-        args: {'friend': state.friendEntity},
+      NavigationUtils.handleResult(
+        context: context,
+        navigation: NavigationService.pushNamed(
+          AppRoutes.addExpense,
+          args: {
+            'friend': state.friendEntity,
+            'origin': ExpenseOrigin.friend,
+          },
+        ),
+        refreshType: RefreshType.friendDetail,
+        id: state.friendEntity!.id,
+        onRefresh: () {
+          final currentFriend = context.read<FriendDetailBloc>().state.friendEntity;
+          if (currentFriend != null) {
+            context.read<FriendDetailBloc>().add(LoadFriendDetails(friend: currentFriend, hasChanges: true));
+          }
+          context.read<FriendDetailBloc>().add(const LoadFriendExpenseHistory());
+        },
       );
-      // If the expense was added successfully, reload the history
-      if (result == true && mounted) {
-        context.read<FriendDetailBloc>().add(const LoadFriendExpenseHistory());
-      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: _canPop,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
-        _onBack();
+    return BlocListener<DataRefreshCubit, DataRefreshState>(
+      listenWhen: (prev, curr) => curr.lastSignal?.type == RefreshType.friendDetail,
+      listener: (context, state) {
+        final friendId = context.read<FriendDetailBloc>().state.friendEntity?.id;
+        if (context.read<DataRefreshCubit>().shouldRefresh(RefreshType.friendDetail, id: friendId)) {
+          context.read<DataRefreshCubit>().clearRefresh(RefreshType.friendDetail, id: friendId);
+          final currentFriend = context.read<FriendDetailBloc>().state.friendEntity;
+          if (currentFriend != null) {
+            context.read<FriendDetailBloc>().add(LoadFriendDetails(friend: currentFriend, hasChanges: true));
+          }
+          context.read<FriendDetailBloc>().add(const LoadFriendExpenseHistory());
+        }
       },
-      child: BaseScreen(
+      child: ValueListenableBuilder<bool>(
+      valueListenable: _canPop,
+      builder: (context, canPop, child) {
+        return PopScope(
+          canPop: canPop,
+          onPopInvokedWithResult: (didPop, result) {
+            if (didPop) return;
+            _onBack();
+          },
+          child: BaseScreen(
         useSafeArea: false,
         backgroundColor: const Color(0xFFF9FAFB), // Very light airy background
         floatingActionButton: FloatingActionButton.extended(
@@ -145,6 +180,9 @@ class _FriendDetailPageState extends State<FriendDetailPage> {
           ),
         ),
       ),
+    );
+  },
+),
     );
   }
 }
@@ -596,7 +634,19 @@ class _TransactionItem extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        NavigationService.pushNamed(AppRoutes.expanseDetail, args: {"expanse_id": expense.expenseId});
+        NavigationUtils.handleResult(
+          context: context,
+          navigation: NavigationService.pushNamed(AppRoutes.expanseDetail, args: {"expanse_id": expense.expenseId}),
+          refreshType: RefreshType.friendDetail,
+          id: context.read<FriendDetailBloc>().state.friendEntity?.id,
+          onRefresh: () {
+            final currentFriend = context.read<FriendDetailBloc>().state.friendEntity;
+            if (currentFriend != null) {
+              context.read<FriendDetailBloc>().add(LoadFriendDetails(friend: currentFriend, hasChanges: true));
+            }
+            context.read<FriendDetailBloc>().add(const LoadFriendExpenseHistory());
+          },
+        );
       },
       borderRadius: BorderRadius.circular(20),
       child: Padding(

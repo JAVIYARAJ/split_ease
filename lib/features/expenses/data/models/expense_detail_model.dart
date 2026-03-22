@@ -12,9 +12,6 @@ class ExpenseDetailModel extends ExpenseDetailEntity {
     required super.paidBy,
     required super.createdBy,
     required super.splits,
-    required super.yourSummary,
-    required super.monthlyTrends,
-    required super.comments,
   });
 
   factory ExpenseDetailModel.fromJson(Map<String, dynamic> json) {
@@ -31,17 +28,6 @@ class ExpenseDetailModel extends ExpenseDetailEntity {
       splits: (json['splits'] as List)
           .map((e) => ExpenseSplitModel.fromJson(e as Map<String, dynamic>))
           .toList(),
-      yourSummary: ExpenseSummaryModel.fromJson(json['your_summary']),
-      monthlyTrends: json['monthly_trends'] != null
-          ? (json['monthly_trends'] as List)
-              .map((e) => ExpenseTrendModel.fromJson(e as Map<String, dynamic>))
-              .toList()
-          : [],
-      comments: json['comments'] != null
-          ? (json['comments'] as List)
-              .map((e) => ExpenseCommentModel.fromJson(e as Map<String, dynamic>))
-              .toList()
-          : [],
     );
   }
 }
@@ -71,7 +57,7 @@ class ExpenseUserModel extends ExpenseUserEntity {
 
   factory ExpenseUserModel.fromJson(Map<String, dynamic> json) {
     return ExpenseUserModel(
-      id: json['id'] as String,
+      id: (json['id'] ?? json['user_id']) as String,
       fullName: json['full_name'] as String,
       // API spells avatar as avtar
       avatar: json['avtar'] as String?,
@@ -100,40 +86,3 @@ class ExpenseSplitModel extends ExpenseSplitEntity {
   }
 }
 
-class ExpenseSummaryModel extends ExpenseSummaryEntity {
-  const ExpenseSummaryModel({
-    required super.youOwe,
-    required super.youPaid,
-    required super.netEffect,
-  });
-
-  factory ExpenseSummaryModel.fromJson(Map<String, dynamic> json) {
-    return ExpenseSummaryModel(
-      youOwe: (json['you_owe'] as num).toDouble(),
-      youPaid: (json['you_paid'] as num).toDouble(),
-      netEffect: (json['net_effect'] as num).toDouble(),
-    );
-  }
-}
-
-class ExpenseTrendModel extends ExpenseTrendEntity {
-  const ExpenseTrendModel({
-    required super.month,
-    required super.total,
-  });
-
-  factory ExpenseTrendModel.fromJson(Map<String, dynamic> json) {
-    return ExpenseTrendModel(
-      month: json['month'] as String,
-      total: (json['total'] as num).toDouble(),
-    );
-  }
-}
-
-class ExpenseCommentModel extends ExpenseCommentEntity {
-  const ExpenseCommentModel();
-
-  factory ExpenseCommentModel.fromJson(Map<String, dynamic> json) {
-    return const ExpenseCommentModel();
-  }
-}

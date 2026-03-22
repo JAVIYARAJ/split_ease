@@ -25,7 +25,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  bool _isObscured = true;
+  final ValueNotifier<bool> _isObscured = ValueNotifier<bool>(true);
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -33,6 +33,7 @@ class _LoginPageState extends State<LoginPage> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _isObscured.dispose();
     super.dispose();
   }
 
@@ -138,18 +139,21 @@ class _LoginPageState extends State<LoginPage> {
                             const SizedBox(height: 20),
 
                             // Password
-                            AuthField(
-                              label: "Password",
-                              hint: "• • • • • •",
-                              isPassword: true,
-                              isObscured: _isObscured,
-                              controller: _passwordController,
-                              icon: Icons.lock_outline_rounded,
-                              validator: AppValidators.validatePasswordLogin,
-                              onToggleVisibility: () {
-                                setState(() {
-                                  _isObscured = !_isObscured;
-                                });
+                            ValueListenableBuilder<bool>(
+                              valueListenable: _isObscured,
+                              builder: (context, isObscured, child) {
+                                return AuthField(
+                                  label: "Password",
+                                  hint: "• • • • • •",
+                                  isPassword: true,
+                                  isObscured: isObscured,
+                                  controller: _passwordController,
+                                  icon: Icons.lock_outline_rounded,
+                                  validator: AppValidators.validatePasswordLogin,
+                                  onToggleVisibility: () {
+                                    _isObscured.value = !_isObscured.value;
+                                  },
+                                );
                               },
                             ),
 

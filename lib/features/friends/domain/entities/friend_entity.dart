@@ -8,6 +8,18 @@ class FriendGroupBreakdownEntity {
     required this.groupId,
     required this.groupName,
   });
+
+  FriendGroupBreakdownEntity copyWith({
+    double? balance,
+    String? groupId,
+    String? groupName,
+  }) {
+    return FriendGroupBreakdownEntity(
+      balance: balance ?? this.balance,
+      groupId: groupId ?? this.groupId,
+      groupName: groupName ?? this.groupName,
+    );
+  }
 }
 
 class FriendEntity {
@@ -21,8 +33,6 @@ class FriendEntity {
   final List<FriendGroupBreakdownEntity> groupBreakdown;
 
   final String? email;
-  final String? friendSince;
-  final String? friendshipId;
 
   const FriendEntity({
     required this.id,
@@ -34,7 +44,30 @@ class FriendEntity {
     required this.status,
     required this.groupBreakdown,
     this.email,
-    this.friendSince,
-    this.friendshipId,
   });
+
+  FriendEntity copyWith({
+    String? id,
+    String? name,
+    String? imageUrl,
+    double? overallBalance,
+    double? nonGroupBalance,
+    int? totalBalanceGroups,
+    String? status,
+    List<FriendGroupBreakdownEntity>? groupBreakdown,
+    String? email,
+  }) {
+    return FriendEntity(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      imageUrl: imageUrl ?? this.imageUrl,
+      overallBalance: overallBalance ?? this.overallBalance,
+      nonGroupBalance: nonGroupBalance ?? this.nonGroupBalance,
+      totalBalanceGroups: totalBalanceGroups ?? this.totalBalanceGroups,
+      status: status ?? this.status,
+      groupBreakdown: groupBreakdown ?? this.groupBreakdown,
+      email: email ?? this.email,
+    );
+  }
 }
+

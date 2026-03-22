@@ -7,6 +7,12 @@ enum SplitType {
   shares,
 }
 
+enum ExpenseOrigin {
+  group,
+  friend,
+  global,
+}
+
 class ExpenseEntity extends Equatable {
   final String? id;
   final String description;

@@ -12,7 +12,11 @@ import 'package:split_ease/features/groups/presentation/bloc/group_detail_bloc.d
 import 'package:split_ease/core/routing/app_routes.dart';
 
 import 'package:split_ease/core/routing/navigation_service.dart';
+import 'package:split_ease/core/services/data_refresh_service.dart';
+import 'package:split_ease/core/utils/navigation_utils.dart';
+import 'package:split_ease/injection_container.dart';
 import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
+import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 import 'package:intl/intl.dart';
 
 class GroupDetailPage extends StatefulWidget {
@@ -23,18 +27,22 @@ class GroupDetailPage extends StatefulWidget {
 }
 
 class _GroupDetailPageState extends State<GroupDetailPage> {
-  bool _canPop = false;
+  final ValueNotifier<bool> _canPop = ValueNotifier<bool>(false);
 
   void _onBack() {
-    setState(() {
-      _canPop = true;
-    });
+    _canPop.value = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         final state = context.read<GroupDetailBloc>().state;
         Navigator.pop(context, state.hasChanges);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _canPop.dispose();
+    super.dispose();
   }
 
   @override
@@ -54,26 +62,47 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   Future<void> _openAddExpense() async {
     final state = context.read<GroupDetailBloc>().state;
     if (state.groupEntity != null) {
-      final result = await NavigationService.pushNamed(
-        AppRoutes.addExpense,
-        args: {'group': state.groupEntity},
+      NavigationUtils.handleResult(
+        context: context,
+        navigation: NavigationService.pushNamed(
+          AppRoutes.addExpense,
+          args: {
+            'group': state.groupEntity,
+            'origin': ExpenseOrigin.group,
+          },
+        ),
+        refreshType: RefreshType.groupDetail,
+        id: state.groupEntity!.id,
+        onRefresh: () {
+          context.read<GroupDetailBloc>().add(const LoadGroupDetails(hasChanges: true));
+          context.read<GroupDetailBloc>().add(const LoadGroupExpenseHistory());
+        },
       );
-      // AddExpensePage pops with `true` on success → reload history
-      if (result == true && mounted) {
-        context.read<GroupDetailBloc>().add(LoadGroupExpenseHistory());
-      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: _canPop,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
-        _onBack();
+    return BlocListener<DataRefreshCubit, DataRefreshState>(
+      listenWhen: (prev, curr) => curr.lastSignal?.type == RefreshType.groupDetail,
+      listener: (context, state) {
+        final groupId = context.read<GroupDetailBloc>().state.groupEntity?.id;
+        if (context.read<DataRefreshCubit>().shouldRefresh(RefreshType.groupDetail, id: groupId)) {
+          context.read<DataRefreshCubit>().clearRefresh(RefreshType.groupDetail, id: groupId);
+          context.read<GroupDetailBloc>().add(const LoadGroupDetails(hasChanges: true));
+          context.read<GroupDetailBloc>().add(const LoadGroupExpenseHistory());
+        }
       },
-      child: BaseScreen(
+      child: ValueListenableBuilder<bool>(
+      valueListenable: _canPop,
+      builder: (context, canPop, child) {
+        return PopScope(
+          canPop: canPop,
+          onPopInvokedWithResult: (didPop, result) {
+            if (didPop) return;
+            _onBack();
+          },
+          child: BaseScreen(
         useSafeArea: false,
         backgroundColor: AppColors.backgroundLightGrey,
         floatingActionButton: BlocBuilder<GroupDetailBloc, GroupDetailState>(
@@ -99,17 +128,43 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
           child: CustomScrollView(
             slivers: [
               _GroupDetailAppBar(onBack: _onBack),
+              // 1. Group info & Balance summary
               BlocBuilder<GroupDetailBloc, GroupDetailState>(
                 builder: (context, state) {
-                  if (state.groupEntity == null || (state.groupEntity?.members?.length??0) <= 1 || (state.expenseHistory?.expenses??[]).isEmpty == true) return const SliverToBoxAdapter(child: SizedBox());
+                  final isLoading = state.status == GroupDetailStatus.loading;
+                  final hasGroup = state.groupEntity != null;
+                  
+                  // Show shimmer while group is loading
+                  if (isLoading) {
+                    return const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: _ShimmerDetailInfo(),
+                      ),
+                    );
+                  }
+
+                  // Hide if no group or history is entirely empty (and we want to hide it)
+                  if (!hasGroup) return const SliverToBoxAdapter(child: SizedBox());
+
+                  // Show info iff we have members and (either loading history or has history)
+                  final hasMembers = (state.groupEntity?.members?.length ?? 0) > 1;
+                  if (!hasMembers) return const SliverToBoxAdapter(child: SizedBox());
+
                   return _GroupDetailInfo(state.groupEntity!);
                 },
               ),
+
+              // 2. Transaction List / Empty States
               BlocBuilder<GroupDetailBloc, GroupDetailState>(
                 builder: (context, state) {
-                  if (state.expenseStatus == GroupDetailExpenseStatus.loading) {
-                    return _ShimmerTransactionList();
+                  final isHistoryLoading = state.expenseStatus == GroupDetailExpenseStatus.loading || 
+                                          state.status == GroupDetailStatus.loading;
+                  
+                  if (isHistoryLoading) {
+                    return const _ShimmerTransactionList();
                   }
+
                   if (state.expenseStatus == GroupDetailExpenseStatus.failure) {
                     return SliverToBoxAdapter(
                       child: Padding(
@@ -124,6 +179,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                       ),
                     );
                   }
+
                   if (state.expenseStatus == GroupDetailExpenseStatus.success &&
                       state.expenseHistory != null) {
                     final hasMembers = (state.groupEntity?.members?.length ?? 0) > 1;
@@ -133,43 +189,57 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                       groupId: state.groupEntity?.id,
                     );
                   }
+                  
                   return const SliverToBoxAdapter(child: SizedBox());
                 },
               ),
-              SliverToBoxAdapter(child: SizedBox(
-                height: 100,
-              ))
+              SliverToBoxAdapter(child: SizedBox(height: 100))
             ],
           ),
         ),
       ),
-    );
-  }
+        );
+      },
+    ),
+  );
+}
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shimmer skeleton widgets (using skeletonizer)
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Skeleton for the balance summary section
-class _ShimmerBalanceSummary extends StatelessWidget {
-  const _ShimmerBalanceSummary();
+/// Skeleton for the whole detail info box
+class _ShimmerDetailInfo extends StatelessWidget {
+  const _ShimmerDetailInfo();
 
   @override
   Widget build(BuildContext context) {
-    return Skeletonizer(
-      enabled: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Overall balance line (wide)
-          _FakeLine(width: 240, height: 18),
-          const SizedBox(height: 10),
-          // Member balance lines
-          _FakeLine(width: 190, height: 14),
-          const SizedBox(height: 6),
-          _FakeLine(width: 160, height: 14),
-        ],
+    return Container(
+      padding: const EdgeInsets.all(20.0),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceWhite,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.borderGreyLight),
+      ),
+      child: Skeletonizer(
+        enabled: true,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _FakeLine(width: 240, height: 18),
+            const SizedBox(height: 10),
+            _FakeLine(width: 190, height: 14),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Bone.square(size: 80, borderRadius: BorderRadius.circular(12)),
+                const SizedBox(width: 12),
+                Bone.square(size: 80, borderRadius: BorderRadius.circular(12)),
+              ],
+            )
+          ],
+        ),
       ),
     );
   }
@@ -196,47 +266,50 @@ class _ShimmerTransactionItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      child: Row(
-        children: [
-          // Date column
-          SizedBox(
-            width: 36,
-            child: Column(
+    return Skeletonizer(
+      enabled: true,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        child: Row(
+          children: [
+            // Date column
+            SizedBox(
+              width: 36,
+              child: Column(
+                children: [
+                  Bone.text(width: 28, fontSize: 12),
+                  const SizedBox(height: 4),
+                  Bone.text(width: 22, fontSize: 18),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Icon placeholder
+            Bone.square(size: 44, borderRadius: BorderRadius.circular(8)),
+            const SizedBox(width: 16),
+            // Description + sub-text
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Bone.text(width: double.infinity, fontSize: 16),
+                  const SizedBox(height: 6),
+                  Bone.text(width: 150, fontSize: 12),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Balance column
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Bone.text(width: 28, fontSize: 12),
+                Bone.text(width: 56, fontSize: 12),
                 const SizedBox(height: 4),
-                Bone.text(width: 22, fontSize: 18),
+                Bone.text(width: 64, fontSize: 14),
               ],
             ),
-          ),
-          const SizedBox(width: 16),
-          // Icon placeholder
-          Bone.square(size: 44, borderRadius: BorderRadius.circular(8)),
-          const SizedBox(width: 16),
-          // Description + sub-text
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Bone.text(width: double.infinity, fontSize: 16),
-                const SizedBox(height: 6),
-                Bone.text(width: 150, fontSize: 12),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Balance column
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Bone.text(width: 56, fontSize: 12),
-              const SizedBox(height: 4),
-              Bone.text(width: 64, fontSize: 14),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -249,20 +322,20 @@ class _ShimmerTransactionList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliverToBoxAdapter(
-      child: Skeletonizer(
-        enabled: true,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Month header skeleton
-            Padding(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Month header skeleton
+          Skeletonizer(
+            enabled: true,
+            child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Bone.text(width: 110, fontSize: 14),
             ),
-            // 5 fake transaction rows
-            for (int i = 0; i < 5; i++) const _ShimmerTransactionItem(),
-          ],
-        ),
+          ),
+          // 5 fake transaction rows
+          for (int i = 0; i < 5; i++) const _ShimmerTransactionItem(),
+        ],
       ),
     );
   }
@@ -331,14 +404,18 @@ class _GroupDetailAppBar extends StatelessWidget {
             onPressed: () {
             final state = context.read<GroupDetailBloc>().state;
             if (state.groupEntity?.id != null) {
-              NavigationService.pushNamed(
-                AppRoutes.groupSettings,
-                args: {'groupId': state.groupEntity!.id!},
-              ).then((value) {
-                if(value == true && context.mounted){
-                   context.read<GroupDetailBloc>().add(LoadGroupDetails( hasChanges: true));
-                }
-              });
+              NavigationUtils.handleResult(
+                context: context,
+                navigation: NavigationService.pushNamed(
+                  AppRoutes.groupSettings,
+                  args: {'groupId': state.groupEntity!.id!},
+                ),
+                refreshType: RefreshType.groupDetail,
+                id: state.groupEntity!.id,
+                onRefresh: () {
+                   context.read<GroupDetailBloc>().add(const LoadGroupDetails(hasChanges: true));
+                },
+              );
             }
           },
         ),
@@ -451,13 +528,23 @@ class _BalanceSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<GroupDetailBloc, GroupDetailState>(
-      buildWhen: (previous, current) => previous.expenseHistory != current.expenseHistory || previous.expenseStatus != current.expenseStatus,
       builder: (context, state) {
         final history = state.expenseHistory;
+        final isHistoryLoading = state.expenseStatus == GroupDetailExpenseStatus.loading;
 
         // ── Skeletonizer for the balance section ──
-        if (state.expenseStatus == GroupDetailExpenseStatus.loading) {
-          return const _ShimmerBalanceSummary();
+        if (isHistoryLoading) {
+          return Skeletonizer(
+            enabled: true,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _FakeLine(width: 240, height: 18),
+                const SizedBox(height: 10),
+                _FakeLine(width: 190, height: 14),
+              ],
+            ),
+          );
         }
 
         if (history == null) return const SizedBox();
@@ -647,15 +734,19 @@ class _TransactionList extends StatelessWidget {
                 ElevatedButton.icon(
                   onPressed: () {
                     if (groupId != null) {
-                      NavigationService.pushNamed(
-                        AppRoutes.addMembers,
-                        args: {'groupId': groupId!},
-                      ).then((value) {
-                        if (value == true) {
-                          context.read<GroupDetailBloc>().add(LoadGroupDetails(hasChanges: true));
-                          context.read<GroupDetailBloc>().add(LoadGroupExpenseHistory());
-                        }
-                      });
+                      NavigationUtils.handleResult(
+                        context: context,
+                        navigation: NavigationService.pushNamed(
+                          AppRoutes.addMembers,
+                          args: {'groupId': groupId!},
+                        ),
+                        refreshType: RefreshType.groupDetail,
+                        id: groupId,
+                        onRefresh: () {
+                          context.read<GroupDetailBloc>().add(const LoadGroupDetails(hasChanges: true));
+                          context.read<GroupDetailBloc>().add(const LoadGroupExpenseHistory());
+                        },
+                      );
                     }
                   },
                   icon: const Icon(Icons.group_add_rounded, color: Colors.white),
@@ -750,7 +841,7 @@ class _TransactionList extends StatelessWidget {
         ),
       );
       for (final expense in entry.value) {
-        children.add(_TransactionItem(expense: expense));
+        children.add(_TransactionItem(expense: expense, groupId: groupId));
       }
     }
 
@@ -762,8 +853,9 @@ class _TransactionList extends StatelessWidget {
 
 class _TransactionItem extends StatelessWidget {
   final GroupExpenseEntity expense;
+  final String? groupId;
 
-  const _TransactionItem({required this.expense});
+  const _TransactionItem({required this.expense, this.groupId});
 
   @override
   Widget build(BuildContext context) {
@@ -783,7 +875,19 @@ class _TransactionItem extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        NavigationService.pushNamed(AppRoutes.expanseDetail,args: {"expanse_id":expense.expenseId});
+        NavigationUtils.handleResult(
+          context: context,
+          navigation: NavigationService.pushNamed(
+            AppRoutes.expanseDetail,
+            args: {"expanse_id": expense.expenseId},
+          ),
+          refreshType: RefreshType.groupDetail,
+          id: groupId,
+          onRefresh: () {
+            context.read<GroupDetailBloc>().add(const LoadGroupDetails(hasChanges: true));
+            context.read<GroupDetailBloc>().add(const LoadGroupExpenseHistory());
+          },
+        );
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),

@@ -24,3 +24,5 @@ class DeleteExpenseEvent extends ExpenseDetailEvent {
   @override
   List<Object> get props => [expenseId];
 }
+
+class MarkExpenseAsChanged extends ExpenseDetailEvent {}

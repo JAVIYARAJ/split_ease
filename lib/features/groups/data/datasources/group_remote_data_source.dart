@@ -149,12 +149,13 @@ class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
   @override
   Future<bool> deleteGroup(String groupId) async {
     try {
-        await client.from('group').delete().eq('id', groupId);
+        await client.rpc('delete_group_rpc', params: {'p_group_id': groupId});
         return true;
     } catch (error) {
       throw ServerException(message: ErrorMessageUtils.generate(error));
     }
   }
+
 
   @override
   Future<bool> updateGroup(String id, String name, String type, String? icon,String inviteCode) async {

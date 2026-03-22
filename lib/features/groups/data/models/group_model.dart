@@ -8,10 +8,6 @@ class GroupModel extends GroupEntity {
     super.id,
     super.name,
     super.createdBy,
-    super.isActive,
-    super.isDeleted,
-    super.updatedAt,
-    super.createdAt,
     super.groupType,
     super.groupIcon,
     super.inviteCode,
@@ -28,10 +24,6 @@ class GroupModel extends GroupEntity {
       id: json['id'],
       name: json['name'],
       createdBy: json['created_by'] != null ? UserModel.fromJson(json['created_by']) : null,
-      isActive: json['is_active'],
-      isDeleted: json['is_deleted'],
-      updatedAt: json['updated_at'],
-      createdAt: json['created_at'],
       groupType: json['group_type'],
       groupIcon: json['group_icon'],
       inviteCode: json['invite_code'],
@@ -55,10 +47,6 @@ class GroupModel extends GroupEntity {
     data['id'] = super.id;
     data['name'] = super.name;
     data['created_by'] = super.createdBy;
-    data['is_active'] = super.isActive;
-    data['is_deleted'] = super.isDeleted;
-    data['updated_at'] = super.updatedAt;
-    data['created_at'] = super.createdAt;
     data['group_type'] = super.groupType;
     data['group_icon'] = super.groupIcon;
     data['invite_code'] = super.inviteCode;

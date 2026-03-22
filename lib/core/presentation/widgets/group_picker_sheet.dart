@@ -1,10 +1,11 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
 import 'package:split_ease/features/groups/presentation/bloc/groups_bloc.dart';
+
+import 'app_avatar.dart';
 
 /// Called from GroupsPage / FriendsPage (GroupsBloc is in the tree).
 /// Reuses the already-loaded groups — no extra API call.
@@ -75,10 +76,13 @@ class _GroupPickerSheet extends StatelessWidget {
                 : ListView.separated(
                     shrinkWrap: true,
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                    itemCount: groups.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemCount: groups.length + 1,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
-                      final group = groups[index];
+                      if (index == 0) {
+                        return _NonGroupTile(onTap: () => Navigator.pop(context, null));
+                      }
+                      final group = groups[index - 1];
                       return _GroupTile(group: group, onTap: () => Navigator.pop(context, group));
                     },
                   ),
@@ -110,15 +114,14 @@ class _GroupTile extends StatelessWidget {
         child: Row(
           children: [
             // Icon / image
-            Container(
+            SizedBox(
               width: 44,
               height: 44,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: AppColors.surfaceWhite,
-                image: group.groupIcon != null ? DecorationImage(image: CachedNetworkImageProvider(group.groupIcon!), fit: BoxFit.cover) : null,
+              child: AppAvatar(
+                url: group.groupIcon,
+                radius: 22, // Set radius to half of width/height (44/2)
+                backgroundColor: AppColors.surfaceWhite,
               ),
-              child: group.groupIcon == null ? const Icon(Icons.groups_rounded, color: AppColors.primaryTeal, size: 24) : null,
             ),
             const SizedBox(width: 14),
             // Name + member count
@@ -137,12 +140,12 @@ class _GroupTile extends StatelessWidget {
                       "${group.memberCount} member${group.memberCount == 1 ? '' : 's'}",
                       style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey, fontWeight: FontWeight.w500),
                     ),
-                    if(group.memberCount ==1)...[
-                      Text(
-                        "You're the only member in this group. Add members to start splitting expenses.",
-                        style: GoogleFonts.outfit(fontSize: 12, color: AppColors.errorRed, fontWeight: FontWeight.w500),
-                      ),
-                    ]
+                  if (group.memberCount == 1) ...[
+                    Text(
+                      "You're the only member in this group. Add members to start splitting expenses.",
+                      style: GoogleFonts.outfit(fontSize: 12, color: AppColors.errorRed, fontWeight: FontWeight.w500),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -176,21 +179,14 @@ class _NonGroupTile extends StatelessWidget {
             Container(
               width: 44,
               height: 44,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: AppColors.surfaceWhite,
-              ),
-              child: const Icon(Icons.person_outline,
-                  color: AppColors.textGrey, size: 24),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: AppColors.surfaceWhite),
+              child: const Icon(Icons.person_outline, color: AppColors.textGrey, size: 24),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: Text(
                 "Non-group",
-                style: GoogleFonts.outfit(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textBlack),
+                style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
               ),
             ),
           ],

@@ -4,7 +4,7 @@ abstract class GroupDetailEvent extends Equatable {
   const GroupDetailEvent();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 class LoadGroupDetails extends GroupDetailEvent {
@@ -14,7 +14,7 @@ class LoadGroupDetails extends GroupDetailEvent {
   const LoadGroupDetails({this.groupId, this.hasChanges = false});
 
   @override
-  List<Object> get props => [?groupId];
+  List<Object?> get props => [groupId, hasChanges];
 }
 
 class LoadGroupExpenseHistory extends GroupDetailEvent {
@@ -22,5 +22,5 @@ class LoadGroupExpenseHistory extends GroupDetailEvent {
   const LoadGroupExpenseHistory({this.groupId});
 
   @override
-  List<Object> get props => [?groupId];
+  List<Object?> get props => [groupId];
 }

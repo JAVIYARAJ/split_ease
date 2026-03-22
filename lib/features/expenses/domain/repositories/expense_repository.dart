@@ -1,10 +1,14 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:split_ease/features/expenses/domain/usecases/create_expense_params.dart';
+import 'package:split_ease/features/expenses/domain/usecases/update_expense_params.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_detail_entity.dart';
 import '../../../../core/error/failure.dart';
 
 abstract class ExpenseRepository {
   Future<Either<Failure, void>> createExpense(CreateExpenseParams params);
+  Future<Either<Failure, void>> updateExpense(UpdateExpenseParams params);
   Future<Either<Failure, ExpenseDetailEntity>> getExpenseDetail(String expenseId);
   Future<Either<Failure, void>> deleteExpense(String expenseId);
+  Future<Either<Failure, List<ExpenseUserEntity>>> getExpenseParticipants({String? groupId, String? friendUserId});
 }
+

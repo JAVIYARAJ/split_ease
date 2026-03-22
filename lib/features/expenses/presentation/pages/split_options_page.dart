@@ -183,7 +183,6 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
         url: member.avtar,
         radius: 25,
         border: Border.all(color: Colors.white, width: 2),
-        backgroundColor: member.avtar == null ? AppColors.primaryTeal : null,
       ),
     );
   }
@@ -299,27 +298,14 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
                     ),
                   )
                 else if (state.splitType == SplitType.shares)
-                  Builder(
-                    builder: (context) {
-                      double totalShares = state.splits.fold(0, (sum, s) => sum + s.shares);
-                      double memberShares = split?.shares ?? 0;
-                      double amount = totalShares > 0 ? (state.totalAmount * memberShares / totalShares) : 0;
-                      return Text(
-                         "₹${amount.toStringAsFixed(2)}",
-                         style: GoogleFonts.openSans(fontSize: 13, color: AppColors.textGrey),
-                      );
-                    }
+                  Text(
+                    "₹${state.getMemberAmount(member.userId!).toStringAsFixed(2)}",
+                    style: GoogleFonts.openSans(fontSize: 13, color: AppColors.textGrey),
                   )
                 else if (state.splitType == SplitType.percentage)
-                  Builder(
-                    builder: (context) {
-                       double memberPercentage = split?.percentage ?? 0;
-                       double amount = (state.totalAmount * memberPercentage / 100);
-                       return Text(
-                          "₹${amount.toStringAsFixed(2)}",
-                          style: GoogleFonts.openSans(fontSize: 13, color: AppColors.textGrey),
-                       );
-                    }
+                  Text(
+                    "₹${state.getMemberAmount(member.userId!).toStringAsFixed(2)}",
+                    style: GoogleFonts.openSans(fontSize: 13, color: AppColors.textGrey),
                   ),
               ],
             ),
@@ -344,7 +330,6 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
     return AppAvatar(
       url: member.avtar,
       radius: 20,
-      backgroundColor: member.avtar == null ? AppColors.primaryTeal : null,
     );
   }
 
@@ -441,28 +426,28 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
     Color subTextColor = AppColors.textGrey;
 
     if (state.splitType == SplitType.exact) {
-      double currentTotal = state.splits.fold(0, (sum, item) => sum + item.amount);
+      double currentTotal = state.currentTotalAmount;
       double remaining = state.totalAmount - currentTotal;
       
       mainText = "₹${currentTotal.toStringAsFixed(2)} of ₹${state.totalAmount.toStringAsFixed(2)}";
       if (remaining.abs() < 0.01) {
-        subText = "Perfect match"; // Or leave empty?
+        subText = "Perfect match";
         subTextColor = AppColors.primaryTeal;
       } else if (remaining > 0) {
         subText = "₹${remaining.toStringAsFixed(2)} left";
-        subTextColor = AppColors.textBlack; // Or red?
+        subTextColor = AppColors.textBlack;
       } else {
         subText = "₹${(-remaining).toStringAsFixed(2)} over";
         subTextColor = Colors.red;
       }
     } else if (state.splitType == SplitType.percentage) {
-      double currentTotal = state.splits.fold(0, (sum, item) => sum + item.percentage);
+      double currentTotal = state.totalPercentage;
       double remaining = 100 - currentTotal;
       
       mainText = "${currentTotal.toStringAsFixed(1)}% of 100%";
       
       if (remaining.abs() < 0.1) {
-         // Perfect match
+         subText = "Perfect match";
          subTextColor = AppColors.primaryTeal;
       } else if (remaining > 0) {
         subText = "${remaining.toStringAsFixed(1)}% left";
@@ -472,7 +457,7 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
         subTextColor = Colors.red;
       }
     } else if (state.splitType == SplitType.shares) {
-      double totalShares = state.splits.fold(0, (sum, item) => sum + item.shares);
+      double totalShares = state.totalShares;
       mainText = "${totalShares.toStringAsFixed(0)} total shares";
     }
 

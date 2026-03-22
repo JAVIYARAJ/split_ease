@@ -15,7 +15,9 @@ class GroupsBloc extends Bloc<GroupsEvent, GroupsState> {
 
   GroupsBloc({required this.getAllGroups}) : super(const GroupsState()) {
     on<LoadGroups>(_onLoadGroups);
+    on<ToggleGroupsFab>((event, emit) => emit(state.copyWith(isFabExtended: event.isExtended)));
   }
+
 
   Future<void> _onLoadGroups(LoadGroups event, Emitter<GroupsState> emit) async {
     try {

@@ -10,6 +10,7 @@ class AddMembersState {
   final Set<String> selectedUserIds;
   final AddMembersSubmitStatus submitStatus;
   final String errorMessage;
+  final String searchQuery;
 
   const AddMembersState({
     this.status = AddMembersStatus.initial,
@@ -17,10 +18,23 @@ class AddMembersState {
     this.selectedUserIds = const {},
     this.submitStatus = AddMembersSubmitStatus.initial,
     this.errorMessage = '',
+    this.searchQuery = '',
   });
 
   List<GroupFriendEntity> get alreadyInGroup => friends.where((f) => f.isInGroup).toList();
   List<GroupFriendEntity> get notInGroup => friends.where((f) => !f.isInGroup).toList();
+
+  List<GroupFriendEntity> get filteredInGroup => _filterFriends(alreadyInGroup);
+  List<GroupFriendEntity> get filteredNotInGroup => _filterFriends(notInGroup);
+
+  List<GroupFriendEntity> _filterFriends(List<GroupFriendEntity> list) {
+    if (searchQuery.isEmpty) return list;
+    final query = searchQuery.toLowerCase();
+    return list.where((f) {
+      return f.fullName.toLowerCase().contains(query) ||
+          (f.email?.toLowerCase().contains(query) ?? false);
+    }).toList();
+  }
 
   AddMembersState copyWith({
     AddMembersStatus? status,
@@ -28,6 +42,7 @@ class AddMembersState {
     Set<String>? selectedUserIds,
     AddMembersSubmitStatus? submitStatus,
     String? errorMessage,
+    String? searchQuery,
   }) {
     return AddMembersState(
       status: status ?? this.status,
@@ -35,6 +50,7 @@ class AddMembersState {
       selectedUserIds: selectedUserIds ?? this.selectedUserIds,
       submitStatus: submitStatus ?? this.submitStatus,
       errorMessage: errorMessage ?? this.errorMessage,
+      searchQuery: searchQuery ?? this.searchQuery,
     );
   }
 }

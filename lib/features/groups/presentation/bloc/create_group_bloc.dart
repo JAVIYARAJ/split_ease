@@ -8,6 +8,7 @@ import '../../../../../core/services/image_picker_service.dart';
 import '../../domain/entities/group_type.dart';
 import '../../domain/usecases/group_insert_icon.dart';
 import '../../domain/entities/group_entity.dart';
+import 'package:split_ease/core/services/data_refresh_service.dart';
 import 'dart:math';
 
 part 'create_group_event.dart';
@@ -20,8 +21,9 @@ class CreateGroupBloc extends Bloc<CreateGroupEvent, CreateGroupState> {
   final GroupCreate _groupCreate;
   final CheckInviteCode _checkInviteCode;
   final UpdateGroup _updateGroup;
+  final DataRefreshCubit _dataRefreshCubit;
 
-  CreateGroupBloc(this._imagePickerService, this._groupInsertIcon, this._groupCreate, this._checkInviteCode, this._updateGroup)
+  CreateGroupBloc(this._imagePickerService, this._groupInsertIcon, this._groupCreate, this._checkInviteCode, this._updateGroup, this._dataRefreshCubit)
     : super(const CreateGroupState()) {
     on<SelectGroupType>(_onSelectGroupType);
     on<PickGroupImage>(_onPickGroupImage);
@@ -70,8 +72,9 @@ class CreateGroupBloc extends Bloc<CreateGroupEvent, CreateGroupState> {
             emit(state.copyWith(status: CreateGroupStatus.failure, errorMessage: l.message));
           },
           (r) {
+            _dataRefreshCubit.markMultipleForRefresh([RefreshType.groups, RefreshType.activity]);
             if (r is List && r.isNotEmpty) {
-              emit(state.copyWith(status: CreateGroupStatus.success, createdGroupId: r.firstOrNull?["id"]));
+              emit(state.copyWith(status: CreateGroupStatus.success, createdGroupId: (r as List).firstOrNull?["id"]));
             } else {
               emit(state.copyWith(status: CreateGroupStatus.failure, errorMessage: "Something went wrong"));
             }
@@ -157,7 +160,11 @@ class CreateGroupBloc extends Bloc<CreateGroupEvent, CreateGroupState> {
 
       result.fold(
         (l) => emit(state.copyWith(status: CreateGroupStatus.failure, errorMessage: l.message)),
-        (r) => emit(state.copyWith(status: CreateGroupStatus.success, createdGroupId: event.groupId)),
+        (r) {
+          _dataRefreshCubit.markMultipleForRefresh([RefreshType.groups, RefreshType.activity]);
+          _dataRefreshCubit.markForRefresh(RefreshType.groupDetail, id: event.groupId);
+          emit(state.copyWith(status: CreateGroupStatus.success, createdGroupId: event.groupId));
+        },
       );
     } catch (e) {
       emit(state.copyWith(status: CreateGroupStatus.failure, errorMessage: e.toString()));

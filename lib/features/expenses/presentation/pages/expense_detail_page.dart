@@ -16,6 +16,9 @@ import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/routing/navigation_service.dart';
+import 'package:split_ease/core/services/data_refresh_service.dart';
+import 'package:split_ease/core/utils/navigation_utils.dart';
+import 'package:split_ease/injection_container.dart';
 
 class ExpenseDetailPage extends StatefulWidget {
   const ExpenseDetailPage({super.key});
@@ -25,121 +28,188 @@ class ExpenseDetailPage extends StatefulWidget {
 }
 
 class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
+  final ValueNotifier<bool> _canPop = ValueNotifier<bool>(false);
+
+  @override
+  void dispose() {
+    _canPop.dispose();
+    super.dispose();
+  }
+
+  void _onBack() {
+    _canPop.value = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final state = context.read<ExpenseDetailBloc>().state;
+        Navigator.of(context).pop(state.hasChanges);
+      }
+    });
+  }
+
   @override
   void initState() {
+    super.initState();
     WidgetsFlutterBinding.ensureInitialized().addPostFrameCallback((timeStamp) {
+      if (!mounted) return;
       var argument = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
       if (argument != null && argument["expanse_id"] != null) {
         context.read<ExpenseDetailBloc>().add(FetchExpenseDetailEvent(argument["expanse_id"]));
       }
     });
-    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BaseScreen(
-      useSafeArea: true,
-      backgroundColor: AppColors.backgroundLightGrey, // Using a gentle background for card styling
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: true,
-        title: Text(
-          "Expense Details",
-          style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 18, fontWeight: FontWeight.w600),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined, color: AppColors.textBlack),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline_rounded, color: AppColors.errorRed),
-            onPressed: () {
-              final arg = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-              if (arg != null && arg['expanse_id'] != null) {
-                _showDeleteConfirmationDialog(context, arg['expanse_id']);
-              }
-            },
-          ),
-        ],
-      ),
-      child: BlocListener<ExpenseDetailBloc, ExpenseDetailState>(
-        listener: (context, state) {
-          if (state is ExpenseDeleted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Expense deleted successfully')),
-            );
-            Navigator.of(context).pop();
-          } else if (state is ExpenseDeleteError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Failed to delete expense: ${state.message}')),
-            );
+    return BlocListener<DataRefreshCubit, DataRefreshState>(
+      listenWhen: (prev, curr) => curr.lastSignal?.type == RefreshType.expenseDetail,
+      listener: (context, state) {
+        final detailState = context.read<ExpenseDetailBloc>().state;
+        if (detailState is ExpenseDetailLoaded) {
+          final expenseId = detailState.expenseDetail.id;
+          if (context.read<DataRefreshCubit>().shouldRefresh(RefreshType.expenseDetail, id: expenseId)) {
+            context.read<DataRefreshCubit>().clearRefresh(RefreshType.expenseDetail, id: expenseId);
+            context.read<ExpenseDetailBloc>().add(MarkExpenseAsChanged());
+            context.read<ExpenseDetailBloc>().add(FetchExpenseDetailEvent(expenseId));
           }
-        },
-        child: BlocBuilder<ExpenseDetailBloc, ExpenseDetailState>(
-          builder: (context, state) {
-            if (state is ExpenseDetailError) {
-              return _buildErrorState(state.message);
-            }
-
-            final bool isLoading = state is ExpenseDetailLoading || state is ExpenseDetailInitial || state is ExpenseDeleteLoading;
-            final entity = state is ExpenseDetailLoaded ? state.expenseDetail : _getMockEntity();
-
-            return Skeletonizer(
-              enabled: isLoading,
-              child: Column(
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _buildHeaderAmount(entity),
-                            const SizedBox(height: 32),
-                            _buildQuickInfo(entity),
-                            const SizedBox(height: 24),
-                            _buildActionGrid(entity),
-                            const SizedBox(height: 24),
-                            _buildSectionTitle("Paid By"),
-                            const SizedBox(height: 8),
-                            _buildPaidBySection(entity),
-                            const SizedBox(height: 24),
-                            _buildSectionTitle("Split Details"),
-                            const SizedBox(height: 8),
-                            _buildSplitsList(entity),
-                            const SizedBox(height: 80), // Bottom padding
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Sticky Comments Section at the Bottom
-                  Container(
-                    color: AppColors.backgroundLightGrey,
-                    padding: EdgeInsets.only(
-                      left: 20,
-                      right: 20,
-                      top: 12,
-                      bottom: MediaQuery.of(context).padding.bottom > 0 
-                          ? MediaQuery.of(context).padding.bottom 
-                          : 20,
-                    ),
-                    child: _buildCommentsSection(entity),
-                  ),
-                ],
-              ),
-            );
+        }
+      },
+      child: ValueListenableBuilder<bool>(
+      valueListenable: _canPop,
+      builder: (context, canPop, child) {
+        return PopScope(
+          canPop: canPop,
+          onPopInvokedWithResult: (didPop, result) {
+            if (didPop) return;
+            _onBack();
           },
-        ),
-      ),
-    );
-  }
+          child: BaseScreen(
+            useSafeArea: true,
+            backgroundColor: AppColors.backgroundLightGrey, // Using a gentle background for card styling
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              centerTitle: true,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textBlack),
+                onPressed: _onBack,
+              ),
+              title: Text(
+                "Expense Details",
+                style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+              actions: [
+                BlocBuilder<ExpenseDetailBloc, ExpenseDetailState>(
+                  builder: (context, state) {
+                    if (state is! ExpenseDetailLoaded) return const SizedBox.shrink();
+
+                    // Only show edit/delete if the current user is the one who added the expense
+                    if (state.currentUserId != state.expenseDetail.createdBy.id) {
+                      return const SizedBox.shrink();
+                    }
+
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined, color: AppColors.textBlack),
+                        onPressed: () {
+                           NavigationUtils.handleResult(
+                             context: context,
+                             navigation: NavigationService.pushNamed(AppRoutes.addExpense, args: {'expense': state.expenseDetail}),
+                             refreshType: RefreshType.expenseDetail,
+                             id: state.expenseDetail.id,
+                             onRefresh: () {
+                               context.read<ExpenseDetailBloc>().add(MarkExpenseAsChanged());
+                               context.read<ExpenseDetailBloc>().add(FetchExpenseDetailEvent(state.expenseDetail.id));
+                             },
+                           );
+                        },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline_rounded, color: AppColors.errorRed),
+                          onPressed: () {
+                            _showDeleteConfirmationDialog(context, state.expenseDetail.id);
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+            child: BlocListener<ExpenseDetailBloc, ExpenseDetailState>(
+              listener: (context, state) {
+                if (state is ExpenseDeleted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Expense deleted successfully')));
+                  Navigator.of(context).pop(true); // Return true on deletion
+                } else if (state is ExpenseDeleteError) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete expense: ${state.message}')));
+                }
+              },
+              child: BlocBuilder<ExpenseDetailBloc, ExpenseDetailState>(
+                builder: (context, state) {
+                  if (state is ExpenseDetailError) {
+                    return _buildErrorState(state.message);
+                  }
+
+                  final bool isLoading = state is ExpenseDetailLoading || state is ExpenseDetailInitial || state is ExpenseDeleteLoading;
+                  final entity = state is ExpenseDetailLoaded ? state.expenseDetail : _getMockEntity();
+
+                  return Skeletonizer(
+                    enabled: isLoading,
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _buildHeaderAmount(entity),
+                                  const SizedBox(height: 32),
+                                  _buildQuickInfo(state is ExpenseDetailLoaded ? state : ExpenseDetailLoaded(_getMockEntity(), "")),
+                                  const SizedBox(height: 24),
+                                  _buildActionGrid(entity),
+                                  const SizedBox(height: 24),
+                                  _buildSectionTitle("Paid By"),
+                                  const SizedBox(height: 8),
+                                  _buildPaidBySection(entity),
+                                  const SizedBox(height: 24),
+                                  _buildSectionTitle("Split Details"),
+                                  const SizedBox(height: 8),
+                                  _buildSplitsList(entity),
+                                  const SizedBox(height: 80), // Bottom padding
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Sticky Comments Section at the Bottom
+                        Container(
+                          color: AppColors.backgroundLightGrey,
+                          padding: EdgeInsets.only(
+                            left: 20,
+                            right: 20,
+                            top: 12,
+                            bottom: MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom : 20,
+                          ),
+                          child: _buildCommentsSection(entity),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
 
   void _showDeleteConfirmationDialog(BuildContext context, String expanseId) {
     showDialog(
@@ -158,7 +228,10 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 Navigator.of(ctx).pop();
                 context.read<ExpenseDetailBloc>().add(DeleteExpenseEvent(expanseId));
               },
-              child: Text('Delete', style: GoogleFonts.outfit(color: AppColors.errorRed, fontWeight: FontWeight.w600)),
+              child: Text(
+                'Delete',
+                style: GoogleFonts.outfit(color: AppColors.errorRed, fontWeight: FontWeight.w600),
+              ),
             ),
           ],
         );
@@ -226,7 +299,8 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     );
   }
 
-  Widget _buildQuickInfo(ExpenseDetailEntity entity) {
+  Widget _buildQuickInfo(ExpenseDetailLoaded state) {
+    final entity = state.expenseDetail;
     String formattedDate = "Unknown Date";
     try {
       final parsed = DateTime.parse(entity.expenseDate);
@@ -245,9 +319,9 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
         children: [
           _buildInfoItem(Icons.calendar_today_rounded, "Date", formattedDate),
           Container(width: 1, height: 32, color: AppColors.borderGreyLight),
-          _buildInfoItem(Icons.person_outline_rounded, "Added By", entity.createdBy.fullName.split(' ').first),
+          _buildInfoItem(Icons.person_outline_rounded, "Added By", state.creatorFirstName),
           Container(width: 1, height: 32, color: AppColors.borderGreyLight),
-          _buildInfoItem(Icons.group_outlined, "Group", (entity.group?.name??"").isNotEmpty ? entity.group?.name??"": "Non-group"),
+          _buildInfoItem(Icons.group_outlined, "Group", state.groupDisplayName),
         ],
       ),
     );
@@ -268,7 +342,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             value,
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 13, fontWeight: FontWeight.w600),
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
         ],
@@ -283,13 +357,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
           child: _buildActionButton(Icons.receipt_rounded, "Receipt", () async {
             final path = await ExpensePdfGenerator.generatePdf(entity);
             if (mounted) {
-              NavigationService.pushNamed(
-                AppRoutes.expensePdfPreview,
-                args: {
-                  'pdfPath': path,
-                  'expenseDescription': entity.description,
-                },
-              );
+              NavigationService.pushNamed(AppRoutes.expensePdfPreview, args: {'pdfPath': path, 'expenseDescription': entity.description});
             }
           }),
         ),
@@ -333,12 +401,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Row(
         children: [
-          AppAvatar(
-            url: entity.paidBy.avatar,
-            radius: 22,
-            backgroundColor: AppColors.backgroundLightGrey,
-            iconColor: AppColors.textGrey,
-          ),
+          AppAvatar(url: entity.paidBy.avatar, radius: 22, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -393,12 +456,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
         child: Row(
           children: [
-            AppAvatar(
-              url: avatarUrl,
-              radius: 19,
-              backgroundColor: AppColors.backgroundLightGrey,
-              iconColor: AppColors.textGrey,
-            ),
+            AppAvatar(url: avatarUrl, radius: 19, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -433,11 +491,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       padding: const EdgeInsets.all(12.0),
       child: Row(
         children: [
-          const AppAvatar(
-            radius: 18,
-            backgroundColor: AppColors.primary,
-            iconColor: Colors.white,
-          ),
+          const AppAvatar(radius: 18, backgroundColor: AppColors.primary, iconColor: Colors.white),
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
@@ -470,13 +524,10 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       createdAt: "2026-02-21T00:00:00+00:00",
       paidBy: ExpenseUserEntity(id: "", fullName: "User Name"),
       createdBy: ExpenseUserEntity(id: "", fullName: "User Name"),
-      splits: [
+      splits: const [
         ExpenseSplitEntity(type: "you_owe", amount: 500, userId: "1", fullName: "Test User"),
         ExpenseSplitEntity(type: "participant", amount: 500, userId: "2", fullName: "Test User"),
       ],
-      yourSummary: ExpenseSummaryEntity(youOwe: 500, youPaid: 0, netEffect: -500),
-      monthlyTrends: [],
-      comments: [],
     );
   }
 }

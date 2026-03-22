@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:split_ease/core/presentation/widgets/custom_refresh_indicator.dart';
 import 'package:split_ease/features/activity/domain/entities/activity_entity.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
@@ -11,13 +12,24 @@ import '../../../../core/routing/navigation_service.dart';
 import '../widgets/activity_list_item.dart';
 import '../bloc/activity_bloc.dart';
 import '../../../../../core/presentation/widgets/app_empty_state.dart';
+import 'package:split_ease/core/services/data_refresh_service.dart';
+import 'package:split_ease/injection_container.dart';
+import 'package:split_ease/core/utils/navigation_utils.dart';
 
 class ActivityPage extends StatelessWidget {
   const ActivityPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BaseScreen(
+    return BlocListener<DataRefreshCubit, DataRefreshState>(
+      listenWhen: (prev, curr) => curr.lastSignal?.type == RefreshType.activity,
+      listener: (context, state) {
+        if (context.read<DataRefreshCubit>().shouldRefresh(RefreshType.activity)) {
+          context.read<DataRefreshCubit>().clearRefresh(RefreshType.activity);
+          context.read<ActivityBloc>().add(LoadActivities());
+        }
+      },
+      child: BaseScreen(
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
@@ -41,22 +53,32 @@ class ActivityPage extends StatelessWidget {
       ),
       child: BlocBuilder<ActivityBloc, ActivityState>(
         builder: (context, state) {
-          if (state is ActivityLoading) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (state is ActivityLoaded) {
-             if (state.activities.isEmpty) {
-               return const AppEmptyState(
-                 icon: Icons.history_rounded,
-                 title: "No Activities Yet",
-                 subtitle: "When you add expenses, settle debts, or get added to groups, your recent activities will appear here.",
-               );
-             }
-             return CustomRefreshIndicator(
-               onRefresh: () async{
-                 context.read<ActivityBloc>().add(LoadActivities());
-               },
-               child: ListView.separated(
-                itemCount: state.activities.length,
+          final isLoading = state is ActivityLoading;
+          
+          if (state is ActivityError) {
+             return Center(child: Text(state.message));
+          }
+
+          final List<ActivityEntity> activities = (state is ActivityLoaded) 
+              ? state.activities 
+              : _getDummyActivities();
+
+          if (!isLoading && activities.isEmpty) {
+            return const AppEmptyState(
+              icon: Icons.history_rounded,
+              title: "No Activities Yet",
+              subtitle: "When you add expenses, settle debts, or get added to groups, your recent activities will appear here.",
+            );
+          }
+
+          return CustomRefreshIndicator(
+            onRefresh: () async {
+              context.read<ActivityBloc>().add(LoadActivities());
+            },
+            child: Skeletonizer(
+              enabled: isLoading,
+              child: ListView.separated(
+                itemCount: activities.length,
                 separatorBuilder: (context, index) => Divider(
                   color: AppColors.backgroundLightGrey,
                   height: 1,
@@ -64,24 +86,43 @@ class ActivityPage extends StatelessWidget {
                   endIndent: 24,
                 ),
                 itemBuilder: (context, index) {
-                  final activity = state.activities[index];
+                  final activity = activities[index];
                   return ActivityListItem(
                     activity: activity,
-                    onTap: () {
-                      if(activity.type==ActivityType.expense && activity.activityId!=null){
-                        NavigationService.pushNamed(AppRoutes.expanseDetail,args: {"expanse_id":activity.activityId});
+                    onTap: isLoading ? null : () async {
+                      if (activity.type == ActivityType.expense && activity.activityId != null) {
+                        NavigationUtils.handleResult(
+                          context: context,
+                          navigation: NavigationService.pushNamed(AppRoutes.expanseDetail, args: {"expanse_id": activity.activityId}),
+                          refreshType: RefreshType.activity,
+                          onRefresh: () {
+                            context.read<ActivityBloc>().add(LoadActivities());
+                          },
+                        );
                       }
                     },
                   );
                 },
                 padding: const EdgeInsets.only(bottom: 100),
-                           ),
-             );
-          } else if (state is ActivityError) {
-             return Center(child: Text(state.message));
-          }
-          return const SizedBox();
+              ),
+            ),
+          );
         },
+      ),
+    ),
+  );
+}
+
+  List<ActivityEntity> _getDummyActivities() {
+    return List.generate(
+      8,
+      (index) => ActivityEntity(
+        id: index.toString(),
+        type: ActivityType.expense,
+        title: "Dummy activity description text",
+        subtitle: "You get back ₹00.00",
+        isPositive: true,
+        timestamp: DateTime.now(),
       ),
     );
   }

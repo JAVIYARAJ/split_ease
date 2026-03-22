@@ -58,6 +58,7 @@ import 'core/common/cubit/app_user_cubit.dart';
 import 'core/secrets/app_secrets.dart';
 import 'core/services/image_picker_service.dart';
 import 'core/services/realtime_service.dart';
+import 'core/services/data_refresh_service.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/domain/usecases/user_login.dart';
 
@@ -71,7 +72,10 @@ import 'features/expenses/data/datasources/expense_remote_data_source.dart';
 import 'features/expenses/data/repositories/expense_repository_impl.dart';
 import 'features/expenses/domain/repositories/expense_repository.dart';
 import 'features/expenses/domain/usecases/add_expense_usecase.dart';
+import 'package:split_ease/features/expenses/domain/usecases/update_expense.dart';
+
 import 'package:split_ease/features/expenses/domain/usecases/get_expense_detail_usecase.dart';
+import 'package:split_ease/features/expenses/domain/usecases/get_expense_participants_usecase.dart';
 import 'features/groups/domain/usecases/group_insert_icon.dart';
 import 'features/groups/presentation/bloc/groups_bloc.dart';
 import 'features/groups/presentation/bloc/create_group_bloc.dart';
@@ -116,6 +120,7 @@ Future<void> _core() async {
   sl.registerLazySingleton(() => ImagePicker());
   sl.registerLazySingleton<ImagePickerService>(() => ImagePickerServiceImpl(sl()));
   sl.registerLazySingleton<RealtimeService>(() => RealtimeService(client: sl<SupabaseClient>()));
+  sl.registerLazySingleton(() => DataRefreshCubit());
 
   // Local Storage
   final sharedPreferences = await SharedPreferences.getInstance();
@@ -149,8 +154,11 @@ void _features() {
 void _expense() {
   // Use cases
   sl.registerLazySingleton(() => AddExpenseUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateExpense(repository: sl()));
   sl.registerLazySingleton(() => GetExpenseDetailUseCase(sl()));
+
   sl.registerLazySingleton(() => DeleteExpenseUseCase(sl()));
+  sl.registerLazySingleton(() => GetExpenseParticipantsUsecase(repository: sl()));
 
   // Repository
   sl.registerLazySingleton<ExpenseRepository>(() => ExpenseRepositoryImpl(remoteDataSource: sl()));
@@ -162,10 +170,14 @@ void _expense() {
 
   sl.registerFactory(() => ExpenseBloc(
         addExpenseUseCase: sl(),
+        updateExpenseUseCase: sl(),
         getGroupMembers: sl(),
         getCommonGroupsUseCase: sl(),
+        getExpenseParticipantsUsecase: sl(),
+        dataRefreshCubit: sl(),
       ));
-  sl.registerFactory(() => ExpenseDetailBloc(sl(), sl()));
+
+  sl.registerFactory(() => ExpenseDetailBloc(sl<GetExpenseDetailUseCase>(), sl<DeleteExpenseUseCase>(), sl<AppUserCubit>(), sl<DataRefreshCubit>()));
   sl.registerFactory(() => PayerBloc());
   sl.registerFactory(() => SplitBloc());
   sl.registerFactory(() => DateBloc());
@@ -196,7 +208,7 @@ void _group() {
 
   sl.registerFactory(() => UpdateGroup(repository: sl<GroupRepository>()),);
 
-  sl.registerFactory(() => CreateGroupBloc(sl<ImagePickerService>(),sl<GroupInsertIcon>(),sl<GroupCreate>(), sl<CheckInviteCode>(),sl<UpdateGroup>()));
+  sl.registerFactory(() => CreateGroupBloc(sl<ImagePickerService>(),sl<GroupInsertIcon>(),sl<GroupCreate>(), sl<CheckInviteCode>(),sl<UpdateGroup>(), sl<DataRefreshCubit>()));
 
 
   sl.registerFactory(() => GetGroupDetail(groupRepository: sl<GroupRepository>()),);
@@ -220,10 +232,7 @@ void _group() {
   sl.registerFactory(() => GetFriendsWithGroupStatus(groupRepository: sl<GroupRepository>()));
   sl.registerFactory(() => AddFriendsToGroup(groupRepository: sl<GroupRepository>()));
   sl.registerFactory(() => GetGroupMembers(sl<GroupRepository>()));
-  sl.registerFactory(() => AddMembersBloc(
-    getFriendsWithGroupStatus: sl<GetFriendsWithGroupStatus>(),
-    addFriendsToGroup: sl<AddFriendsToGroup>(),
-  ));
+  sl.registerFactory(() => AddMembersBloc(getFriendsWithGroupStatus: sl<GetFriendsWithGroupStatus>(), addFriendsToGroup: sl<AddFriendsToGroup>(), dataRefreshCubit: sl<DataRefreshCubit>()),);
 }
 
 void _friend() {
@@ -261,8 +270,8 @@ void _home() {
 
   sl.registerFactory(() => GetUnreadFriendRequestCount(friendsRepository: sl<FriendsRepository>()),);
 
-  sl.registerFactory(() => FriendsBloc(friendJoin: sl<FriendJoin>(), getMyFriends: sl<GetMyFriends>(), getUnreadFriendRequestCount: sl<GetUnreadFriendRequestCount>()),);
-  sl.registerFactory(() => FriendRequestsBloc(getFriendRequests: sl<GetFriendRequests>(), respondToFriendRequest: sl<RespondToFriendRequest>()),);
+  sl.registerFactory(() => FriendsBloc(friendJoin: sl<FriendJoin>(), getMyFriends: sl<GetMyFriends>(), getUnreadFriendRequestCount: sl<GetUnreadFriendRequestCount>(), dataRefreshCubit: sl<DataRefreshCubit>()),);
+  sl.registerFactory(() => FriendRequestsBloc(getFriendRequests: sl<GetFriendRequests>(), respondToFriendRequest: sl<RespondToFriendRequest>(), dataRefreshCubit: sl<DataRefreshCubit>()),);
 
   sl.registerFactory(() => GetFriendExpenseHistoryUseCase(sl<FriendsRepository>()),);
   sl.registerFactory(() => FriendDetailBloc(getFriendExpenseHistoryUseCase: sl<GetFriendExpenseHistoryUseCase>()),);

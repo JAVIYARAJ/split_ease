@@ -7,10 +7,6 @@ class GroupEntity extends Equatable {
   final String? id;
   final String? name;
   final UserEntity? createdBy;
-  final bool? isActive;
-  final bool? isDeleted;
-  final String? updatedAt;
-  final String? createdAt;
   final String? groupType;
   final String? groupIcon;
   final String? inviteCode;
@@ -26,10 +22,6 @@ class GroupEntity extends Equatable {
     this.id,
     this.name,
     this.createdBy,
-    this.isActive,
-    this.isDeleted,
-    this.updatedAt,
-    this.createdAt,
     this.groupType,
     this.groupIcon,
     this.inviteCode,
@@ -46,10 +38,6 @@ class GroupEntity extends Equatable {
         id,
         name,
         createdBy,
-        isActive,
-        isDeleted,
-        updatedAt,
-        createdAt,
         groupType,
         groupIcon,
         inviteCode,

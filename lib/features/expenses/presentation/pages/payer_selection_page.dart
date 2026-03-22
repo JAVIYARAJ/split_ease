@@ -50,7 +50,7 @@ class PayerSelectionPage extends StatelessWidget {
         body: BlocBuilder<PayerBloc, PayerState>(
           builder: (context, state) {
             final members = state.members;
-            final selectedUserId = state.selectedPayerId ?? (members.isNotEmpty ? members.first.userId : '');
+            final selectedUserId = state.effectiveSelectedId;
 
             return ListView.builder(
               itemCount: members.length,
@@ -71,7 +71,6 @@ class PayerSelectionPage extends StatelessWidget {
                         AppAvatar(
                           url: member.avtar,
                           radius: 20,
-                          backgroundColor: member.avtar == null ? AppColors.primaryTeal : null,
                         ),
                         const SizedBox(width: 12),
                         Expanded(

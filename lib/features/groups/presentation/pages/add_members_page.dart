@@ -24,7 +24,6 @@ class AddMembersPage extends StatefulWidget {
 
 class _AddMembersPageState extends State<AddMembersPage> {
   final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
 
   @override
   void dispose() {
@@ -161,12 +160,8 @@ class _AddMembersPageState extends State<AddMembersPage> {
       );
     }
 
-    final alreadyInGroup = state.alreadyInGroup;
-    final notInGroup = state.notInGroup;
-
-    // Apply search filter
-    final filteredInGroup = _filterFriends(alreadyInGroup);
-    final filteredNotInGroup = _filterFriends(notInGroup);
+    final filteredInGroup = state.filteredInGroup;
+    final filteredNotInGroup = state.filteredNotInGroup;
 
     return Column(
       children: [
@@ -175,7 +170,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
           child: TextField(
             controller: _searchController,
-            onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
+            onChanged: (value) => context.read<AddMembersBloc>().add(ChangeSearchQuery(value)),
             style: GoogleFonts.openSans(fontSize: 16, color: AppColors.textBlack),
             decoration: InputDecoration(
               hintText: 'Search friends by name...',
@@ -236,7 +231,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
                       Icon(Icons.search_off_rounded, size: 48, color: AppColors.textGrey.withValues(alpha: 0.3)),
                       const SizedBox(height: 16),
                       Text(
-                        _searchQuery.isNotEmpty ? 'No friends match "$_searchQuery"' : 'No friends found',
+                        state.searchQuery.isNotEmpty ? 'No friends match "${state.searchQuery}"' : 'No friends found',
                         style: GoogleFonts.openSans(fontSize: 16, color: AppColors.textGrey),
                       ),
                     ],
@@ -247,14 +242,6 @@ class _AddMembersPageState extends State<AddMembersPage> {
         ),
       ],
     );
-  }
-
-  List<GroupFriendEntity> _filterFriends(List<GroupFriendEntity> friends) {
-    if (_searchQuery.isEmpty) return friends;
-    return friends.where((f) {
-      return f.fullName.toLowerCase().contains(_searchQuery) ||
-          (f.email?.toLowerCase().contains(_searchQuery) ?? false);
-    }).toList();
   }
 
   Widget _buildSectionHeader(String title) {

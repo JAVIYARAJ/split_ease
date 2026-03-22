@@ -24,7 +24,9 @@ class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
   Future<void> _onLoadGroupDetails(LoadGroupDetails event, Emitter<GroupDetailState> emit) async {
     emit(state.copyWith(status: GroupDetailStatus.loading, hasChanges: event.hasChanges));
     try {
-      var response = await getGroupDetail(GroupDetailParam(event.groupId!));
+      final id = event.groupId ?? state.groupEntity?.id;
+      if (id == null) return;
+      var response = await getGroupDetail(GroupDetailParam(id));
       response.fold(
         (l) {
           emit(state.copyWith(status: GroupDetailStatus.failure, errorMessage: l.message));

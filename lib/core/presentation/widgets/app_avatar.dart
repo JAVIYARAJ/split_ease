@@ -28,6 +28,9 @@ class AppAvatar extends StatelessWidget {
     final effectiveBackgroundColor = backgroundColor ?? AppColors.primary.withValues(alpha: 0.1);
     final effectiveIconColor = iconColor ?? AppColors.primary;
     final effectiveIconSize = iconSize ?? (radius * 1.2);
+    
+    final cleanUrl = url?.trim();
+    final bool hasUrl = cleanUrl != null && cleanUrl.isNotEmpty && cleanUrl.toLowerCase() != 'null';
 
     return Container(
       width: radius * 2,
@@ -36,27 +39,41 @@ class AppAvatar extends StatelessWidget {
         shape: BoxShape.circle,
         color: effectiveBackgroundColor,
         border: border,
-        image: file != null
-            ? DecorationImage(
-                image: FileImage(file!),
-                fit: BoxFit.cover,
-              )
-            : (url != null && url!.isNotEmpty)
-                ? DecorationImage(
-                    image: CachedNetworkImageProvider(url!),
-                    fit: BoxFit.cover,
-                  )
-                : null,
       ),
-      child: (file == null && (url == null || url!.isEmpty))
-          ? Center(
-              child: Icon(
-                Icons.person_rounded,
-                color: effectiveIconColor,
-                size: effectiveIconSize,
-              ),
-            )
-          : null,
+      child: ClipOval(
+        child: _buildAvatarContent(
+          hasUrl: hasUrl,
+          cleanUrl: cleanUrl,
+          iconColor: effectiveIconColor,
+          iconSize: effectiveIconSize,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatarContent({
+    required bool hasUrl,
+    String? cleanUrl,
+    required Color iconColor,
+    required double iconSize,
+  }) {
+    if (file != null) {
+      return Image.file(file!, fit: BoxFit.cover);
+    }
+
+    if (!hasUrl) {
+      return Center(
+        child: Icon(Icons.person_rounded, color: iconColor, size: iconSize),
+      );
+    }
+
+    return CachedNetworkImage(
+      imageUrl: cleanUrl!,
+      fit: BoxFit.cover,
+      placeholder: (context, url) => Container(color: Colors.transparent),
+      errorWidget: (context, url, error) => Center(
+        child: Icon(Icons.person_rounded, color: iconColor, size: iconSize),
+      ),
     );
   }
 }

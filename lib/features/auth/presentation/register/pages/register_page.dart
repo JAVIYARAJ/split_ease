@@ -24,7 +24,7 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   // Local State
-  bool _isObscured = true;
+  final ValueNotifier<bool> _isObscured = ValueNotifier<bool>(true);
   final _formKey = GlobalKey<FormState>();
 
   // Controllers
@@ -37,6 +37,7 @@ class _RegisterPageState extends State<RegisterPage> {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _isObscured.dispose();
     super.dispose();
   }
 
@@ -153,19 +154,22 @@ class _RegisterPageState extends State<RegisterPage> {
                             const SizedBox(height: 20),
 
                             // --- 3. Password Field ---
-                            AuthField(
-                              label: "Password",
-                              hint: "Create a strong password",
-                              isPassword: true,
-                              isObscured: _isObscured,
-                              controller: _passwordController,
-                              icon: Icons.lock_outline_rounded,
-                              onToggleVisibility: () {
-                                setState(() {
-                                  _isObscured = !_isObscured;
-                                });
+                            ValueListenableBuilder<bool>(
+                              valueListenable: _isObscured,
+                              builder: (context, isObscured, child) {
+                                return AuthField(
+                                  label: "Password",
+                                  hint: "Create a strong password",
+                                  isPassword: true,
+                                  isObscured: isObscured,
+                                  controller: _passwordController,
+                                  icon: Icons.lock_outline_rounded,
+                                  onToggleVisibility: () {
+                                    _isObscured.value = !_isObscured.value;
+                                  },
+                                  validator: AppValidators.validatePasswordRegister,
+                                );
                               },
-                              validator: AppValidators.validatePasswordRegister,
                             ),
 
                           const SizedBox(height: 30),

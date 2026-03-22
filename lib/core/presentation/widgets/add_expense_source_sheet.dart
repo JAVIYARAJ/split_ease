@@ -1,34 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
-import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
-import 'package:split_ease/features/friends/domain/entities/friend_entity.dart';
+import 'package:split_ease/core/utils/navigation_utils.dart';
+import 'package:split_ease/features/activity/presentation/bloc/activity_bloc.dart';
+import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friends_bloc.dart';
 import 'package:split_ease/features/groups/presentation/bloc/groups_bloc.dart';
-import 'group_picker_sheet.dart';
 
 /// Shows the "Add Expense" source chooser from FriendsPage.
 /// The user picks to split with a Group or a specific Friend.
-Future<void> showAddExpenseFromFriendsSheet(BuildContext context) async {
-  await showModalBottomSheet<void>(
+Future<bool?> showAddExpenseFromFriendsSheet(BuildContext context) async {
+  return await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => MultiBlocProvider(
+    builder: (sheetContext) => MultiBlocProvider(
       providers: [
         BlocProvider.value(value: context.read<GroupsBloc>()),
         BlocProvider.value(value: context.read<FriendsBloc>()),
+        BlocProvider.value(value: context.read<ActivityBloc>()),
       ],
-      child: const _AddExpenseSourceSheet(),
+      child: _AddExpenseSourceSheet(parentContext: context),
     ),
   );
 }
 
 class _AddExpenseSourceSheet extends StatefulWidget {
-  const _AddExpenseSourceSheet();
+  final BuildContext parentContext;
+  const _AddExpenseSourceSheet({required this.parentContext});
 
   @override
   State<_AddExpenseSourceSheet> createState() => _AddExpenseSourceSheetState();
@@ -36,67 +39,78 @@ class _AddExpenseSourceSheet extends StatefulWidget {
 
 class _AddExpenseSourceSheetState extends State<_AddExpenseSourceSheet> {
   // 'none' | 'group' | 'friend'
-  String _view = 'none';
+  final ValueNotifier<String> _view = ValueNotifier<String>('none');
+
+  @override
+  void dispose() {
+    _view.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 12),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(color: AppColors.borderGreyLight, borderRadius: BorderRadius.circular(2)),
+    return ValueListenableBuilder<String>(
+      valueListenable: _view,
+      builder: (context, view, child) {
+        return Container(
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          const SizedBox(height: 20),
-          // Title
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Row(
-              children: [
-                if (_view != 'none')
-                  GestureDetector(
-                    onTap: () => setState(() => _view = 'none'),
-                    child: const Padding(
-                      padding: EdgeInsets.only(right: 8.0),
-                      child: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textBlack),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(color: AppColors.borderGreyLight, borderRadius: BorderRadius.circular(2)),
+              ),
+              const SizedBox(height: 20),
+              // Title
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  children: [
+                    if (view != 'none')
+                      GestureDetector(
+                        onTap: () => _view.value = 'none',
+                        child: const Padding(
+                          padding: EdgeInsets.only(right: 8.0),
+                          child: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textBlack),
+                        ),
+                      ),
+                    Text(
+                      view == 'group'
+                          ? "Select a Group"
+                          : view == 'friend'
+                          ? "Select a Friend"
+                          : "Add Expense",
+                      style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textBlack),
                     ),
-                  ),
-                Text(
-                  _view == 'group'
-                      ? "Select a Group"
-                      : _view == 'friend'
-                      ? "Select a Friend"
-                      : "Add Expense",
-                  style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: view == 'group'
+                      ? _GroupList(key: const ValueKey('group'), parentContext: widget.parentContext)
+                      : view == 'friend'
+                      ? _FriendList(key: const ValueKey('friend'), parentContext: widget.parentContext)
+                      : _ModeSelector(
+                          key: const ValueKey('none'),
+                          onGroupTap: () => _view.value = 'group',
+                          onFriendTap: () => _view.value = 'friend',
+                        ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          Flexible(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: _view == 'group'
-                  ? _GroupList(key: const ValueKey('group'))
-                  : _view == 'friend'
-                  ? _FriendList(key: const ValueKey('friend'))
-                  : _ModeSelector(
-                      key: const ValueKey('none'),
-                      onGroupTap: () => setState(() => _view = 'group'),
-                      onFriendTap: () => setState(() => _view = 'friend'),
-                    ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -194,19 +208,34 @@ class _OptionTile extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _GroupList extends StatelessWidget {
-  const _GroupList({super.key});
+  final BuildContext parentContext;
+  const _GroupList({super.key, required this.parentContext});
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<GroupsBloc, GroupsState>(
       builder: (context, state) {
-        if (state.status == GroupsStatus.loading || state.groups.isEmpty) {
+        if (state.status == GroupsStatus.loading) {
           context.read<GroupsBloc>().add(LoadGroups());
           return const Padding(
             padding: EdgeInsets.all(32),
             child: Center(child: CircularProgressIndicator(color: AppColors.primaryTeal)),
           );
         }
+
+        if (state.groups.isEmpty && state.status != GroupsStatus.loading) {
+          return Padding(
+            padding: const EdgeInsets.all(32),
+            child: Center(
+              child: Text(
+                "No groups yet. Create a group first!",
+                style: GoogleFonts.outfit(fontSize: 15, color: AppColors.textGrey),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+
         return ListView.separated(
           shrinkWrap: true,
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
@@ -218,13 +247,18 @@ class _GroupList extends StatelessWidget {
               icon: Icons.groups_rounded,
               label: group.name ?? "Group",
               sublabel: "${group.memberCount ?? 0} members",
-              onTap: () {
-                Navigator.pop(context); // close sheet
-                NavigationService.pushNamed(
-                  AppRoutes.addExpense,
-                  args: {
-                    'group': group,
-                    'groups': state.groups, // pass for optional re-select
+              onTap: () async {
+                final groupsBloc = context.read<GroupsBloc>();
+                final friendsBloc = context.read<FriendsBloc>();
+                final activityBloc = context.read<ActivityBloc>();
+                Navigator.pop(ctx); // close sheet
+                NavigationUtils.handleResult(
+                  context: parentContext,
+                  navigation: NavigationService.pushNamed(AppRoutes.addExpense, args: {'group': group, 'origin': ExpenseOrigin.group}),
+                  onRefresh: () {
+                    groupsBloc.add(LoadGroups());
+                    friendsBloc.add(LoadFriends());
+                    activityBloc.add(LoadActivities());
                   },
                 );
               },
@@ -241,18 +275,33 @@ class _GroupList extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _FriendList extends StatelessWidget {
-  const _FriendList({super.key});
+  final BuildContext parentContext;
+  const _FriendList({super.key, required this.parentContext});
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<FriendsBloc, FriendsState>(
       builder: (context, state) {
-        if (state.status == FriendsStatus.loading || state.friends.isEmpty) {
+        if (state.status == FriendsStatus.loading) {
           return const Padding(
             padding: EdgeInsets.all(32),
             child: Center(child: CircularProgressIndicator(color: AppColors.primaryTeal)),
           );
         }
+
+        if (state.friends.isEmpty && state.status != FriendsStatus.loading) {
+          return Padding(
+            padding: const EdgeInsets.all(32),
+            child: Center(
+              child: Text(
+                "No friends yet. Connect with other to build your split ease group.",
+                style: GoogleFonts.outfit(fontSize: 15, color: AppColors.textGrey),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+
         return ListView.separated(
           shrinkWrap: true,
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
@@ -265,14 +314,18 @@ class _FriendList extends StatelessWidget {
               isFriend: true,
               label: friend.name,
               sublabel: friend.email ?? "",
-              onTap: () {
-                final groups = context.read<GroupsBloc>().state.groups;
-                Navigator.pop(context); // close sheet
-                NavigationService.pushNamed(
-                  AppRoutes.addExpense,
-                  args: {
-                    'friend': friend,
-                    'groups': groups, // so AddExpensePage can show group picker
+              onTap: () async {
+                final groupsBloc = context.read<GroupsBloc>();
+                final friendsBloc = context.read<FriendsBloc>();
+                final activityBloc = context.read<ActivityBloc>();
+                Navigator.pop(ctx); // close sheet
+                NavigationUtils.handleResult(
+                  context: parentContext,
+                  navigation: NavigationService.pushNamed(AppRoutes.addExpense, args: {'friend': friend, 'origin': ExpenseOrigin.friend}),
+                  onRefresh: () {
+                    groupsBloc.add(LoadGroups());
+                    friendsBloc.add(LoadFriends());
+                    activityBloc.add(LoadActivities());
                   },
                 );
               },
@@ -309,10 +362,7 @@ class _RowTile extends StatelessWidget {
         child: Row(
           children: [
             if (isFriend)
-              AppAvatar(
-                url: avatarUrl,
-                radius: 20,
-              )
+              AppAvatar(url: avatarUrl, radius: 20)
             else
               Container(
                 width: 40,

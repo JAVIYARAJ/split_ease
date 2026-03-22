@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:split_ease/features/expenses/domain/usecases/create_expense_params.dart';
+import 'package:split_ease/features/expenses/domain/usecases/update_expense_params.dart';
+
 
 import '../../../../core/error/exception.dart';
 
@@ -7,9 +9,12 @@ import 'package:split_ease/features/expenses/data/models/expense_detail_model.da
 
 abstract class ExpenseRemoteDataSource {
   Future<void> createExpense(CreateExpenseParams params);
+  Future<void> updateExpense(UpdateExpenseParams params);
   Future<ExpenseDetailModel> getExpenseDetail(String expenseId);
   Future<void> deleteExpense(String expenseId);
+  Future<List<ExpenseUserModel>> getExpenseParticipants({String? groupId, String? friendUserId});
 }
+
 
 class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
   final SupabaseClient client;
@@ -39,6 +44,19 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
     }
   }
   @override
+  Future<void> updateExpense(UpdateExpenseParams params) async {
+    try {
+      await client.rpc(
+        'update_expense_rpc',
+        params: params.toJson(),
+      );
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+
+  @override
+
   Future<ExpenseDetailModel> getExpenseDetail(String expenseId) async {
    // try {
       final response = await client.rpc(
@@ -64,6 +82,25 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
           'p_expense_id': expenseId,
         },
       );
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+  
+  @override
+  Future<List<ExpenseUserModel>> getExpenseParticipants({String? groupId, String? friendUserId}) async {
+    try {
+      final response = await client.rpc(
+        'get_expense_participants_rpc',
+        params: {
+          'p_group_id': groupId,
+          'p_friend_user_id': friendUserId,
+        },
+      );
+      
+      return (response as List)
+          .map((e) => ExpenseUserModel.fromJson(e as Map<String, dynamic>))
+          .toList();
     } catch (e) {
       throw ServerException(message: e.toString());
     }

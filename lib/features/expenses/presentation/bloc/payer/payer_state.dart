@@ -6,6 +6,10 @@ class PayerState extends Equatable {
 
   const PayerState({this.members = const [], this.selectedPayerId});
 
+  /// Logic Moved from UI: Determines the ID to highlight in the list, 
+  /// defaulting to the first member if no specific payer is selected.
+  String get effectiveSelectedId => selectedPayerId ?? (members.isNotEmpty ? members.first.userId ?? '' : '');
+
   PayerState copyWith({
     List<GroupMemberEntity>? members,
     String? selectedPayerId,

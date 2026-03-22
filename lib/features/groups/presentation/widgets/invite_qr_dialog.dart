@@ -21,12 +21,16 @@ class InviteQrDialog extends StatefulWidget {
 
 class _InviteQrDialogState extends State<InviteQrDialog> {
   final ScreenshotController _screenshotController = ScreenshotController();
-  bool _isSharing = false;
+  final ValueNotifier<bool> _isSharing = ValueNotifier<bool>(false);
+
+  @override
+  void dispose() {
+    _isSharing.dispose();
+    super.dispose();
+  }
 
   Future<void> _shareQrCode() async {
-    setState(() {
-      _isSharing = true;
-    });
+    _isSharing.value = true;
 
     try {
       final imageBytes = await _screenshotController.capture();
@@ -42,9 +46,7 @@ class _InviteQrDialogState extends State<InviteQrDialog> {
       }
     } finally {
       if (mounted) {
-        setState(() {
-          _isSharing = false;
-        });
+        _isSharing.value = false;
       }
     }
   }
@@ -140,18 +142,23 @@ class _InviteQrDialogState extends State<InviteQrDialog> {
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _isSharing ? null : _shareQrCode,
-                    icon: _isSharing
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.share_rounded, size: 18),
-                    label: Text(_isSharing ? "Sharing..." : "Share"),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      side: const BorderSide(color: AppColors.primary),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _isSharing,
+                    builder: (context, isSharing, child) {
+                      return OutlinedButton.icon(
+                        onPressed: isSharing ? null : _shareQrCode,
+                        icon: isSharing
+                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Icon(Icons.share_rounded, size: 18),
+                        label: Text(isSharing ? "Sharing..." : "Share"),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          side: const BorderSide(color: AppColors.primary),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),

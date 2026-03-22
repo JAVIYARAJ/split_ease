@@ -16,3 +16,8 @@ class SubmitSelectedFriends extends AddMembersEvent {
   final String groupId;
   SubmitSelectedFriends(this.groupId);
 }
+
+class ChangeSearchQuery extends AddMembersEvent {
+  final String query;
+  ChangeSearchQuery(this.query);
+}
