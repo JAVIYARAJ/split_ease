@@ -1,4 +1,4 @@
-enum GroupPermission { editGroup, deleteGroup, inviteMembers, addMembers,exitGroup }
+enum GroupPermission { editGroup, deleteGroup, inviteMembers, addMembers, exitGroup, removeMember }
 
 class GroupPermissionService {
   static const String roleAdmin = 'admin';
@@ -11,6 +11,7 @@ class GroupPermissionService {
       GroupPermission.inviteMembers,
       GroupPermission.addMembers,
       GroupPermission.exitGroup,
+      GroupPermission.removeMember,
     },
     roleMember: {
       GroupPermission.inviteMembers,
@@ -18,7 +19,8 @@ class GroupPermissionService {
     },
   };
 
-  static bool hasPermission(String? role, GroupPermission permission) {
+  static bool hasPermission(String? role, GroupPermission permission, {bool isOwner = false}) {
+    if (isOwner) return true; // Owner always has all permissions
     if (role == null) return false;
     return _permissions[role.toLowerCase()]?.contains(permission) ?? false;
   }

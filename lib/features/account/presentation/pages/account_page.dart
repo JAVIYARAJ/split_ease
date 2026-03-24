@@ -40,7 +40,7 @@ class AccountPage extends StatelessWidget {
           }
 
           return Scaffold(
-            backgroundColor: AppColors.backgroundLightGrey,
+            backgroundColor: AppColors.backgroundWhite,
             body: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 16),

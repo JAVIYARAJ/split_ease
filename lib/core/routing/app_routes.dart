@@ -20,4 +20,5 @@ class AppRoutes {
   static const String editProfile = '/editProfile';
   static const String userQr = '/userQr';
   static const String expensePdfPreview = '/expensePdfPreview';
+  static const String expenseNote = '/expenseNote';
 }

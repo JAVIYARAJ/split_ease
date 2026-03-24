@@ -13,6 +13,9 @@ import 'package:split_ease/core/routing/app_routes.dart';
 import '../../domain/entities/group_member_entity.dart';
 import '../widgets/invite_qr_dialog.dart';
 import '../../domain/services/group_permission_service.dart';
+import '../widgets/group_member_options_sheet.dart';
+import '../../domain/entities/group_member_balance_entity.dart';
+// intl import removed
 
 class GroupSettingsPage extends StatefulWidget {
   final String groupId;
@@ -66,15 +69,50 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                         AppAlerts.showError(context, state.message);
                       } else if (state is GroupActionSuccess) {
                         AppAlerts.showSuccess(context, state.message);
-                        NavigationService.pop(arg: true);
+                        if (state.shouldPop) {
+                          NavigationService.pop(arg: 'refresh-and-pop');
+                        }
                       }
                     },
                     builder: (context, state) {
+                      GroupEntity? group;
+                      String? currentUserId;
+
+                      if (state is GroupSettingsLoaded) {
+                        group = state.group;
+                        currentUserId = state.currentUserId;
+                      } else if (state is GroupSettingsLoading) {
+                        group = state.group;
+                        currentUserId = state.currentUserId;
+                      } else if (state is GroupSettingsError) {
+                        group = state.group;
+                        currentUserId = state.currentUserId;
+                      }
+
+                      if (group != null) {
+                        return Stack(
+                          children: [
+                            _GroupSettingsContent(
+                              group: group,
+                              onBack: () => _onBack(context),
+                              currentUserId: currentUserId,
+                              memberBalances: state is GroupSettingsLoaded
+                                  ? state.memberBalances
+                                  : (state is GroupSettingsLoading ? state.memberBalances : (state is GroupSettingsError ? state.memberBalances : null)),
+                            ),
+                            if (state is GroupSettingsLoading)
+                              Container(
+                                color: Colors.black12,
+                                child: const Center(child: CircularProgressIndicator()),
+                              ),
+                          ],
+                        );
+                      }
+
                       if (state is GroupSettingsLoading) {
                         return const _GroupSettingsShimmer();
-                      } else if (state is GroupSettingsLoaded) {
-                        return _GroupSettingsContent(group: state.group, onBack: () => _onBack(context));
                       }
+                      
                       return const SizedBox.shrink();
                     },
                   ),
@@ -91,18 +129,26 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
 class _GroupSettingsContent extends StatelessWidget {
   final GroupEntity group;
   final VoidCallback onBack;
+  final String? currentUserId;
+  final List<GroupMemberBalanceEntity>? memberBalances;
 
-  const _GroupSettingsContent({required this.group, required this.onBack});
+  const _GroupSettingsContent({
+    required this.group,
+    required this.onBack,
+    this.currentUserId,
+    this.memberBalances,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // Find current user's member entity
+    // Use the passed currentUserId to find the user's role
     final currentUserMember = group.members?.cast<GroupMemberEntity?>().firstWhere(
-          (m) => m?.userId == (context.read<GroupSettingsBloc>().state is GroupSettingsLoaded ? (context.read<GroupSettingsBloc>().state as GroupSettingsLoaded).currentUserId : null),
+          (m) => m?.userId == currentUserId,
           orElse: () => null,
     );
 
-    final userRole = currentUserMember?.role;
+    final String? userRole = currentUserMember?.role;
+    final bool isCreator = group.createdBy?.id == currentUserId;
 
     return CustomScrollView(
       slivers: [
@@ -169,7 +215,7 @@ class _GroupSettingsContent extends StatelessWidget {
             // Members Section
             _buildSectionHeader('Members'),
             _buildInsetGroup(
-              children: _buildMembersList(group),
+              children: _buildMembersList(context, group, userRole, isCreator),
             ),
 
             const SizedBox(height: 24),
@@ -185,7 +231,17 @@ class _GroupSettingsContent extends StatelessWidget {
                       icon: Icons.exit_to_app_rounded,
                       title: 'Leave Group',
                       onTap: () {
-                        AppAlerts.showError(context, "Cannot leave group with outstanding debts.");
+                        final currentUser = group.members?.cast<GroupMemberEntity?>().firstWhere(
+                              (m) => m?.userId == currentUserId,
+                              orElse: () => null,
+                        );
+                        if (currentUser != null) {
+                          final balanceEntity = (memberBalances ?? []).cast<GroupMemberBalanceEntity?>().firstWhere(
+                                (b) => b?.userId == currentUser.userId,
+                                orElse: () => null,
+                          );
+                          _showMemberOptions(context, currentUser, balanceEntity?.balance ?? 0.0, true, currentUser.role, isCreator);
+                        }
                       },
                       iconBgColor: const Color(0xFFFFF3E0),
                       iconColor: const Color(0xFFFB8C00),
@@ -413,15 +469,37 @@ class _GroupSettingsContent extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildMembersList(GroupEntity group) {
+  List<Widget> _buildMembersList(BuildContext context, GroupEntity group, String? currentUserRole, bool isCreator) {
     if (group.members == null || group.members!.isEmpty) {
       return [const SizedBox.shrink()];
     }
-    return List.generate(group.members!.length, (index) {
-      final member = group.members![index];
+
+    final balances = memberBalances ?? [];
+    
+    // Sort members: Current user first
+    final List<GroupMemberEntity> sortedMembers = List.from(group.members!);
+    sortedMembers.sort((a, b) {
+      if (a.userId == currentUserId) return -1;
+      if (b.userId == currentUserId) return 1;
+      return 0;
+    });
+
+    return List.generate(sortedMembers.length, (index) {
+      final member = sortedMembers[index];
+      // Find balance for this member
+      final balanceEntity = balances.cast<GroupMemberBalanceEntity?>().firstWhere(
+            (b) => b?.userId == member.userId,
+            orElse: () => null,
+      );
+      final double balance = balanceEntity?.balance ?? 0.0;
+      final bool isCurrentUser = member.userId == currentUserId;
+      
+      final bool isFirst = index == 0;
+      final bool isLast = index == group.members!.length - 1;
+
       return Column(children: [
-        _buildMemberTile(member), 
-        if (index != group.members!.length - 1) _buildDivider()
+        _buildMemberTile(context, member, balance, isCurrentUser, isFirst, isLast, currentUserRole, isCreator), 
+        if (!isLast) _buildDivider()
       ]);
     });
   }
@@ -466,54 +544,125 @@ class _GroupSettingsContent extends StatelessWidget {
     );
   }
 
-  Widget _buildMemberTile(GroupMemberEntity member) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      child: Row(
-        children: [
-          AppAvatar(
-            url: member.avtar,
-            radius: 24,
-            backgroundColor: AppColors.backgroundLightGrey,
-            iconColor: Colors.grey.shade400,
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+  Widget _buildMemberTile(BuildContext context, GroupMemberEntity member, double balance, bool isCurrentUser, bool isFirst, bool isLast, String? currentUserRole, bool isCreator) {
+    final bool isOwed = balance > 0.01;
+    final bool owes = balance < -0.01;
+    
+    final radius = BorderRadius.vertical(
+      top: isFirst ? const Radius.circular(16) : Radius.zero,
+      bottom: isLast ? const Radius.circular(16) : Radius.zero,
+    );
+
+    return Material(
+      color: Colors.transparent,
+      borderRadius: radius,
+      child: InkWell(
+        onTap: () => _showMemberOptions(context, member, balance, isCurrentUser, currentUserRole, isCreator),
+        borderRadius: radius,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          child: Row(
+            children: [
+              AppAvatar(
+                url: member.avtar,
+                radius: 24,
+                backgroundColor: AppColors.backgroundLightGrey,
+                iconColor: Colors.grey.shade400,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Flexible(
-                      child: Text(
-                        member.fullName ?? "Unknown",
-                        style: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (member.role?.toLowerCase() == 'admin') ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
-                        child: Text(
-                          'ADMIN',
-                          style: GoogleFonts.openSans(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.primary),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            member.fullName ?? "Unknown",
+                            style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                    ],
+                        if (isCurrentUser) ...[
+                             const SizedBox(width: 6),
+                             Text("(you)", style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w500)),
+                        ],
+                        if (member.role?.toLowerCase() == 'admin') ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+                            child: Text(
+                              'ADMIN',
+                              style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.primary),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      member.email ?? "-",
+                      style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  member.email ?? "-",
-                  style: GoogleFonts.openSans(fontSize: 13, color: AppColors.textGrey, fontWeight: FontWeight.w500),
-                  overflow: TextOverflow.ellipsis,
+              ),
+              if (isOwed || owes) ...[
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      isOwed ? "gets back" : "owes",
+                      style: GoogleFonts.outfit(
+                        fontSize: 11,
+                        color: isOwed ? AppColors.successGreen : AppColors.errorRed,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      "₹${balance.abs().toStringAsFixed(2)}",
+                      style: GoogleFonts.outfit(
+                        fontSize: 15,
+                        color: isOwed ? AppColors.successGreen : AppColors.errorRed,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ),
+            ],
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  void _showMemberOptions(BuildContext context, GroupMemberEntity member, double balance, bool isCurrentUser, String? currentUserRole, bool isCreator) {
+    showModalBottomSheet(
+      context: context, 
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => GroupMemberOptionsSheet(
+        member: member, 
+        balance: balance, 
+        isCurrentUser: isCurrentUser,
+        currentUserRole: currentUserRole,
+        isCreator: isCreator,
+        onLeaveGroup: () {
+          Navigator.pop(ctx);
+          context.read<GroupSettingsBloc>().add(LeaveGroupEvent(group.id!));
+        },
+        onRemoveFromGroup: () {
+          Navigator.pop(ctx);
+          context.read<GroupSettingsBloc>().add(RemoveMemberEvent(group.id!, member.userId!));
+        },
+        onViewSettings: () {
+          Navigator.pop(ctx);
+          // Navigation to user profile or similar
+        },
       ),
     );
   }

@@ -19,3 +19,9 @@ class DeleteGroupEvent extends GroupSettingsEvent {
   final String groupId;
   DeleteGroupEvent(this.groupId);
 }
+
+class RemoveMemberEvent extends GroupSettingsEvent {
+  final String groupId;
+  final String userId;
+  RemoveMemberEvent(this.groupId, this.userId);
+}

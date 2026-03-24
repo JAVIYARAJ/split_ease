@@ -90,7 +90,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return BaseScreen(
-      backgroundColor: AppColors.backgroundWhite,
+      useSafeArea: false,
+      backgroundColor: AppColors.backgroundLightGrey,
       child: MultiBlocProvider(
         providers: [
           BlocProvider(create: (_) => sl<FriendsBloc>()..add(LoadFriends())),

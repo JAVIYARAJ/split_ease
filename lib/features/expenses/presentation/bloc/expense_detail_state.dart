@@ -11,7 +11,9 @@ abstract class ExpenseDetailState extends Equatable {
 
 class ExpenseDetailInitial extends ExpenseDetailState {}
 
-class ExpenseDetailLoading extends ExpenseDetailState {}
+class ExpenseDetailLoading extends ExpenseDetailState {
+  const ExpenseDetailLoading({bool hasChanges = false}) : super(hasChanges: hasChanges);
+}
 
 class ExpenseDetailLoaded extends ExpenseDetailState {
   final ExpenseDetailEntity expenseDetail;
@@ -44,7 +46,7 @@ class ExpenseDetailLoaded extends ExpenseDetailState {
 class ExpenseDetailError extends ExpenseDetailState {
   final String message;
 
-  const ExpenseDetailError(this.message);
+  const ExpenseDetailError(this.message, {bool hasChanges = false}) : super(hasChanges: hasChanges);
 
   @override
   List<Object?> get props => [message, hasChanges];

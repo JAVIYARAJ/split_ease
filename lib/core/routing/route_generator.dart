@@ -36,6 +36,7 @@ import '../../features/groups/presentation/pages/qr_scanner_page.dart';
 import '../../features/profile/presentation/pages/edit_profile_page.dart';
 import '../../features/account/presentation/pages/user_qr_page.dart';
 import '../../features/expenses/presentation/pages/expense_pdf_preview_page.dart';
+import '../../features/expenses/presentation/pages/expense_note_page.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
 
 class RouteGenerator {
@@ -172,6 +173,15 @@ class RouteGenerator {
           builder: (_) => ExpensePdfPreviewPage(
             pdfPath: args['pdfPath'],
             expenseDescription: args['expenseDescription'],
+          ),
+          settings: RouteSettings(arguments: settings.arguments, name: settings.name),
+        );
+      case AppRoutes.expenseNote:
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => ExpenseNotePage(
+            initialNote: args['initialNote'] ?? '',
+            maxWords: args['maxWords'] ?? 1000,
           ),
           settings: RouteSettings(arguments: settings.arguments, name: settings.name),
         );

@@ -4,6 +4,7 @@ import 'package:split_ease/core/presentation/widgets/base_screen.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_bloc.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_event.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_state.dart';
@@ -141,10 +142,10 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             child: BlocListener<ExpenseDetailBloc, ExpenseDetailState>(
               listener: (context, state) {
                 if (state is ExpenseDeleted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Expense deleted successfully')));
+                  AppAlerts.showSuccess(context, 'Expense deleted successfully');
                   Navigator.of(context).pop(true); // Return true on deletion
                 } else if (state is ExpenseDeleteError) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete expense: ${state.message}')));
+                  AppAlerts.showError(context, 'Failed to delete expense: ${state.message}');
                 }
               },
               child: BlocBuilder<ExpenseDetailBloc, ExpenseDetailState>(
@@ -178,6 +179,12 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                                   const SizedBox(height: 8),
                                   _buildPaidBySection(entity),
                                   const SizedBox(height: 24),
+                                  if (entity.notes != null && entity.notes!.isNotEmpty) ...[
+                                    _buildSectionTitle("Notes"),
+                                    const SizedBox(height: 8),
+                                    _buildNotesSection(entity.notes!),
+                                    const SizedBox(height: 24),
+                                  ],
                                   _buildSectionTitle("Split Details"),
                                   const SizedBox(height: 8),
                                   _buildSplitsList(entity),
@@ -338,12 +345,16 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             style: GoogleFonts.outfit(color: AppColors.iconGrey, fontSize: 12, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 4),
-          Text(
-            value,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 13, fontWeight: FontWeight.w600),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.center,
+            child: Text(
+              value,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 13, fontWeight: FontWeight.w600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
@@ -420,6 +431,27 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack),
           ),
         ],
+      ),
+    );
+  }
+  }
+
+  Widget _buildNotesSection(String notes) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF9C4).withValues(alpha: 0.3), // Very light yellow sticky note feel
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFFF176).withValues(alpha: 0.5)),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Text(
+        notes,
+        style: GoogleFonts.outfit(
+          fontSize: 14,
+          height: 1.5,
+          color: AppColors.textBlack.withValues(alpha: 0.8),
+          fontStyle: FontStyle.italic,
+        ),
       ),
     );
   }
@@ -518,6 +550,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     return const ExpenseDetailEntity(
       id: "",
       description: "Loading...",
+      notes: null,
       expenseType: "expense",
       totalAmount: 1000.0,
       expenseDate: "2026-02-21T00:00:00+00:00",
@@ -530,4 +563,3 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       ],
     );
   }
-}

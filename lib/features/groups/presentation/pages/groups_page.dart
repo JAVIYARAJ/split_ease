@@ -7,7 +7,6 @@ import 'package:split_ease/core/presentation/widgets/group_picker_sheet.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
-import 'package:split_ease/injection_container.dart';
 import '../../../../../core/utils/navigation_utils.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
 import '../../../../../core/presentation/widgets/custom_refresh_indicator.dart';
@@ -44,7 +43,7 @@ class _GroupsPageState extends State<GroupsPage> {
         }
       },
       child: BaseScreen(
-      backgroundColor: AppColors.backgroundLightGrey,
+      backgroundColor: AppColors.backgroundWhite,
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 90.0),
         child: BlocBuilder<GroupsBloc, GroupsState>(

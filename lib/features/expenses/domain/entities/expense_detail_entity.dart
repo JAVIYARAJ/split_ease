@@ -10,11 +10,13 @@ class ExpenseDetailEntity extends Equatable {
   final ExpenseGroupEntity? group;
   final ExpenseUserEntity paidBy;
   final ExpenseUserEntity createdBy;
+  final String? notes;
   final List<ExpenseSplitEntity> splits;
 
   const ExpenseDetailEntity({
     required this.id,
     required this.description,
+    this.notes,
     required this.expenseType,
     required this.totalAmount,
     required this.expenseDate,
@@ -29,6 +31,7 @@ class ExpenseDetailEntity extends Equatable {
   List<Object?> get props => [
         id,
         description,
+        notes,
         expenseType,
         totalAmount,
         expenseDate,

@@ -22,6 +22,8 @@ abstract interface class GroupRemoteDataSource {
   Future<String?> joinGroup(String code);
 
   Future<bool> leaveGroup(String groupId);
+  
+  Future<bool> removeMember(String groupId, String userId);
 
   Future<bool> deleteGroup(String groupId);
 
@@ -136,10 +138,23 @@ class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
   Future<bool> leaveGroup(String groupId) async {
     try {
       final userId = client.auth.currentUser!.id;
-      
-      // We will use an RPC to ensure safety
-      await client.rpc('leave_group', params: {'p_group_id': groupId, 'p_user_id': userId});
-      
+      await client.rpc('remove_or_leave_group_member_rpc', params: {
+        'p_group_id': groupId, 
+        'p_target_user_id': userId
+      });
+      return true;
+    } catch (error) {
+      throw ServerException(message: ErrorMessageUtils.generate(error));
+    }
+  }
+
+  @override
+  Future<bool> removeMember(String groupId, String userId) async {
+    try {
+      await client.rpc('remove_or_leave_group_member_rpc', params: {
+        'p_group_id': groupId, 
+        'p_target_user_id': userId
+      });
       return true;
     } catch (error) {
       throw ServerException(message: ErrorMessageUtils.generate(error));

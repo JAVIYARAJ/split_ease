@@ -18,7 +18,7 @@ class FriendDetailBloc extends Bloc<FriendDetailEvent, FriendDetailState> {
   void _onLoadFriendDetails(LoadFriendDetails event, Emitter<FriendDetailState> emit) {
     emit(state.copyWith(
       friendEntity: event.friend,
-      hasChanges: event.hasChanges,
+      hasChanges: event.hasChanges || state.hasChanges,
     ));
     if (event.friend.id.isNotEmpty) {
       add(LoadFriendExpenseHistory(friendId: event.friend.id));

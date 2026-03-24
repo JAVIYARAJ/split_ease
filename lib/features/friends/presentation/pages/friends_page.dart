@@ -58,7 +58,7 @@ class _FriendsPageState extends State<FriendsPage> {
         }
       },
       child: BaseScreen(
-        backgroundColor: AppColors.backgroundLightGrey,
+        backgroundColor: AppColors.backgroundWhite,
         floatingActionButton: Padding(
           padding: const EdgeInsets.only(bottom: 90.0), // Raise FAB above custom bottom nav
           child: BlocBuilder<FriendsBloc, FriendsState>(

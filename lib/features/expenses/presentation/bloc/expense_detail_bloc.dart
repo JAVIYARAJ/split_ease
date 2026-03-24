@@ -37,7 +37,8 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
     FetchExpenseDetailEvent event,
     Emitter<ExpenseDetailState> emit,
   ) async {
-    emit(ExpenseDetailLoading());
+    final bool currentHasChanges = state.hasChanges;
+    emit(ExpenseDetailLoading(hasChanges: currentHasChanges));
     final result = await _getExpenseDetailUseCase(event.expenseId);
     
     final appUserState = _appUserCubit.state;
@@ -47,8 +48,8 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
     }
     
     result.fold(
-      (failure) => emit(ExpenseDetailError(failure.message)),
-      (expenseDetail) => emit(ExpenseDetailLoaded(expenseDetail, currentUserId)),
+      (failure) => emit(ExpenseDetailError(failure.message, hasChanges: currentHasChanges)),
+      (expenseDetail) => emit(ExpenseDetailLoaded(expenseDetail, currentUserId, hasChanges: currentHasChanges)),
     );
   }
 

@@ -26,15 +26,7 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
     try {
       await client.rpc(
         'create_expense_rpc',
-        params: {
-          'p_group_id': params.groupId,
-          'p_description': params.description,
-          'p_total_amount': params.totalAmount,
-          'p_paid_by': params.paidByUserId,
-          'p_expense_date': params.expenseDate.toIso8601String().split('T')[0],
-          'p_split_type': params.splitType,
-          'p_splits': params.splits,
-        },
+        params: params.toJson(),
       );
 
       // RPC returns a JSON object, if it throws it will be caught by catch block

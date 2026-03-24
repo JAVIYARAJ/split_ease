@@ -97,3 +97,7 @@ class FetchCommonGroups extends ExpenseEvent {
   final List<String> userIds;
   const FetchCommonGroups(this.userIds);
 }
+class NotesChanged extends ExpenseEvent {
+  final String notes;
+  const NotesChanged(this.notes);
+}

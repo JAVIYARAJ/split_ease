@@ -401,21 +401,30 @@ class _GroupDetailAppBar extends StatelessWidget {
       actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined, color: Colors.white),
-            onPressed: () {
+            onPressed: () async {
             final state = context.read<GroupDetailBloc>().state;
             if (state.groupEntity?.id != null) {
-              NavigationUtils.handleResult(
-                context: context,
-                navigation: NavigationService.pushNamed(
-                  AppRoutes.groupSettings,
-                  args: {'groupId': state.groupEntity!.id!},
-                ),
-                refreshType: RefreshType.groupDetail,
-                id: state.groupEntity!.id,
-                onRefresh: () {
-                   context.read<GroupDetailBloc>().add(const LoadGroupDetails(hasChanges: true));
-                },
+              final result = await NavigationService.pushNamed(
+                AppRoutes.groupSettings,
+                args: {'groupId': state.groupEntity!.id!},
               );
+
+              if (!context.mounted) return;
+
+              if (result == 'refresh-and-pop') {
+                // Return true to GroupsPage so it refreshes its list
+                Navigator.pop(context, true);
+              } else {
+                NavigationUtils.handleResult(
+                  context: context,
+                  navigation: Future.value(result),
+                  refreshType: RefreshType.groupDetail,
+                  id: state.groupEntity!.id,
+                  onRefresh: () {
+                    context.read<GroupDetailBloc>().add(const LoadGroupDetails(hasChanges: true));
+                  },
+                );
+              }
             }
           },
         ),

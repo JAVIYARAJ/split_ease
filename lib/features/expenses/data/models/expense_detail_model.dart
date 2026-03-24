@@ -12,12 +12,14 @@ class ExpenseDetailModel extends ExpenseDetailEntity {
     required super.paidBy,
     required super.createdBy,
     required super.splits,
+    super.notes
   });
 
   factory ExpenseDetailModel.fromJson(Map<String, dynamic> json) {
     return ExpenseDetailModel(
       id: json['id'] as String,
       description: json['description'] as String,
+      notes: json['notes'] as String?,
       expenseType: json['expense_type'] as String,
       totalAmount: (json['total_amount'] as num).toDouble(),
       expenseDate: json['expense_date'] as String,

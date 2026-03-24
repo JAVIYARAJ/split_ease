@@ -55,6 +55,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     on<AddExpenseSubmitted>(_onAddExpenseSubmitted);
     on<FetchCommonGroups>(_onFetchCommonGroups);
     on<ValidateNavigation>(_onValidateNavigation);
+    on<NotesChanged>(_onNotesChanged);
   }
 
   /// Logic Moved from UI: Validates basic form requirements before allowing navigation
@@ -233,6 +234,10 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     emit(state.copyWith(splits: event.splits));
   }
 
+  void _onNotesChanged(NotesChanged event, Emitter<ExpenseState> emit) {
+    emit(state.copyWith(notes: event.notes));
+  }
+
   // ── Submission Logic ────────────────────────────────────────────────────────
 
   /// Finalizes the draft and sends it to the backend.
@@ -289,6 +294,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
           expenseId: state.expenseId!,
           groupId: state.group?.id,
           description: state.description.isEmpty ? "No description" : state.description,
+          notes: state.notes,
           totalAmount: double.parse(state.amount),
           paidByUserId: finalPayerId,
           expenseDate: state.date ?? DateTime.now(),
@@ -321,6 +327,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
         final params = CreateExpenseParams(
           groupId: state.group?.id,
           description: state.description.isEmpty ? "No description" : state.description,
+          notes: state.notes,
           totalAmount: double.parse(state.amount),
           paidByUserId: finalPayerId,
           expenseDate: state.date ?? DateTime.now(),
@@ -443,6 +450,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
       groupMembersStatus: ExpenseStatus.success,
       group: () => (expense.group != null && expense.group?.id != null) ? GroupEntity(id: expense.group!.id!, name: expense.group!.name ?? '', groupIcon: expense.group!.groupIcon) : null,
       friend: () => friend,
+      notes: expense.notes ?? '',
       origin: (expense.group != null && expense.group?.id != null) ? ExpenseOrigin.group : ExpenseOrigin.friend,
     ));
 

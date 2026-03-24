@@ -499,6 +499,93 @@ class _AddExpensePageState extends State<AddExpensePage> {
                   ),
 
 
+                  const SizedBox(height: 16),
+
+                  // Notes Section - Refined UI
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: BlocBuilder<ExpenseBloc, ExpenseState>(
+                      builder: (context, state) {
+                        return InkWell(
+                          onTap: () async {
+                            final result = await NavigationService.pushNamed(
+                              AppRoutes.expenseNote,
+                              args: {
+                                'initialNote': state.notes,
+                                'maxWords': 1000,
+                              },
+                            );
+                            if (result != null && result is String) {
+                              if (context.mounted) {
+                                context.read<ExpenseBloc>().add(NotesChanged(result));
+                              }
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppColors.backgroundLightGrey.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.2)),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.02),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    state.notes.isNotEmpty ? Icons.description_rounded : Icons.note_add_outlined,
+                                    size: 20,
+                                    color: state.notes.isNotEmpty ? AppColors.primaryTeal : AppColors.textGrey,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        state.notes.isNotEmpty ? "Notes" : "Add detailed notes",
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.textBlack,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        state.notes.isNotEmpty ? state.notes : "Keep track of receipt details or reminders",
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                          color: state.notes.isNotEmpty ? AppColors.textBlack.withValues(alpha: 0.6) : AppColors.textGrey,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.textGrey.withValues(alpha: 0.5)),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
                   const SizedBox(height: 40),
                 ],
               ),

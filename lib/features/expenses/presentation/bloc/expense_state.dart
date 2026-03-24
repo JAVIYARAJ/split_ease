@@ -20,6 +20,7 @@ class ExpenseState {
   final List<GroupMemberEntity> groupMembers;
   final List<GroupEntity> commonGroups;
   final ExpenseOrigin origin;
+  final String notes;
   final String? errorMessage;
 
 
@@ -40,6 +41,7 @@ class ExpenseState {
     this.groupMembers = const [],
     this.commonGroups = const [],
     this.origin = ExpenseOrigin.global,
+    this.notes = '',
     this.errorMessage,
   });
 
@@ -101,6 +103,7 @@ class ExpenseState {
     List<GroupMemberEntity>? groupMembers,
     List<GroupEntity>? commonGroups,
     ExpenseOrigin? origin,
+    String? notes,
     String? Function()? errorMessage,
   }) {
     return ExpenseState(
@@ -121,6 +124,7 @@ class ExpenseState {
       groupMembers: groupMembers ?? this.groupMembers,
       commonGroups: commonGroups ?? this.commonGroups,
       origin: origin ?? this.origin,
+      notes: notes ?? this.notes,
       errorMessage: errorMessage != null ? errorMessage() : this.errorMessage,
     );
   }

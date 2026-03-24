@@ -7,11 +7,13 @@ class CreateExpenseParams extends Equatable {
   final String paidByUserId;
   final DateTime expenseDate;
   final String splitType;
+  final String? notes;
   final List<Map<String, dynamic>> splits;
 
   const CreateExpenseParams({
     this.groupId,
     required this.description,
+    this.notes,
     required this.totalAmount,
     required this.paidByUserId,
     required this.expenseDate,
@@ -21,13 +23,14 @@ class CreateExpenseParams extends Equatable {
 
   Map<String, dynamic> toJson() {
     return {
-      'group_id': groupId,
-      'description': description,
-      'total_amount': totalAmount,
-      'paid_by': paidByUserId,
-      'expense_date': expenseDate.toIso8601String().split('T')[0], // YYYY-MM-DD
-      'split_type': splitType,
-      'splits': splits,
+      'p_group_id': groupId,
+      'p_description': description,
+      'p_notes': notes,
+      'p_total_amount': totalAmount,
+      'p_paid_by': paidByUserId,
+      'p_expense_date': expenseDate.toIso8601String().split('T')[0], // YYYY-MM-DD
+      'p_split_type': splitType,
+      'p_splits': splits,
     };
   }
 
@@ -35,6 +38,7 @@ class CreateExpenseParams extends Equatable {
   List<Object?> get props => [
         groupId,
         description,
+        notes,
         totalAmount,
         paidByUserId,
         expenseDate,
