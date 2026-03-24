@@ -31,13 +31,15 @@ abstract interface class GroupRemoteDataSource {
 
   Future<List<GroupFriendModel>> getFriendsWithGroupStatus(String groupId);
 
-  Future<void> addMultipleFriendsToGroup(String groupId, List<String> userIds);
+  Future<void> addMultipleFriendsToGroup(String groupId, List<String> userIds, {Map<String, String>? roles});
 
   Future<GroupExpenseHistoryModel> getGroupExpenseHistory(String groupId);
 
   Future<List<GroupMemberModel>> getGroupMembers(String groupId);
   
   Future<List<GroupModel>> getCommonGroupsForUsers(List<String> userIds);
+
+  Future<bool> updateGroupMemberRole(String groupId, String userId, String newRole);
 }
 
 class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
@@ -197,13 +199,18 @@ class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
   }
 
   @override
-  Future<void> addMultipleFriendsToGroup(String groupId, List<String> userIds) async {
+  Future<void> addMultipleFriendsToGroup(String groupId, List<String> userIds, {Map<String, String>? roles}) async {
     try {
+      final membersList = userIds.map((id) => {
+        'user_id': id,
+        'role': roles?[id] ?? 'user',
+      }).toList();
+
       await client.rpc(
         'add_multiple_friends_to_group_rpc',
         params: {
           'p_group_id': groupId,
-          'p_user_ids': userIds,
+          'p_members': membersList,
         },
       );
     } catch (error) {
@@ -245,6 +252,20 @@ class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
         params: {'p_user_ids': userIds},
       );
       return (response as List).map((e) => GroupModel.fromJson(e)).toList();
+    } catch (error) {
+      throw ServerException(message: ErrorMessageUtils.generate(error));
+    }
+  }
+
+  @override
+  Future<bool> updateGroupMemberRole(String groupId, String userId, String newRole) async {
+    try {
+      await client.rpc('update_group_member_role_rpc', params: {
+        'p_group_id': groupId,
+        'p_target_user_id': userId,
+        'p_new_role': newRole,
+      });
+      return true;
     } catch (error) {
       throw ServerException(message: ErrorMessageUtils.generate(error));
     }

@@ -13,6 +13,7 @@ import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_detail_entity.dart';
+import 'package:split_ease/core/config/app_configs.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_bloc.dart';
 
 import 'package:split_ease/features/friends/domain/entities/friend_entity.dart';
@@ -512,7 +513,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                               AppRoutes.expenseNote,
                               args: {
                                 'initialNote': state.notes,
-                                'maxWords': 1000,
+                                'maxCharacters': AppConfigs.maxExpenseNoteCharacters,
                               },
                             );
                             if (result != null && result is String) {
@@ -571,7 +572,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                                           fontWeight: FontWeight.w500,
                                           color: state.notes.isNotEmpty ? AppColors.textBlack.withValues(alpha: 0.6) : AppColors.textGrey,
                                         ),
-                                        maxLines: 1,
+                                        maxLines: 3,
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ],

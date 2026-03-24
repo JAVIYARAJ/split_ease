@@ -49,6 +49,7 @@ import 'package:split_ease/features/groups/domain/usecases/get_group_expense_his
 import 'package:split_ease/features/groups/domain/usecases/get_group_members.dart';
 import 'package:split_ease/features/groups/domain/usecases/get_common_groups_usecase.dart';
 import 'package:split_ease/features/groups/domain/usecases/remove_group_member.dart';
+import 'package:split_ease/features/groups/domain/usecases/update_member_role.dart';
 import 'package:split_ease/features/groups/presentation/bloc/add_members_bloc.dart';
 import 'package:split_ease/features/splash/data/datasources/splash_remote_data_source.dart';
 import 'package:split_ease/features/splash/data/repository/splash_repository_impl.dart';
@@ -224,12 +225,14 @@ void _group() {
   sl.registerFactory(() => LeaveGroup(groupRepository: sl<GroupRepository>()));
   sl.registerFactory(() => RemoveGroupMember(groupRepository: sl<GroupRepository>()));
   sl.registerFactory(() => DeleteGroup(groupRepository: sl<GroupRepository>()));
+  sl.registerFactory(() => UpdateMemberRole(sl<GroupRepository>()));
 
   sl.registerFactory(() => GroupSettingsBloc(
     getGroupDetail: sl<GetGroupDetail>(),
     deleteGroup: sl<DeleteGroup>(),
     leaveGroup: sl<LeaveGroup>(),
     removeGroupMember: sl<RemoveGroupMember>(),
+    updateMemberRole: sl<UpdateMemberRole>(),
     authRepository: sl<AuthRepository>(),
     getGroupExpenseHistory: sl<GetGroupExpenseHistory>(),
     dataRefreshCubit: sl<DataRefreshCubit>(),

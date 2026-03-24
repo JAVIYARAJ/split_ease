@@ -137,9 +137,9 @@ class GroupRepositoryImpl implements GroupRepository {
   }
 
   @override
-  Future<Either<Failure, void>> addMultipleFriendsToGroup(String groupId, List<String> userIds) async {
+  Future<Either<Failure, void>> addMultipleFriendsToGroup(String groupId, List<String> userIds, {Map<String, String>? roles}) async {
     try {
-      await dataSource.addMultipleFriendsToGroup(groupId, userIds);
+      await dataSource.addMultipleFriendsToGroup(groupId, userIds, roles: roles);
       return right(null);
     } on ServerException catch (error) {
       return left(Failure(message: error.message));
@@ -160,6 +160,16 @@ class GroupRepositoryImpl implements GroupRepository {
   Future<Either<Failure, List<GroupEntity>>> getCommonGroupsForUsers(List<String> userIds) async {
     try {
       final response = await dataSource.getCommonGroupsForUsers(userIds);
+      return right(response);
+    } on ServerException catch (error) {
+      return left(Failure(message: error.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> updateGroupMemberRole(String groupId, String userId, String newRole) async {
+    try {
+      final response = await dataSource.updateGroupMemberRole(groupId, userId, newRole);
       return right(response);
     } on ServerException catch (error) {
       return left(Failure(message: error.message));

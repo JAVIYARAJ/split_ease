@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/features/groups/domain/services/group_permission_service.dart';
+import 'package:split_ease/features/groups/presentation/utils/group_settings_logic_helper.dart';
 import '../../domain/entities/group_member_entity.dart';
 
 class GroupMemberOptionsSheet extends StatelessWidget {
@@ -11,8 +12,11 @@ class GroupMemberOptionsSheet extends StatelessWidget {
   final bool isCurrentUser;
   final String? currentUserRole;
   final bool isCreator;
+  final bool isTargetCreator;
   final VoidCallback? onLeaveGroup;
   final VoidCallback? onRemoveFromGroup;
+  final VoidCallback? onPromote;
+  final VoidCallback? onDemote;
   final VoidCallback? onViewSettings;
 
   const GroupMemberOptionsSheet({
@@ -22,8 +26,11 @@ class GroupMemberOptionsSheet extends StatelessWidget {
     required this.isCurrentUser,
     this.currentUserRole,
     this.isCreator = false,
+    this.isTargetCreator = false,
     this.onLeaveGroup,
     this.onRemoveFromGroup,
+    this.onPromote,
+    this.onDemote,
     this.onViewSettings,
   });
 
@@ -48,10 +55,7 @@ class GroupMemberOptionsSheet extends StatelessWidget {
               margin: const EdgeInsets.only(top: 12, bottom: 20),
               width: 40,
               height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.borderGrey.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(2),
-              ),
+              decoration: BoxDecoration(color: AppColors.borderGrey.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(2)),
             ),
           ),
 
@@ -71,18 +75,9 @@ class GroupMemberOptionsSheet extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))],
                     ),
-                    child: AppAvatar(
-                      url: member.avtar,
-                      radius: 28,
-                    ),
+                    child: AppAvatar(url: member.avtar, radius: 28),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -131,32 +126,66 @@ class GroupMemberOptionsSheet extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+
+          // Role Management Options (Accessible to Admins/Creator)
+          if (GroupPermissionService.hasPermission(currentUserRole, GroupPermission.changeRole, isOwner: isCreator)) ...[
+            if (member.role?.toLowerCase() != 'admin')
+              _buildOptionTile(
+                icon: Icons.verified_user_outlined,
+                title: "Promote to admin",
+                subtitle: "Admins can manage group members, settings, and expenses.",
+                onTap: onPromote,
+              ),
+            if (member.role?.toLowerCase() == 'admin' && !isTargetCreator && !isCurrentUser)
+              _buildOptionTile(
+                icon: Icons.person_outline_rounded,
+                title: "Demote to member",
+                subtitle: isCurrentUser
+                    ? "Warning: You will lose administrative access to this group."
+                    : "This member will no longer have administrative permissions.",
+                onTap: onDemote,
+              ),
+          ],
 
           if (isCurrentUser) ...[
             // Current User Options: Leave Group
             _buildOptionTile(
               icon: Icons.logout_rounded,
               title: "Leave group",
-              subtitle: hasDebt 
-                  ? "You can't leave this group because you have outstanding debts with other group members. Please make sure all of your debts have been settled up, and try again."
-                  : null,
-              onTap: hasDebt ? null : onLeaveGroup,
+              subtitle: GroupSettingsLogicHelper.getLeaveGroupWarning(isCreator: isCreator, hasDebt: hasDebt),
+              onTap: GroupSettingsLogicHelper.canLeaveGroup(isCreator: isCreator, hasDebt: hasDebt) ? onLeaveGroup : null,
               isDestructive: true,
-              isDisabled: hasDebt,
+              isDisabled: !GroupSettingsLogicHelper.canLeaveGroup(isCreator: isCreator, hasDebt: hasDebt),
             ),
           ] else ...[
-            // Other Member Options - View Settings is hidden
+            // Other Member Options
             if (GroupPermissionService.hasPermission(currentUserRole, GroupPermission.removeMember, isOwner: isCreator))
               _buildOptionTile(
                 icon: Icons.person_remove_outlined,
                 title: "Remove from group",
-                subtitle: hasDebt
-                    ? "You can't remove this person until their debts are settled up."
-                    : null,
-                onTap: hasDebt ? null : onRemoveFromGroup,
+                subtitle: GroupSettingsLogicHelper.getRemovalWarning(
+                  isTargetCreator: isTargetCreator,
+                  targetBalance: balance,
+                  isCurrentUserCreator: isCreator,
+                  currentUserRole: currentUserRole,
+                  targetRole: member.role,
+                ),
+                onTap: GroupSettingsLogicHelper.canRemoveMember(
+                  isTargetCreator: isTargetCreator,
+                  targetBalance: balance,
+                  isCurrentUserCreator: isCreator,
+                  currentUserRole: currentUserRole,
+                  targetRole: member.role,
+                ) ? onRemoveFromGroup : null,
                 isDestructive: true,
-                isDisabled: hasDebt,
+                isDisabled: !GroupSettingsLogicHelper.canRemoveMember(
+                  isTargetCreator: isTargetCreator,
+                  targetBalance: balance,
+                  isCurrentUserCreator: isCreator,
+                  currentUserRole: currentUserRole,
+                  targetRole: member.role,
+                ),
               ),
           ],
         ],
@@ -173,7 +202,7 @@ class GroupMemberOptionsSheet extends StatelessWidget {
     bool isDisabled = false,
   }) {
     final Color color = isDestructive ? AppColors.errorRed : AppColors.textBlack;
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Container(
@@ -181,18 +210,9 @@ class GroupMemberOptionsSheet extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isDestructive && !isDisabled 
-                ? AppColors.errorRed.withValues(alpha: 0.1) 
-                : AppColors.borderGrey.withValues(alpha: 0.4)
+            color: isDestructive && !isDisabled ? AppColors.errorRed.withValues(alpha: 0.1) : AppColors.borderGrey.withValues(alpha: 0.4),
           ),
-          boxShadow: [
-            if (!isDisabled)
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-          ],
+          boxShadow: [if (!isDisabled) BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: Material(
           color: Colors.transparent,
@@ -207,16 +227,10 @@ class GroupMemberOptionsSheet extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: isDestructive 
-                          ? AppColors.errorRed.withValues(alpha: 0.08)
-                          : AppColors.primary.withValues(alpha: 0.08),
+                      color: isDestructive ? AppColors.errorRed.withValues(alpha: 0.08) : AppColors.primary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Icon(
-                      icon, 
-                      color: color.withValues(alpha: isDisabled ? 0.3 : 1.0), 
-                      size: 24
-                    ),
+                    child: Icon(icon, color: color.withValues(alpha: isDisabled ? 0.3 : 1.0), size: 24),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -250,15 +264,8 @@ class GroupMemberOptionsSheet extends StatelessWidget {
                   if (!isDisabled)
                     Container(
                       padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: AppColors.backgroundLightGrey,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.arrow_forward_ios_rounded, 
-                        color: AppColors.textGrey.withValues(alpha: 0.5), 
-                        size: 12
-                      ),
+                      decoration: BoxDecoration(color: AppColors.backgroundLightGrey, shape: BoxShape.circle),
+                      child: Icon(Icons.arrow_forward_ios_rounded, color: AppColors.textGrey.withValues(alpha: 0.5), size: 12),
                     ),
                 ],
               ),

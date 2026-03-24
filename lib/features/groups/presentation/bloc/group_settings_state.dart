@@ -8,8 +8,10 @@ class GroupSettingsLoading extends GroupSettingsState {
   final GroupEntity? group;
   final String? currentUserId;
   final List<GroupMemberBalanceEntity>? memberBalances;
+  final double? overallBalance;
+  final bool? youAreOwed;
 
-  GroupSettingsLoading({this.group, this.currentUserId, this.memberBalances});
+  GroupSettingsLoading({this.group, this.currentUserId, this.memberBalances, this.overallBalance, this.youAreOwed});
 }
 
 class GroupSettingsLoaded extends GroupSettingsState {
@@ -17,8 +19,16 @@ class GroupSettingsLoaded extends GroupSettingsState {
   final bool hasChanges;
   final String? currentUserId;
   final List<GroupMemberBalanceEntity>? memberBalances;
+  final double? overallBalance;
+  final bool? youAreOwed;
 
-  GroupSettingsLoaded(this.group, {this.hasChanges = false, this.currentUserId, this.memberBalances});
+  GroupSettingsLoaded(this.group, {
+    this.hasChanges = false, 
+    this.currentUserId, 
+    this.memberBalances,
+    this.overallBalance,
+    this.youAreOwed,
+  });
 }
 
 class GroupSettingsError extends GroupSettingsState {
@@ -26,8 +36,16 @@ class GroupSettingsError extends GroupSettingsState {
   final GroupEntity? group;
   final String? currentUserId;
   final List<GroupMemberBalanceEntity>? memberBalances;
+  final double? overallBalance;
+  final bool? youAreOwed;
 
-  GroupSettingsError(this.message, {this.group, this.currentUserId, this.memberBalances});
+  GroupSettingsError(this.message, {
+    this.group, 
+    this.currentUserId, 
+    this.memberBalances,
+    this.overallBalance,
+    this.youAreOwed,
+  });
 }
 
 class GroupActionSuccess extends GroupSettingsState { // For leave/delete

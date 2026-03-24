@@ -28,7 +28,7 @@ class UpdateExpenseParams extends Equatable {
       'p_expense_id': expenseId,
       'p_group_id': groupId,
       'p_description': description,
-      'p_notes': notes,
+      'p_expense_note': notes,
       'p_total_amount': totalAmount,
       'p_paid_by': paidByUserId,
       'p_expense_date': expenseDate.toIso8601String().split('T')[0], // YYYY-MM-DD

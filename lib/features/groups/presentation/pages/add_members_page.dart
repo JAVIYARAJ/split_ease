@@ -284,7 +284,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
               ),
               const SizedBox(width: 16),
 
-              // Name + subtitle
+              // Name + subtitle + Role selection
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -309,6 +309,25 @@ class _AddMembersPageState extends State<AddMembersPage> {
                           color: AppColors.textGrey.withValues(alpha: 0.8),
                         ),
                       ),
+                    ] else if (isSelected) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          _buildRoleChip(
+                            context,
+                            friend.userId,
+                            role: 'user',
+                            isSelected: context.read<AddMembersBloc>().state.selectedRoles[friend.userId] == 'user',
+                          ),
+                          const SizedBox(width: 8),
+                          _buildRoleChip(
+                            context,
+                            friend.userId,
+                            role: 'admin',
+                            isSelected: context.read<AddMembersBloc>().state.selectedRoles[friend.userId] == 'admin',
+                          ),
+                        ],
+                      ),
                     ],
                   ],
                 ),
@@ -316,25 +335,74 @@ class _AddMembersPageState extends State<AddMembersPage> {
 
               // Selection Indicator
               if (!isDisabled)
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isSelected ? AppColors.primaryTeal : Colors.transparent,
-                    border: Border.all(
-                      color: isSelected ? AppColors.primaryTeal : AppColors.borderGrey,
-                      width: 2,
+                GestureDetector(
+                  onTap: () => context.read<AddMembersBloc>().add(ToggleFriendSelection(friend.userId)),
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isSelected ? AppColors.primaryTeal : Colors.transparent,
+                      border: Border.all(
+                        color: isSelected ? AppColors.primaryTeal : AppColors.borderGrey,
+                        width: 2,
+                      ),
                     ),
+                    child: isSelected
+                        ? const Icon(Icons.check, color: Colors.white, size: 16)
+                        : null,
                   ),
-                  child: isSelected
-                      ? const Icon(Icons.check, color: Colors.white, size: 16)
-                      : null,
                 )
               else
                  Icon(Icons.check_circle, color: AppColors.textGrey.withValues(alpha: 0.3), size: 24),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleChip(BuildContext context, String userId, {required String role, required bool isSelected}) {
+    final isUserRole = role == 'user';
+    return InkWell(
+      onTap: () => context.read<AddMembersBloc>().add(ChangeFriendRole(userId, role)),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected 
+              ? (isUserRole ? AppColors.primaryTeal.withValues(alpha: 0.1) : AppColors.errorRed.withValues(alpha: 0.08))
+              : Colors.transparent,
+          border: Border.all(
+            color: isSelected 
+                ? (isUserRole ? AppColors.primaryTeal : AppColors.errorRed.withValues(alpha: 0.3))
+                : AppColors.borderGrey.withValues(alpha: 0.5),
+            width: 1,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isUserRole ? Icons.person_outline : Icons.verified_user_outlined,
+              size: 14,
+              color: isSelected 
+                  ? (isUserRole ? AppColors.primaryTeal : AppColors.errorRed)
+                  : AppColors.textGrey,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              role.toUpperCase(),
+              style: GoogleFonts.outfit(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: isSelected 
+                  ? (isUserRole ? AppColors.primaryTeal : AppColors.errorRed)
+                  : AppColors.textGrey,
+              ),
+            ),
+          ],
         ),
       ),
     );

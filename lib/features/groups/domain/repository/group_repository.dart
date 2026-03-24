@@ -31,11 +31,13 @@ abstract interface class GroupRepository {
 
   Future<Either<Failure, List<GroupFriendEntity>>> getFriendsWithGroupStatus(String groupId);
 
-  Future<Either<Failure, void>> addMultipleFriendsToGroup(String groupId, List<String> userIds);
+  Future<Either<Failure, void>> addMultipleFriendsToGroup(String groupId, List<String> userIds, {Map<String, String>? roles});
 
   Future<Either<Failure, GroupExpenseHistoryEntity>> getGroupExpenseHistory(String groupId);
 
   Future<Either<Failure, List<GroupMemberEntity>>> getGroupMembers(String groupId);
 
   Future<Either<Failure, List<GroupEntity>>> getCommonGroupsForUsers(List<String> userIds);
+
+  Future<Either<Failure, bool>> updateGroupMemberRole(String groupId, String userId, String newRole);
 }

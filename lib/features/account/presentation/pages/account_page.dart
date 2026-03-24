@@ -46,7 +46,7 @@ class AccountPage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 children: [
-                   const SizedBox(height: 20),
+                   const SizedBox(height: 50),
                    
                   // 1. Centered Profile Header
                   Center(

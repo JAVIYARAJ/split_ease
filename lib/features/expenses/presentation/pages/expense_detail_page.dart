@@ -443,12 +443,14 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFFFF176).withValues(alpha: 0.5)),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       child: Text(
         notes,
+        textAlign: TextAlign.start,
         style: GoogleFonts.outfit(
           fontSize: 14,
-          height: 1.5,
+          height: 1.6,
+          letterSpacing: 0.2,
           color: AppColors.textBlack.withValues(alpha: 0.8),
           fontStyle: FontStyle.italic,
         ),

@@ -19,7 +19,7 @@ class ExpenseDetailModel extends ExpenseDetailEntity {
     return ExpenseDetailModel(
       id: json['id'] as String,
       description: json['description'] as String,
-      notes: json['notes'] as String?,
+      notes: (json['expense_note']) as String?,
       expenseType: json['expense_type'] as String,
       totalAmount: (json['total_amount'] as num).toDouble(),
       expenseDate: json['expense_date'] as String,

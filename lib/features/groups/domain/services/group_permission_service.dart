@@ -1,4 +1,4 @@
-enum GroupPermission { editGroup, deleteGroup, inviteMembers, addMembers, exitGroup, removeMember }
+enum GroupPermission { editGroup, deleteGroup, inviteMembers, addMembers, exitGroup, removeMember, changeRole }
 
 class GroupPermissionService {
   static const String roleAdmin = 'admin';
@@ -12,6 +12,7 @@ class GroupPermissionService {
       GroupPermission.addMembers,
       GroupPermission.exitGroup,
       GroupPermission.removeMember,
+      GroupPermission.changeRole,
     },
     roleMember: {
       GroupPermission.inviteMembers,

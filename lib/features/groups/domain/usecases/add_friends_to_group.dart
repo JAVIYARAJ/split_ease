@@ -10,13 +10,22 @@ class AddFriendsToGroup implements UseCase<void, AddFriendsToGroupParam> {
 
   @override
   Future<Either<Failure, void>> call(AddFriendsToGroupParam params) async {
-    return await groupRepository.addMultipleFriendsToGroup(params.groupId, params.userIds);
+    return await groupRepository.addMultipleFriendsToGroup(
+      params.groupId, 
+      params.userIds,
+      roles: params.roles,
+    );
   }
 }
 
 class AddFriendsToGroupParam {
   final String groupId;
   final List<String> userIds;
+  final Map<String, String>? roles;
 
-  AddFriendsToGroupParam({required this.groupId, required this.userIds});
+  AddFriendsToGroupParam({
+    required this.groupId, 
+    required this.userIds,
+    this.roles,
+  });
 }

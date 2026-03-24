@@ -15,6 +15,7 @@ import '../widgets/invite_qr_dialog.dart';
 import '../../domain/services/group_permission_service.dart';
 import '../widgets/group_member_options_sheet.dart';
 import '../../domain/entities/group_member_balance_entity.dart';
+import 'package:split_ease/features/groups/presentation/utils/group_settings_logic_helper.dart';
 // intl import removed
 
 class GroupSettingsPage extends StatefulWidget {
@@ -99,6 +100,12 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                               memberBalances: state is GroupSettingsLoaded
                                   ? state.memberBalances
                                   : (state is GroupSettingsLoading ? state.memberBalances : (state is GroupSettingsError ? state.memberBalances : null)),
+                              overallBalance: state is GroupSettingsLoaded
+                                  ? state.overallBalance
+                                  : (state is GroupSettingsLoading ? state.overallBalance : (state is GroupSettingsError ? state.overallBalance : null)),
+                              youAreOwed: state is GroupSettingsLoaded
+                                  ? state.youAreOwed
+                                  : (state is GroupSettingsLoading ? state.youAreOwed : (state is GroupSettingsError ? state.youAreOwed : null)),
                             ),
                             if (state is GroupSettingsLoading)
                               Container(
@@ -131,38 +138,40 @@ class _GroupSettingsContent extends StatelessWidget {
   final VoidCallback onBack;
   final String? currentUserId;
   final List<GroupMemberBalanceEntity>? memberBalances;
+  final double? overallBalance;
+  final bool? youAreOwed;
 
   const _GroupSettingsContent({
     required this.group,
     required this.onBack,
     this.currentUserId,
     this.memberBalances,
+    this.overallBalance,
+    this.youAreOwed,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Use the passed currentUserId to find the user's role
-    final currentUserMember = group.members?.cast<GroupMemberEntity?>().firstWhere(
-          (m) => m?.userId == currentUserId,
-          orElse: () => null,
+    final logic = GroupSettingsLogicHelper(
+      group: group,
+      currentUserId: currentUserId,
+      memberBalances: memberBalances,
+      overallBalance: overallBalance,
     );
-
-    final String? userRole = currentUserMember?.role;
-    final bool isCreator = group.createdBy?.id == currentUserId;
 
     return CustomScrollView(
       slivers: [
-        _buildSliverAppBar(context, userRole),
+        _buildSliverAppBar(context, logic.userRole),
         SliverList(
           delegate: SliverChildListDelegate([
             
             // General Settings Section
-            if (GroupPermissionService.hasPermission(userRole, GroupPermission.addMembers) || 
-                GroupPermissionService.hasPermission(userRole, GroupPermission.inviteMembers)) ...[
+            if (GroupPermissionService.hasPermission(logic.userRole, GroupPermission.addMembers) || 
+                GroupPermissionService.hasPermission(logic.userRole, GroupPermission.inviteMembers)) ...[
               _buildSectionHeader('General'),
               _buildInsetGroup(
                 children: [
-                  if (GroupPermissionService.hasPermission(userRole, GroupPermission.addMembers)) ...[
+                  if (GroupPermissionService.hasPermission(logic.userRole, GroupPermission.addMembers)) ...[
                     _buildSettingsTile(
                       icon: Icons.person_add_rounded,
                       title: 'Add people to group',
@@ -179,12 +188,12 @@ class _GroupSettingsContent extends StatelessWidget {
                       iconBgColor: AppColors.primary.withValues(alpha: 0.1),
                       iconColor: AppColors.primary,
                     ),
-                    if (GroupPermissionService.hasPermission(userRole, GroupPermission.inviteMembers))
+                    if (GroupPermissionService.hasPermission(logic.userRole, GroupPermission.inviteMembers))
                        _buildDivider(),
                   ],
                   
                   // Invite QR - Permission Check
-                  if (GroupPermissionService.hasPermission(userRole, GroupPermission.inviteMembers)) ...[
+                  if (GroupPermissionService.hasPermission(logic.userRole, GroupPermission.inviteMembers)) ...[
                     _buildSettingsTile(
                       icon: Icons.qr_code_rounded,
                       title: 'Invite by QR',
@@ -215,46 +224,46 @@ class _GroupSettingsContent extends StatelessWidget {
             // Members Section
             _buildSectionHeader('Members'),
             _buildInsetGroup(
-              children: _buildMembersList(context, group, userRole, isCreator),
+              children: _buildMembersList(context, group, logic.userRole, logic.isCreator, logic),
             ),
 
             const SizedBox(height: 24),
             
             // Danger Zone Section
-            if (GroupPermissionService.hasPermission(userRole, GroupPermission.exitGroup) || 
-                GroupPermissionService.hasPermission(userRole, GroupPermission.deleteGroup)) ...[
+            if (GroupPermissionService.hasPermission(logic.userRole, GroupPermission.exitGroup) || 
+                GroupPermissionService.hasPermission(logic.userRole, GroupPermission.deleteGroup)) ...[
               _buildSectionHeader('Danger Zone', color: AppColors.errorRed),
               _buildInsetGroup(
                 children: [
-                   if (GroupPermissionService.hasPermission(userRole, GroupPermission.exitGroup)) ...[
-                    _buildSettingsTile(
-                      icon: Icons.exit_to_app_rounded,
-                      title: 'Leave Group',
-                      onTap: () {
-                        final currentUser = group.members?.cast<GroupMemberEntity?>().firstWhere(
-                              (m) => m?.userId == currentUserId,
-                              orElse: () => null,
-                        );
-                        if (currentUser != null) {
-                          final balanceEntity = (memberBalances ?? []).cast<GroupMemberBalanceEntity?>().firstWhere(
-                                (b) => b?.userId == currentUser.userId,
-                                orElse: () => null,
-                          );
-                          _showMemberOptions(context, currentUser, balanceEntity?.balance ?? 0.0, true, currentUser.role, isCreator);
-                        }
-                      },
-                      iconBgColor: const Color(0xFFFFF3E0),
-                      iconColor: const Color(0xFFFB8C00),
-                    ),
-                    if (GroupPermissionService.hasPermission(userRole, GroupPermission.deleteGroup))
-                      _buildDivider(),
+                  if (GroupPermissionService.hasPermission(logic.userRole, GroupPermission.exitGroup)) ...[
+                     _buildSettingsTile(
+                       icon: Icons.exit_to_app_rounded,
+                       title: 'Leave Group',
+                       isDisabled: logic.blockLeave,
+                       subtitle: logic.leaveSubtitle,
+                       onTap: () {
+                         final currentUser = group.members?.cast<GroupMemberEntity?>().firstWhere(
+                               (m) => m?.userId == currentUserId,
+                               orElse: () => null,
+                         );
+                         if (currentUser != null) {
+                           _showMemberOptions(context, currentUser, logic.currentUserBalance, true, currentUser.role, logic.isCreator);
+                         }
+                       },
+                       iconBgColor: const Color(0xFFFFF3E0),
+                       iconColor: const Color(0xFFFB8C00),
+                     ),
+                     if (GroupPermissionService.hasPermission(logic.userRole, GroupPermission.deleteGroup))
+                       _buildDivider(),
                   ],
 
-                  if (GroupPermissionService.hasPermission(userRole, GroupPermission.deleteGroup))
+                  if (GroupPermissionService.hasPermission(logic.userRole, GroupPermission.deleteGroup))
                     _buildSettingsTile(
                       icon: Icons.delete_outline_rounded,
                       title: 'Delete Group',
                       titleColor: AppColors.errorRed,
+                      isDisabled: logic.blockDelete,
+                      subtitle: logic.deleteSubtitle,
                       onTap: () {
                          _showDeleteConfirmation(context);
                       },
@@ -433,6 +442,17 @@ class _GroupSettingsContent extends StatelessWidget {
                 ],
               ),
             ),
+            if (group.createdBy?.name != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Created by ${group.createdBy?.name??"Unknown"}',
+                style: GoogleFonts.openSans(
+                  fontSize: 12, 
+                  fontWeight: FontWeight.w500, 
+                  color: AppColors.textGrey.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -469,13 +489,11 @@ class _GroupSettingsContent extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildMembersList(BuildContext context, GroupEntity group, String? currentUserRole, bool isCreator) {
+  List<Widget> _buildMembersList(BuildContext context, GroupEntity group, String? currentUserRole, bool isCreator, GroupSettingsLogicHelper logic) {
     if (group.members == null || group.members!.isEmpty) {
       return [const SizedBox.shrink()];
     }
 
-    final balances = memberBalances ?? [];
-    
     // Sort members: Current user first
     final List<GroupMemberEntity> sortedMembers = List.from(group.members!);
     sortedMembers.sort((a, b) {
@@ -486,16 +504,21 @@ class _GroupSettingsContent extends StatelessWidget {
 
     return List.generate(sortedMembers.length, (index) {
       final member = sortedMembers[index];
-      // Find balance for this member
-      final balanceEntity = balances.cast<GroupMemberBalanceEntity?>().firstWhere(
-            (b) => b?.userId == member.userId,
-            orElse: () => null,
-      );
-      final double balance = balanceEntity?.balance ?? 0.0;
       final bool isCurrentUser = member.userId == currentUserId;
       
+      // Use helper to determine correct balance for this member
+      final balanceEntity = (memberBalances ?? []).cast<GroupMemberBalanceEntity?>().firstWhere(
+        (b) => b?.userId == member.userId,
+        orElse: () => null,
+      );
+      final double balance = isCurrentUser 
+          ? logic.currentUserBalance 
+          : (balanceEntity?.balance ?? 0.0);
+      
+      final bool isTargetCreator = member.userId == group.createdBy?.id;
+      
       final bool isFirst = index == 0;
-      final bool isLast = index == group.members!.length - 1;
+      final bool isLast = index == sortedMembers.length - 1;
 
       return Column(children: [
         _buildMemberTile(context, member, balance, isCurrentUser, isFirst, isLast, currentUserRole, isCreator), 
@@ -511,11 +534,17 @@ class _GroupSettingsContent extends StatelessWidget {
     Color? titleColor,
     Color? iconBgColor,
     Color? iconColor,
+    String? subtitle,
+    bool isDisabled = false,
   }) {
+    final activeTitleColor = isDisabled ? AppColors.textGrey.withValues(alpha: 0.4) : (titleColor ?? AppColors.textBlack);
+    final activeIconColor = isDisabled ? AppColors.iconGrey.withValues(alpha: 0.4) : (iconColor ?? AppColors.primary);
+    final activeIconBgColor = isDisabled ? AppColors.backgroundLightGrey : (iconBgColor ?? AppColors.primary.withValues(alpha: 0.1));
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
+        onTap: isDisabled ? null : onTap,
         borderRadius: BorderRadius.circular(16), // Fits strictly if first/last
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -524,19 +553,40 @@ class _GroupSettingsContent extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: iconBgColor ?? AppColors.primary.withValues(alpha: 0.1), 
+                  color: activeIconBgColor, 
                   borderRadius: BorderRadius.circular(10)
                 ),
-                child: Icon(icon, color: iconColor ?? AppColors.primary, size: 20),
+                child: Icon(icon, color: activeIconColor, size: 20),
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: Text(
-                  title,
-                  style: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.w600, color: titleColor ?? AppColors.textBlack),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.openSans(
+                        fontSize: 16, 
+                        fontWeight: FontWeight.w600, 
+                        color: activeTitleColor,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: GoogleFonts.openSans(
+                          fontSize: 12, 
+                          color: AppColors.textGrey.withValues(alpha: 0.6),
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-              Icon(Icons.arrow_forward_ios_rounded, color: AppColors.borderGrey.withValues(alpha: 0.5), size: 16),
+              if (!isDisabled)
+                Icon(Icons.arrow_forward_ios_rounded, color: AppColors.borderGrey.withValues(alpha: 0.5), size: 16),
             ],
           ),
         ),
@@ -651,6 +701,7 @@ class _GroupSettingsContent extends StatelessWidget {
         isCurrentUser: isCurrentUser,
         currentUserRole: currentUserRole,
         isCreator: isCreator,
+        isTargetCreator: member.userId == group.createdBy?.id,
         onLeaveGroup: () {
           Navigator.pop(ctx);
           context.read<GroupSettingsBloc>().add(LeaveGroupEvent(group.id!));
@@ -658,6 +709,22 @@ class _GroupSettingsContent extends StatelessWidget {
         onRemoveFromGroup: () {
           Navigator.pop(ctx);
           context.read<GroupSettingsBloc>().add(RemoveMemberEvent(group.id!, member.userId!));
+        },
+        onPromote: () {
+          Navigator.pop(ctx);
+          context.read<GroupSettingsBloc>().add(UpdateMemberRoleEvent(
+            groupId: group.id!,
+            userId: member.userId!,
+            newRole: 'admin',
+          ));
+        },
+        onDemote: () {
+          Navigator.pop(ctx);
+          context.read<GroupSettingsBloc>().add(UpdateMemberRoleEvent(
+            groupId: group.id!,
+            userId: member.userId!,
+            newRole: 'user',
+          ));
         },
         onViewSettings: () {
           Navigator.pop(ctx);

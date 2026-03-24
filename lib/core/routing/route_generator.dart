@@ -181,7 +181,7 @@ class RouteGenerator {
         return MaterialPageRoute(
           builder: (_) => ExpenseNotePage(
             initialNote: args['initialNote'] ?? '',
-            maxWords: args['maxWords'] ?? 1000,
+            maxCharacters: args['maxCharacters'] ?? 1000,
           ),
           settings: RouteSettings(arguments: settings.arguments, name: settings.name),
         );
