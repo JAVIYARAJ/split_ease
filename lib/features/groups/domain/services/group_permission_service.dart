@@ -1,13 +1,22 @@
 enum GroupPermission { editGroup, deleteGroup, inviteMembers, addMembers, exitGroup, removeMember, changeRole }
 
 class GroupPermissionService {
+  static const String roleOwner = 'owner';
   static const String roleAdmin = 'admin';
   static const String roleMember = 'user';
 
   static final Map<String, Set<GroupPermission>> _permissions = {
-    roleAdmin: {
+    roleOwner: {
       GroupPermission.editGroup,
       GroupPermission.deleteGroup,
+      GroupPermission.inviteMembers,
+      GroupPermission.addMembers,
+      GroupPermission.exitGroup,
+      GroupPermission.removeMember,
+      GroupPermission.changeRole,
+    },
+    roleAdmin: {
+      GroupPermission.editGroup,
       GroupPermission.inviteMembers,
       GroupPermission.addMembers,
       GroupPermission.exitGroup,

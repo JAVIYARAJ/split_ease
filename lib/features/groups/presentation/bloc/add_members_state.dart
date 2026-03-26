@@ -7,7 +7,7 @@ enum AddMembersSubmitStatus { initial, submitting, success, failure }
 class AddMembersState {
   final AddMembersStatus status;
   final List<GroupFriendEntity> friends;
-  final Map<String, String> selectedRoles; // userId -> role ('user' or 'admin')
+  final Map<String, String> selectedRoles; // userId -> role ('user' or 'owner')
   final AddMembersSubmitStatus submitStatus;
   final String errorMessage;
   final String searchQuery;

@@ -70,11 +70,11 @@ class _GroupsPageState extends State<GroupsPage> {
                         AppRoutes.addMembers,
                         args: {'groupId': group.id},
                       ).then((value) {
-                        if (value == true) {
+                        if (value == true && mounted) {
                           context.read<GroupsBloc>().add(LoadGroups());
                         }
                       });
-                    }else{
+                    } else if (mounted) {
                       NavigationUtils.handleResult(
                         context: context,
                         navigation: NavigationService.pushNamed(

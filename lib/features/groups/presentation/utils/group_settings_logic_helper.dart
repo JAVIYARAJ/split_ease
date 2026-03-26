@@ -24,7 +24,7 @@ class GroupSettingsLogicHelper {
         orElse: () => null,
       );
 
-  /// The role (e.g., 'admin', 'user') of the current user within this group.
+  /// The role (e.g., 'owner', 'user') of the current user within this group.
   late final String? userRole = currentUserMember?.role;
 
   /// Whether the current user is the original creator of this group.
@@ -104,12 +104,18 @@ class GroupSettingsLogicHelper {
     // 3. The Group Creator can remove anyone else (as long as balance is 0).
     if (isCurrentUserCreator) return true;
 
-    // 4. Admins can remove regular users only.
-    if (currentUserRole == GroupPermissionService.roleAdmin && targetRole == GroupPermissionService.roleMember) {
+    // 4. Owners can remove anyone else (Admins or Members).
+    if (currentUserRole == GroupPermissionService.roleOwner) {
+      return true;
+    }
+    
+    // 5. Admins can remove regular members or other admins.
+    if (currentUserRole == GroupPermissionService.roleAdmin && 
+       (targetRole == GroupPermissionService.roleMember || targetRole == GroupPermissionService.roleAdmin)) {
       return true;
     }
 
-    // 5. Regular users cannot remove anyone.
+    // 6. Regular users cannot remove anyone.
     return false;
   }
 
@@ -124,11 +130,15 @@ class GroupSettingsLogicHelper {
     if (isTargetCreator) return "The group creator cannot be removed.";
     if (targetBalance.abs() > 0.01) return "Members with unsettled balances cannot be removed.";
     
-    // Check hierarchy
-    if (!isCurrentUserCreator && 
-        currentUserRole == GroupPermissionService.roleAdmin && 
-        targetRole == GroupPermissionService.roleAdmin) {
-      return "Only the group creator can remove another administrator.";
+    // Check hierarchy for removal warnings
+    if (!isCurrentUserCreator) {
+       // Admins can remove Users/Admins, but NOT Owners.
+       if (currentUserRole == GroupPermissionService.roleAdmin && targetRole == GroupPermissionService.roleOwner) {
+         return "Admins cannot remove a group owner.";
+       }
+       if (currentUserRole == GroupPermissionService.roleOwner && targetRole == GroupPermissionService.roleOwner) {
+         return "Only the group creator can remove another owner.";
+       }
     }
     
     return null;

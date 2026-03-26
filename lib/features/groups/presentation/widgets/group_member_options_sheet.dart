@@ -15,8 +15,7 @@ class GroupMemberOptionsSheet extends StatelessWidget {
   final bool isTargetCreator;
   final VoidCallback? onLeaveGroup;
   final VoidCallback? onRemoveFromGroup;
-  final VoidCallback? onPromote;
-  final VoidCallback? onDemote;
+  final void Function(String role)? onUpdateRole;
   final VoidCallback? onViewSettings;
 
   const GroupMemberOptionsSheet({
@@ -29,8 +28,7 @@ class GroupMemberOptionsSheet extends StatelessWidget {
     this.isTargetCreator = false,
     this.onLeaveGroup,
     this.onRemoveFromGroup,
-    this.onPromote,
-    this.onDemote,
+    this.onUpdateRole,
     this.onViewSettings,
   });
 
@@ -38,7 +36,6 @@ class GroupMemberOptionsSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool hasDebt = balance.abs() > 0.01;
     final bool isOwed = balance > 0.01;
-    final bool owes = balance < -0.01;
 
     return Container(
       padding: const EdgeInsets.only(bottom: 40),
@@ -128,24 +125,9 @@ class GroupMemberOptionsSheet extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // Role Management Options (Accessible to Admins/Creator)
-          if (GroupPermissionService.hasPermission(currentUserRole, GroupPermission.changeRole, isOwner: isCreator)) ...[
-            if (member.role?.toLowerCase() != 'admin')
-              _buildOptionTile(
-                icon: Icons.verified_user_outlined,
-                title: "Promote to admin",
-                subtitle: "Admins can manage group members, settings, and expenses.",
-                onTap: onPromote,
-              ),
-            if (member.role?.toLowerCase() == 'admin' && !isTargetCreator && !isCurrentUser)
-              _buildOptionTile(
-                icon: Icons.person_outline_rounded,
-                title: "Demote to member",
-                subtitle: isCurrentUser
-                    ? "Warning: You will lose administrative access to this group."
-                    : "This member will no longer have administrative permissions.",
-                onTap: onDemote,
-              ),
+          // --- ROLE MANAGEMENT (Hierarchy dependent) ---
+          if (GroupPermissionService.hasPermission(currentUserRole, GroupPermission.changeRole, isOwner: isCreator) && (isCreator || currentUserRole == GroupPermissionService.roleOwner || currentUserRole == GroupPermissionService.roleAdmin)) ...[
+             _buildRoleSelectionSection(context),
           ],
 
           if (isCurrentUser) ...[
@@ -189,6 +171,187 @@ class GroupMemberOptionsSheet extends StatelessWidget {
               ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildRoleSelectionSection(BuildContext context) {
+    final bool isViewerOwner = isCreator || currentUserRole == GroupPermissionService.roleOwner;
+    final bool isTargetOwner = member.role?.toLowerCase() == GroupPermissionService.roleOwner;
+    final bool isTargetAdmin = member.role?.toLowerCase() == GroupPermissionService.roleAdmin;
+
+    // Safety: Creators cannot be changed at all
+    if (isTargetCreator) return const SizedBox.shrink();
+
+    // 1. Hierarchy Check: Determine if viewer can manage this target
+    bool canManageTarget = false;
+    if (isViewerOwner && !isTargetOwner) {
+       canManageTarget = true; 
+    } else if (currentUserRole == GroupPermissionService.roleAdmin && !isTargetOwner && !isTargetAdmin) {
+       canManageTarget = true; 
+    }
+
+    if (!canManageTarget && !isTargetOwner) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionHeader("Role Management"),
+          const SizedBox(height: 16),
+          if (isTargetOwner) ...[
+             // Special display for Owners: No direct role switching
+             Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppColors.primary.withValues(alpha: 0.1), AppColors.primary.withValues(alpha: 0.05)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                    child: const Icon(Icons.verified_user_rounded, color: AppColors.primary, size: 24),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Primary Owner", style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 16, color: AppColors.textBlack)),
+                        const SizedBox(height: 2),
+                        Text("This role is protected. Use 'Ownership Transfer' to change.", 
+                          style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            // Normal Role selection cards
+            Row(
+              children: [
+                Expanded(
+                  child: _buildRoleCard(
+                    context,
+                    role: GroupPermissionService.roleMember,
+                    label: "User",
+                    description: "Add expenses & invite",
+                    icon: Icons.person_outline_rounded,
+                    isSelected: member.role?.toLowerCase() == GroupPermissionService.roleMember,
+                    onTap: () => onUpdateRole?.call(GroupPermissionService.roleMember),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildRoleCard(
+                    context,
+                    role: GroupPermissionService.roleAdmin,
+                    label: "Admin",
+                    description: "Manage group & roles",
+                    icon: Icons.shield_outlined,
+                    isSelected: member.role?.toLowerCase() == GroupPermissionService.roleAdmin,
+                    onTap: () => onUpdateRole?.call(GroupPermissionService.roleAdmin),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoleCard(
+    BuildContext context, {
+    required String role,
+    required String label,
+    required String description,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final Color activeColor = role == GroupPermissionService.roleAdmin ? Colors.blue : AppColors.primaryTeal;
+
+    return InkWell(
+      onTap: isSelected ? null : onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? activeColor.withValues(alpha: 0.08) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? activeColor : AppColors.borderGrey.withValues(alpha: 0.3),
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected ? [] : [
+             BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isSelected ? activeColor : AppColors.backgroundLightGrey,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: isSelected ? Colors.white : AppColors.textGrey, size: 18),
+                ),
+                if (isSelected) 
+                  const Icon(Icons.check_circle, color: AppColors.primaryTeal, size: 20),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              label,
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+                color: isSelected ? activeColor : AppColors.textBlack,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              description,
+              style: GoogleFonts.outfit(
+                fontSize: 12,
+                color: AppColors.textGrey,
+                fontWeight: FontWeight.w500,
+                height: 1.2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Text(
+      title.toUpperCase(),
+      style: GoogleFonts.outfit(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: AppColors.textGrey,
+        letterSpacing: 1.0,
       ),
     );
   }

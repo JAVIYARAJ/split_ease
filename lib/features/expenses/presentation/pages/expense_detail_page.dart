@@ -104,8 +104,8 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                   builder: (context, state) {
                     if (state is! ExpenseDetailLoaded) return const SizedBox.shrink();
 
-                    // Only show edit/delete if the current user is the one who added the expense
-                    if (state.currentUserId != state.expenseDetail.createdBy.id) {
+                    // Only show edit/delete if the user has permissions (creator or owner/admin of group)
+                    if (!state.canManageExpense) {
                       return const SizedBox.shrink();
                     }
 

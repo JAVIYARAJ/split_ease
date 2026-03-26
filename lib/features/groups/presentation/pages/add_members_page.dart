@@ -363,7 +363,14 @@ class _AddMembersPageState extends State<AddMembersPage> {
   }
 
   Widget _buildRoleChip(BuildContext context, String userId, {required String role, required bool isSelected}) {
-    final isUserRole = role == 'user';
+    final Color roleColor = role == 'user' 
+        ? AppColors.primaryTeal 
+        : (role == 'admin' ? Colors.blue : AppColors.errorRed);
+
+    final IconData icon = role == 'user' 
+        ? Icons.person_outline 
+        : (role == 'admin' ? Icons.shield_outlined : Icons.verified_user_outlined);
+
     return InkWell(
       onTap: () => context.read<AddMembersBloc>().add(ChangeFriendRole(userId, role)),
       borderRadius: BorderRadius.circular(12),
@@ -371,11 +378,11 @@ class _AddMembersPageState extends State<AddMembersPage> {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           color: isSelected 
-              ? (isUserRole ? AppColors.primaryTeal.withValues(alpha: 0.1) : AppColors.errorRed.withValues(alpha: 0.08))
+              ? roleColor.withValues(alpha: 0.1)
               : Colors.transparent,
           border: Border.all(
             color: isSelected 
-                ? (isUserRole ? AppColors.primaryTeal : AppColors.errorRed.withValues(alpha: 0.3))
+                ? roleColor
                 : AppColors.borderGrey.withValues(alpha: 0.5),
             width: 1,
           ),
@@ -385,11 +392,9 @@ class _AddMembersPageState extends State<AddMembersPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              isUserRole ? Icons.person_outline : Icons.verified_user_outlined,
+              icon,
               size: 14,
-              color: isSelected 
-                  ? (isUserRole ? AppColors.primaryTeal : AppColors.errorRed)
-                  : AppColors.textGrey,
+              color: isSelected ? roleColor : AppColors.textGrey,
             ),
             const SizedBox(width: 4),
             Text(
@@ -397,9 +402,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
               style: GoogleFonts.outfit(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
-                color: isSelected 
-                  ? (isUserRole ? AppColors.primaryTeal : AppColors.errorRed)
-                  : AppColors.textGrey,
+                color: isSelected ? roleColor : AppColors.textGrey,
               ),
             ),
           ],

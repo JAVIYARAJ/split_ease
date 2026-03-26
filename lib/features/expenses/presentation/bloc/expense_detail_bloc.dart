@@ -5,6 +5,8 @@ import 'package:split_ease/features/expenses/domain/usecases/delete_expense_usec
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_event.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_state.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
+import 'package:split_ease/features/groups/domain/entities/group_member_entity.dart';
+import 'package:split_ease/features/groups/domain/usecases/get_group_members.dart';
 
 class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
   /// Logic Coordinator for the Expense Detail Page.
@@ -13,10 +15,11 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
   /// including participants, summaries, and deleting the expense.
   final GetExpenseDetailUseCase _getExpenseDetailUseCase;
   final DeleteExpenseUseCase _deleteExpenseUseCase;
+  final GetGroupMembers _getGroupMembers;
   final AppUserCubit _appUserCubit;
   final DataRefreshCubit _dataRefreshCubit;
 
-  ExpenseDetailBloc(this._getExpenseDetailUseCase, this._deleteExpenseUseCase, this._appUserCubit, this._dataRefreshCubit) : super(ExpenseDetailInitial()) {
+  ExpenseDetailBloc(this._getExpenseDetailUseCase, this._deleteExpenseUseCase, this._getGroupMembers, this._appUserCubit, this._dataRefreshCubit) : super(ExpenseDetailInitial()) {
     on<FetchExpenseDetailEvent>(_onFetchExpenseDetail);
     on<DeleteExpenseEvent>(_onDeleteExpense);
     on<MarkExpenseAsChanged>(_onMarkExpenseAsChanged);
@@ -46,11 +49,29 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
     if (appUserState is AppUserLoggedIn) {
       currentUserId = appUserState.user.id;
     }
-    
-    result.fold(
-      (failure) => emit(ExpenseDetailError(failure.message, hasChanges: currentHasChanges)),
-      (expenseDetail) => emit(ExpenseDetailLoaded(expenseDetail, currentUserId, hasChanges: currentHasChanges)),
-    );
+
+    if (result.isLeft()) {
+      final failure = result.fold((l) => l, (r) => throw Exception("Should not happen"));
+      emit(ExpenseDetailError(failure.message, hasChanges: currentHasChanges));
+      return;
+    }
+
+    final expenseDetail = result.fold((l) => throw Exception("Should not happen"), (r) => r);
+    String? role;
+    if (expenseDetail.group?.id != null) {
+      final membersResult = await _getGroupMembers(expenseDetail.group!.id!);
+      membersResult.fold(
+        (_) => null,
+        (members) {
+          final me = members.cast<GroupMemberEntity?>().firstWhere(
+            (m) => m?.userId == currentUserId,
+            orElse: () => null,
+          );
+          role = me?.role;
+        },
+      );
+    }
+    emit(ExpenseDetailLoaded(expenseDetail, currentUserId, currentUserRole: role, hasChanges: currentHasChanges));
   }
 
   Future<void> _onDeleteExpense(
@@ -59,7 +80,7 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
   ) async {
     final currentState = state;
     if (currentState is ExpenseDetailLoaded) {
-      if (currentState.currentUserId != currentState.expenseDetail.createdBy.id) {
+      if (!currentState.canManageExpense) {
         emit(const ExpenseDeleteError("You do not have permission to delete this expense."));
         return;
       }

@@ -515,7 +515,7 @@ class _GroupSettingsContent extends StatelessWidget {
           ? logic.currentUserBalance 
           : (balanceEntity?.balance ?? 0.0);
       
-      final bool isTargetCreator = member.userId == group.createdBy?.id;
+      // final bool isTargetCreator = member.userId == group.createdBy?.id; // Removed unused variable
       
       final bool isFirst = index == 0;
       final bool isLast = index == sortedMembers.length - 1;
@@ -597,7 +597,7 @@ class _GroupSettingsContent extends StatelessWidget {
   Widget _buildMemberTile(BuildContext context, GroupMemberEntity member, double balance, bool isCurrentUser, bool isFirst, bool isLast, String? currentUserRole, bool isCreator) {
     final bool isOwed = balance > 0.01;
     final bool owes = balance < -0.01;
-    
+
     final radius = BorderRadius.vertical(
       top: isFirst ? const Radius.circular(16) : Radius.zero,
       bottom: isLast ? const Radius.circular(16) : Radius.zero,
@@ -637,14 +637,21 @@ class _GroupSettingsContent extends StatelessWidget {
                              const SizedBox(width: 6),
                              Text("(you)", style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w500)),
                         ],
-                        if (member.role?.toLowerCase() == 'admin') ...[
+                        if (member.role?.toLowerCase() == 'owner' || member.role?.toLowerCase() == 'admin') ...[
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+                            decoration: BoxDecoration(
+                              color: (member.role?.toLowerCase() == 'owner' ? AppColors.primary : Colors.blue).withValues(alpha: 0.1), 
+                              borderRadius: BorderRadius.circular(6)
+                            ),
                             child: Text(
-                              'ADMIN',
-                              style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.primary),
+                              member.role!.toUpperCase(),
+                              style: GoogleFonts.outfit(
+                                fontSize: 10, 
+                                fontWeight: FontWeight.w800, 
+                                color: member.role?.toLowerCase() == 'owner' ? AppColors.primary : Colors.blue
+                              ),
                             ),
                           ),
                         ],
@@ -710,20 +717,12 @@ class _GroupSettingsContent extends StatelessWidget {
           Navigator.pop(ctx);
           context.read<GroupSettingsBloc>().add(RemoveMemberEvent(group.id!, member.userId!));
         },
-        onPromote: () {
+        onUpdateRole: (role) {
           Navigator.pop(ctx);
           context.read<GroupSettingsBloc>().add(UpdateMemberRoleEvent(
             groupId: group.id!,
             userId: member.userId!,
-            newRole: 'admin',
-          ));
-        },
-        onDemote: () {
-          Navigator.pop(ctx);
-          context.read<GroupSettingsBloc>().add(UpdateMemberRoleEvent(
-            groupId: group.id!,
-            userId: member.userId!,
-            newRole: 'user',
+            newRole: role,
           ));
         },
         onViewSettings: () {

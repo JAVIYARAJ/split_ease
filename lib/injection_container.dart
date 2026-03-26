@@ -179,7 +179,7 @@ void _expense() {
         dataRefreshCubit: sl(),
       ));
 
-  sl.registerFactory(() => ExpenseDetailBloc(sl<GetExpenseDetailUseCase>(), sl<DeleteExpenseUseCase>(), sl<AppUserCubit>(), sl<DataRefreshCubit>()));
+  sl.registerFactory(() => ExpenseDetailBloc(sl<GetExpenseDetailUseCase>(), sl<DeleteExpenseUseCase>(), sl<GetGroupMembers>(), sl<AppUserCubit>(), sl<DataRefreshCubit>()));
   sl.registerFactory(() => PayerBloc());
   sl.registerFactory(() => SplitBloc());
   sl.registerFactory(() => DateBloc());

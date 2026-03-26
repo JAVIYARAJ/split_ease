@@ -17,22 +17,23 @@ Future<GroupEntity?> showGroupPickerSheet(BuildContext context) {
 /// Called from AddExpensePage (GroupsBloc is NOT in the tree).
 /// Accepts a pre-fetched list of groups directly.
 Future<GroupEntity?> showGroupPickerFromList(BuildContext context, List<GroupEntity> groups) {
-  return _openSheet(context, groups);
+  return _openSheet(context, groups,isNonGroupVisible: true);
 }
 
-Future<GroupEntity?> _openSheet(BuildContext context, List<GroupEntity> groups) {
+Future<GroupEntity?> _openSheet(BuildContext context, List<GroupEntity> groups, {bool isNonGroupVisible = false}) {
   return showModalBottomSheet<GroupEntity>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => _GroupPickerSheet(groups: groups),
+    builder: (_) => _GroupPickerSheet(groups: groups,isNonGroupVisible: isNonGroupVisible,),
   );
 }
 
 class _GroupPickerSheet extends StatelessWidget {
   final List<GroupEntity> groups;
+  final bool isNonGroupVisible;
 
-  const _GroupPickerSheet({required this.groups});
+  const _GroupPickerSheet({required this.groups,this.isNonGroupVisible=false});
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +81,9 @@ class _GroupPickerSheet extends StatelessWidget {
                     separatorBuilder: (_, __) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
                       if (index == 0) {
+                        if(!isNonGroupVisible){
+                          return SizedBox.shrink();
+                        }
                         return _NonGroupTile(onTap: () => Navigator.pop(context, null));
                       }
                       final group = groups[index - 1];
