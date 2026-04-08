@@ -38,6 +38,9 @@ import '../../features/account/presentation/pages/user_qr_page.dart';
 import '../../features/expenses/presentation/pages/expense_pdf_preview_page.dart';
 import '../../features/expenses/presentation/pages/expense_note_page.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
+import '../../features/expenses/presentation/pages/settle_up_selection_page.dart';
+import '../../features/expenses/presentation/pages/record_payment_page.dart';
+import '../../features/expenses/presentation/bloc/settle_up/settle_up_cubit.dart';
 
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -182,6 +185,19 @@ class RouteGenerator {
           builder: (_) => ExpenseNotePage(
             initialNote: args['initialNote'] ?? '',
             maxCharacters: args['maxCharacters'] ?? 1000,
+          ),
+          settings: RouteSettings(arguments: settings.arguments, name: settings.name),
+        );
+      case AppRoutes.settleUpSelection:
+        return MaterialPageRoute(
+          builder: (_) => const SettleUpSelectionPage(),
+          settings: RouteSettings(arguments: settings.arguments, name: settings.name),
+        );
+      case AppRoutes.recordPayment:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => sl<SettleUpCubit>(),
+            child: const RecordPaymentPage(),
           ),
           settings: RouteSettings(arguments: settings.arguments, name: settings.name),
         );

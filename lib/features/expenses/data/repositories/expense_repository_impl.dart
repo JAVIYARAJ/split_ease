@@ -73,4 +73,38 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       return Left(Failure(message: e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> addExpenseComment({required String expenseId, required String comment}) async {
+    try {
+      await remoteDataSource.addExpenseComment(expenseId: expenseId, comment: comment);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(Failure(message: e.message));
+    } catch (e) {
+      return Left(Failure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> settleUp({
+    required String toUserId,
+    required double amount,
+    String? groupId,
+    String? note,
+  }) async {
+    try {
+      await remoteDataSource.settleUp(
+        toUserId: toUserId,
+        amount: amount,
+        groupId: groupId,
+        note: note,
+      );
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(Failure(message: e.message));
+    } catch (e) {
+      return Left(Failure(message: e.toString()));
+    }
+  }
 }

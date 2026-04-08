@@ -75,6 +75,9 @@ import 'features/expenses/data/repositories/expense_repository_impl.dart';
 import 'features/expenses/domain/repositories/expense_repository.dart';
 import 'features/expenses/domain/usecases/add_expense_usecase.dart';
 import 'package:split_ease/features/expenses/domain/usecases/update_expense.dart';
+import 'package:split_ease/features/expenses/domain/usecases/add_expense_comment_usecase.dart';
+import 'package:split_ease/features/expenses/domain/usecases/settle_up_usecase.dart';
+import 'package:split_ease/features/expenses/presentation/bloc/settle_up/settle_up_cubit.dart';
 
 import 'package:split_ease/features/expenses/domain/usecases/get_expense_detail_usecase.dart';
 import 'package:split_ease/features/expenses/domain/usecases/get_expense_participants_usecase.dart';
@@ -161,6 +164,8 @@ void _expense() {
 
   sl.registerLazySingleton(() => DeleteExpenseUseCase(sl()));
   sl.registerLazySingleton(() => GetExpenseParticipantsUsecase(repository: sl()));
+  sl.registerLazySingleton(() => AddExpenseCommentUseCase(sl()));
+  sl.registerLazySingleton(() => SettleUpUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<ExpenseRepository>(() => ExpenseRepositoryImpl(remoteDataSource: sl()));
@@ -179,7 +184,19 @@ void _expense() {
         dataRefreshCubit: sl(),
       ));
 
-  sl.registerFactory(() => ExpenseDetailBloc(sl<GetExpenseDetailUseCase>(), sl<DeleteExpenseUseCase>(), sl<GetGroupMembers>(), sl<AppUserCubit>(), sl<DataRefreshCubit>()));
+  sl.registerFactory(() => SettleUpCubit(
+        settleUpUseCase: sl(),
+        getCommonGroupsUseCase: sl(),
+        dataRefreshCubit: sl(),
+      ));
+  sl.registerFactory(() => ExpenseDetailBloc(
+        sl<GetExpenseDetailUseCase>(),
+        sl<DeleteExpenseUseCase>(),
+        sl<GetGroupMembers>(),
+        sl<AddExpenseCommentUseCase>(),
+        sl<AppUserCubit>(),
+        sl<DataRefreshCubit>(),
+      ));
   sl.registerFactory(() => PayerBloc());
   sl.registerFactory(() => SplitBloc());
   sl.registerFactory(() => DateBloc());

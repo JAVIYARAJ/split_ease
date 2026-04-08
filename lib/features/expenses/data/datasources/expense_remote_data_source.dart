@@ -13,6 +13,13 @@ abstract class ExpenseRemoteDataSource {
   Future<ExpenseDetailModel> getExpenseDetail(String expenseId);
   Future<void> deleteExpense(String expenseId);
   Future<List<ExpenseUserModel>> getExpenseParticipants({String? groupId, String? friendUserId});
+  Future<void> addExpenseComment({required String expenseId, required String comment});
+  Future<void> settleUp({
+    required String toUserId,
+    required double amount,
+    String? groupId,
+    String? note,
+  });
 }
 
 
@@ -93,6 +100,43 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
       return (response as List)
           .map((e) => ExpenseUserModel.fromJson(e as Map<String, dynamic>))
           .toList();
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+
+  @override
+  Future<void> addExpenseComment({required String expenseId, required String comment}) async {
+    try {
+      await client.rpc(
+        'add_expense_comment_rpc',
+        params: {
+          'p_expense_id': expenseId,
+          'p_comment': comment,
+        },
+      );
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+
+  @override
+  Future<void> settleUp({
+    required String toUserId,
+    required double amount,
+    String? groupId,
+    String? note,
+  }) async {
+    try {
+      await client.rpc(
+        'settle_up_rpc',
+        params: {
+          'p_to_user_id': toUserId,
+          'p_amount': amount,
+          'p_group_id': groupId,
+          'p_note': note,
+        },
+      );
     } catch (e) {
       throw ServerException(message: e.toString());
     }

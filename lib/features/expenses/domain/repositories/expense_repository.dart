@@ -10,5 +10,12 @@ abstract class ExpenseRepository {
   Future<Either<Failure, ExpenseDetailEntity>> getExpenseDetail(String expenseId);
   Future<Either<Failure, void>> deleteExpense(String expenseId);
   Future<Either<Failure, List<ExpenseUserEntity>>> getExpenseParticipants({String? groupId, String? friendUserId});
+  Future<Either<Failure, void>> addExpenseComment({required String expenseId, required String comment});
+  Future<Either<Failure, void>> settleUp({
+    required String toUserId,
+    required double amount,
+    String? groupId,
+    String? note,
+  });
 }
 

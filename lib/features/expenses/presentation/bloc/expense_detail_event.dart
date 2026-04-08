@@ -26,3 +26,13 @@ class DeleteExpenseEvent extends ExpenseDetailEvent {
 }
 
 class MarkExpenseAsChanged extends ExpenseDetailEvent {}
+
+class AddExpenseCommentEvent extends ExpenseDetailEvent {
+  final String expenseId;
+  final String comment;
+
+  const AddExpenseCommentEvent({required this.expenseId, required this.comment});
+
+  @override
+  List<Object> get props => [expenseId, comment];
+}

@@ -4,6 +4,7 @@ import 'package:split_ease/features/expenses/domain/usecases/get_expense_detail_
 import 'package:split_ease/features/expenses/domain/usecases/delete_expense_usecase.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_event.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_state.dart';
+import 'package:split_ease/features/expenses/domain/usecases/add_expense_comment_usecase.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
 import 'package:split_ease/features/groups/domain/entities/group_member_entity.dart';
 import 'package:split_ease/features/groups/domain/usecases/get_group_members.dart';
@@ -16,13 +17,15 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
   final GetExpenseDetailUseCase _getExpenseDetailUseCase;
   final DeleteExpenseUseCase _deleteExpenseUseCase;
   final GetGroupMembers _getGroupMembers;
+  final AddExpenseCommentUseCase _addExpenseCommentUseCase;
   final AppUserCubit _appUserCubit;
   final DataRefreshCubit _dataRefreshCubit;
 
-  ExpenseDetailBloc(this._getExpenseDetailUseCase, this._deleteExpenseUseCase, this._getGroupMembers, this._appUserCubit, this._dataRefreshCubit) : super(ExpenseDetailInitial()) {
+  ExpenseDetailBloc(this._getExpenseDetailUseCase, this._deleteExpenseUseCase, this._getGroupMembers, this._addExpenseCommentUseCase, this._appUserCubit, this._dataRefreshCubit) : super(ExpenseDetailInitial()) {
     on<FetchExpenseDetailEvent>(_onFetchExpenseDetail);
     on<DeleteExpenseEvent>(_onDeleteExpense);
     on<MarkExpenseAsChanged>(_onMarkExpenseAsChanged);
+    on<AddExpenseCommentEvent>(_onAddExpenseComment);
   }
 
   void _onMarkExpenseAsChanged(
@@ -111,4 +114,19 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
         },
       );
     }
+
+  Future<void> _onAddExpenseComment(
+    AddExpenseCommentEvent event,
+    Emitter<ExpenseDetailState> emit,
+  ) async {
+    final result = await _addExpenseCommentUseCase(expenseId: event.expenseId, comment: event.comment);
+    result.fold(
+      (failure) => null, // We might want to show an error state if needed, but for now just refresh or ignore
+      (_) {
+        // Refresh details to show the new comment
+        add(FetchExpenseDetailEvent(event.expenseId));
+        add(MarkExpenseAsChanged()); // Signal that data has changed (for parent screen refresh)
+      },
+    );
+  }
 }

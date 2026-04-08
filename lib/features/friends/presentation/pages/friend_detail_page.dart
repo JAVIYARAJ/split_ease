@@ -334,7 +334,25 @@ class _FriendDetailProfile extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildCircularAction(Icons.account_balance_wallet_rounded, "Settle Up", AppColors.warningOrange, () {}),
+              _buildCircularAction(
+                Icons.account_balance_wallet_rounded,
+                "Settle Up",
+                AppColors.warningOrange,
+                () {
+                  final state = context.read<FriendDetailBloc>().state;
+                  if (state.friendEntity != null) {
+                    NavigationService.pushNamed(
+                      AppRoutes.recordPayment,
+                      args: {
+                        'targetUserId': state.friendEntity!.id,
+                        'targetUserName': state.friendEntity!.name,
+                        'targetUserAvatar': state.friendEntity!.imageUrl,
+                        'balance': state.friendEntity!.overallBalance,
+                      },
+                    );
+                  }
+                },
+              ),
               const SizedBox(width: 24),
               _buildCircularAction(Icons.notifications_active_rounded, "Remind", AppColors.primary, () {}),
               const SizedBox(width: 24),

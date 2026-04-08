@@ -1,25 +1,23 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:split_ease/core/presentation/widgets/base_screen.dart';
-import 'package:split_ease/core/theme/app_colors.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:skeletonizer/skeletonizer.dart';
+import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
+import 'package:split_ease/core/presentation/widgets/base_screen.dart';
+import 'package:split_ease/core/services/data_refresh_service.dart';
+import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
+import 'package:split_ease/core/utils/navigation_utils.dart';
+import 'package:split_ease/features/expenses/domain/entities/expense_detail_entity.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_bloc.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_event.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_state.dart';
-import 'package:split_ease/features/expenses/domain/entities/expense_detail_entity.dart';
 import 'package:split_ease/features/expenses/presentation/utils/expense_pdf_generator.dart';
-import 'package:split_ease/features/expenses/presentation/pages/expense_pdf_preview_page.dart';
-import 'package:skeletonizer/skeletonizer.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/routing/navigation_service.dart';
-import 'package:split_ease/core/services/data_refresh_service.dart';
-import 'package:split_ease/core/utils/navigation_utils.dart';
-import 'package:split_ease/injection_container.dart';
 
 class ExpenseDetailPage extends StatefulWidget {
   const ExpenseDetailPage({super.key});
@@ -30,10 +28,12 @@ class ExpenseDetailPage extends StatefulWidget {
 
 class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
   final ValueNotifier<bool> _canPop = ValueNotifier<bool>(false);
+  final TextEditingController _commentController = TextEditingController();
 
   @override
   void dispose() {
     _canPop.dispose();
+    _commentController.dispose();
     super.dispose();
   }
 
@@ -41,7 +41,9 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     _canPop.value = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        final state = context.read<ExpenseDetailBloc>().state;
+        final state = context
+            .read<ExpenseDetailBloc>()
+            .state;
         Navigator.of(context).pop(state.hasChanges);
       }
     });
@@ -52,7 +54,10 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     super.initState();
     WidgetsFlutterBinding.ensureInitialized().addPostFrameCallback((timeStamp) {
       if (!mounted) return;
-      var argument = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      var argument = ModalRoute
+          .of(context)
+          ?.settings
+          .arguments as Map<String, dynamic>?;
       if (argument != null && argument["expanse_id"] != null) {
         context.read<ExpenseDetailBloc>().add(FetchExpenseDetailEvent(argument["expanse_id"]));
       }
@@ -64,7 +69,9 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     return BlocListener<DataRefreshCubit, DataRefreshState>(
       listenWhen: (prev, curr) => curr.lastSignal?.type == RefreshType.expenseDetail,
       listener: (context, state) {
-        final detailState = context.read<ExpenseDetailBloc>().state;
+        final detailState = context
+            .read<ExpenseDetailBloc>()
+            .state;
         if (detailState is ExpenseDetailLoaded) {
           final expenseId = detailState.expenseDetail.id;
           if (context.read<DataRefreshCubit>().shouldRefresh(RefreshType.expenseDetail, id: expenseId)) {
@@ -75,148 +82,162 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
         }
       },
       child: ValueListenableBuilder<bool>(
-      valueListenable: _canPop,
-      builder: (context, canPop, child) {
-        return PopScope(
-          canPop: canPop,
-          onPopInvokedWithResult: (didPop, result) {
-            if (didPop) return;
-            _onBack();
-          },
-          child: BaseScreen(
-            useSafeArea: true,
-            backgroundColor: AppColors.backgroundLightGrey, // Using a gentle background for card styling
-            appBar: AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              centerTitle: true,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textBlack),
-                onPressed: _onBack,
-              ),
-              title: Text(
-                "Expense Details",
-                style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              actions: [
-                BlocBuilder<ExpenseDetailBloc, ExpenseDetailState>(
-                  builder: (context, state) {
-                    if (state is! ExpenseDetailLoaded) return const SizedBox.shrink();
+        valueListenable: _canPop,
+        builder: (context, canPop, child) {
+          return PopScope(
+            canPop: canPop,
+            onPopInvokedWithResult: (didPop, result) {
+              if (didPop) return;
+              _onBack();
+            },
+            child: BaseScreen(
+              useSafeArea: true,
+              backgroundColor: AppColors.backgroundLightGrey, // Using a gentle background for card styling
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                centerTitle: true,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textBlack),
+                  onPressed: _onBack,
+                ),
+                title: Text(
+                  "Expense Details",
+                  style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+                actions: [
+                  BlocBuilder<ExpenseDetailBloc, ExpenseDetailState>(
+                    builder: (context, state) {
+                      if (state is! ExpenseDetailLoaded) return const SizedBox.shrink();
 
-                    // Only show edit/delete if the user has permissions (creator or owner/admin of group)
-                    if (!state.canManageExpense) {
-                      return const SizedBox.shrink();
+                      // Only show edit/delete if the user has permissions (creator or owner/admin of group)
+                      if (!state.canManageExpense) {
+                        return const SizedBox.shrink();
+                      }
+
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit_outlined, color: AppColors.textBlack),
+                            onPressed: () {
+                              NavigationUtils.handleResult(
+                                context: context,
+                                navigation: NavigationService.pushNamed(AppRoutes.addExpense, args: {'expense': state.expenseDetail}),
+                                refreshType: RefreshType.expenseDetail,
+                                id: state.expenseDetail.id,
+                                onRefresh: () {
+                                  context.read<ExpenseDetailBloc>().add(MarkExpenseAsChanged());
+                                  context.read<ExpenseDetailBloc>().add(FetchExpenseDetailEvent(state.expenseDetail.id));
+                                },
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline_rounded, color: AppColors.errorRed),
+                            onPressed: () {
+                              _showDeleteConfirmationDialog(context, state.expenseDetail.id);
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
+              child: BlocListener<ExpenseDetailBloc, ExpenseDetailState>(
+                listener: (context, state) {
+                  if (state is ExpenseDeleted) {
+                    AppAlerts.showSuccess(context, 'Expense deleted successfully');
+                    Navigator.of(context).pop(true); // Return true on deletion
+                  } else if (state is ExpenseDeleteError) {
+                    AppAlerts.showError(context, 'Failed to delete expense: ${state.message}');
+                  }
+                },
+                child: BlocBuilder<ExpenseDetailBloc, ExpenseDetailState>(
+                  builder: (context, state) {
+                    if (state is ExpenseDetailError) {
+                      return _buildErrorState(state.message);
                     }
 
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined, color: AppColors.textBlack),
-                        onPressed: () {
-                           NavigationUtils.handleResult(
-                             context: context,
-                             navigation: NavigationService.pushNamed(AppRoutes.addExpense, args: {'expense': state.expenseDetail}),
-                             refreshType: RefreshType.expenseDetail,
-                             id: state.expenseDetail.id,
-                             onRefresh: () {
-                               context.read<ExpenseDetailBloc>().add(MarkExpenseAsChanged());
-                               context.read<ExpenseDetailBloc>().add(FetchExpenseDetailEvent(state.expenseDetail.id));
-                             },
-                           );
-                        },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded, color: AppColors.errorRed),
-                          onPressed: () {
-                            _showDeleteConfirmationDialog(context, state.expenseDetail.id);
-                          },
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ],
-            ),
-            child: BlocListener<ExpenseDetailBloc, ExpenseDetailState>(
-              listener: (context, state) {
-                if (state is ExpenseDeleted) {
-                  AppAlerts.showSuccess(context, 'Expense deleted successfully');
-                  Navigator.of(context).pop(true); // Return true on deletion
-                } else if (state is ExpenseDeleteError) {
-                  AppAlerts.showError(context, 'Failed to delete expense: ${state.message}');
-                }
-              },
-              child: BlocBuilder<ExpenseDetailBloc, ExpenseDetailState>(
-                builder: (context, state) {
-                  if (state is ExpenseDetailError) {
-                    return _buildErrorState(state.message);
-                  }
+                    final bool isLoading = state is ExpenseDetailLoading || state is ExpenseDetailInitial || state is ExpenseDeleteLoading;
+                    final entity = state is ExpenseDetailLoaded ? state.expenseDetail : _getMockEntity();
 
-                  final bool isLoading = state is ExpenseDetailLoading || state is ExpenseDetailInitial || state is ExpenseDeleteLoading;
-                  final entity = state is ExpenseDetailLoaded ? state.expenseDetail : _getMockEntity();
-
-                  return Skeletonizer(
-                    enabled: isLoading,
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: SingleChildScrollView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  _buildHeaderAmount(entity),
-                                  const SizedBox(height: 32),
-                                  _buildQuickInfo(state is ExpenseDetailLoaded ? state : ExpenseDetailLoaded(_getMockEntity(), "")),
-                                  const SizedBox(height: 24),
-                                  _buildActionGrid(entity),
-                                  const SizedBox(height: 24),
-                                  _buildSectionTitle("Paid By"),
-                                  const SizedBox(height: 8),
-                                  _buildPaidBySection(entity),
-                                  const SizedBox(height: 24),
-                                  if (entity.notes != null && entity.notes!.isNotEmpty) ...[
-                                    _buildSectionTitle("Notes"),
-                                    const SizedBox(height: 8),
-                                    _buildNotesSection(entity.notes!),
+                    return Skeletonizer(
+                      enabled: isLoading,
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    _buildHeaderAmount(entity),
+                                    const SizedBox(height: 32),
+                                    _buildQuickInfo(state is ExpenseDetailLoaded ? state : ExpenseDetailLoaded(_getMockEntity(), "")),
+                                    if (state is ExpenseDetailLoaded && state.expenseDetail.updatedBy != null) ...[
+                                      const SizedBox(height: 12),
+                                      _buildLastUpdatedInfo(state),
+                                    ],
                                     const SizedBox(height: 24),
+                                    _buildActionGrid(entity),
+                                    const SizedBox(height: 24),
+                                    _buildSectionTitle("Paid By"),
+                                    const SizedBox(height: 8),
+                                    _buildPaidBySection(entity),
+                                    const SizedBox(height: 24),
+                                    if (entity.notes != null && entity.notes!.isNotEmpty) ...[
+                                      _buildSectionTitle("Notes"),
+                                      const SizedBox(height: 8),
+                                      _buildNotesSection(entity.notes!),
+                                      const SizedBox(height: 24),
+                                    ],
+                                    _buildSectionTitle("Comments"),
+                                    const SizedBox(height: 8),
+                                    _buildCommentsList(entity, state is ExpenseDetailLoaded ? state.currentUserId : ""),
+                                    const SizedBox(height: 24),
+                                    _buildSectionTitle("Split Details"),
+                                    const SizedBox(height: 8),
+                                    _buildSplitsList(entity),
+                                    const SizedBox(height: 80), // Bottom padding
                                   ],
-                                  _buildSectionTitle("Split Details"),
-                                  const SizedBox(height: 8),
-                                  _buildSplitsList(entity),
-                                  const SizedBox(height: 80), // Bottom padding
-                                ],
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        // Sticky Comments Section at the Bottom
-                        Container(
-                          color: AppColors.backgroundLightGrey,
-                          padding: EdgeInsets.only(
-                            left: 20,
-                            right: 20,
-                            top: 12,
-                            bottom: MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom : 20,
+                          // Sticky Comments Section at the Bottom
+                          Container(
+                            color: AppColors.backgroundLightGrey,
+                            padding: EdgeInsets.only(
+                              left: 20,
+                              right: 20,
+                              top: 12,
+                              bottom: MediaQuery
+                                  .of(context)
+                                  .padding
+                                  .bottom > 0 ? MediaQuery
+                                  .of(context)
+                                  .padding
+                                  .bottom : 20,
+                            ),
+                            child: _buildCommentsSection(entity),
                           ),
-                          child: _buildCommentsSection(entity),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
-          ),
-        );
-      },
-    ),
-  );
-}
+          );
+        },
+      ),
+    );
+  }
 
   void _showDeleteConfirmationDialog(BuildContext context, String expanseId) {
     showDialog(
@@ -361,6 +382,20 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     );
   }
 
+  Widget _buildLastUpdatedInfo(ExpenseDetailLoaded state) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.history_rounded, size: 14, color: AppColors.textGrey),
+        const SizedBox(width: 4),
+        Text(
+          "Last updated by ${state.updatedByFirstName} on ${state.formattedUpdatedAt}",
+          style: GoogleFonts.outfit(color: AppColors.textGrey, fontSize: 12, fontWeight: FontWeight.w400),
+        ),
+      ],
+    );
+  }
+
   Widget _buildActionGrid(ExpenseDetailEntity entity) {
     return Row(
       children: [
@@ -434,7 +469,6 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       ),
     );
   }
-  }
 
   Widget _buildNotesSection(String notes) {
     return Container(
@@ -475,7 +509,11 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
           final isOwed = split.type != "participant";
           final amountText = isOwed ? "Owes" : "Participated";
 
-          return _buildSplitListItem(name: split.fullName, avatarUrl: split.avatar, subText: amountText, amount: split.amount, isOwed: isOwed);
+          return _buildSplitListItem(name: split.fullName,
+              avatarUrl: split.avatar,
+              subText: amountText,
+              amount: split.amount,
+              isOwed: isOwed);
         },
       ),
     );
@@ -529,6 +567,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
+              controller: _commentController,
               style: GoogleFonts.outfit(fontSize: 14),
               decoration: InputDecoration(
                 hintText: "Add a comment...",
@@ -536,15 +575,134 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 border: InputBorder.none,
                 isDense: true,
               ),
+              onSubmitted: (val) {
+                if (val.trim().isNotEmpty) {
+                  context.read<ExpenseDetailBloc>().add(AddExpenseCommentEvent(expenseId: entity.id, comment: val.trim()));
+                  _commentController.clear();
+                }
+              },
             ),
           ),
           IconButton(
             icon: const Icon(Icons.send_rounded, color: AppColors.primary, size: 20),
-            onPressed: () {},
+            onPressed: () {
+              if (_commentController.text.trim().isNotEmpty) {
+                context.read<ExpenseDetailBloc>().add(AddExpenseCommentEvent(expenseId: entity.id, comment: _commentController.text.trim()));
+                _commentController.clear();
+              }
+            },
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildCommentsList(ExpenseDetailEntity entity, String currentUserId) {
+    if (entity.comments.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceWhite,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.borderGreyLight),
+        ),
+        child: Center(
+          child: Text(
+            "No comments yet",
+            style: GoogleFonts.outfit(color: AppColors.textGrey, fontSize: 14),
+          ),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: entity.comments.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final comment = entity.comments[index];
+        final bool isMe = comment.user.id == currentUserId;
+
+        return Align(
+          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isMe ? AppColors.primary.withValues(alpha: 0.05) : AppColors.surfaceWhite,
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(16),
+                topRight: const Radius.circular(16),
+                bottomLeft: Radius.circular(isMe ? 16 : 0),
+                bottomRight: Radius.circular(isMe ? 0 : 16),
+              ),
+              border: Border.all(color: isMe ? AppColors.primary.withValues(alpha: 0.1) : AppColors.borderGreyLight),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!isMe) ...[
+                  AppAvatar(url: comment.user.avatar, radius: 16, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+                  const SizedBox(width: 12),
+                ],
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (!isMe) ...[
+                            Text(
+                              comment.user.fullName,
+                              style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          Text(
+                            _formatCommentDate(comment.createdAt),
+                            style: GoogleFonts.outfit(fontSize: 10, color: AppColors.textGrey),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        comment.content,
+                        textAlign: isMe ? TextAlign.right : TextAlign.left,
+                        style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textBlack.withValues(alpha: 0.8)),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isMe) ...[
+                  const SizedBox(width: 12),
+                  AppAvatar(url: comment.user.avatar, radius: 16, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  String _formatCommentDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      final now = DateTime.now();
+      final diff = now.difference(date);
+
+      if (diff.inMinutes < 1) return "Just now";
+      if (diff.inMinutes < 60) return "${diff.inMinutes}m ago";
+      if (diff.inHours < 24) return "${diff.inHours}h ago";
+      return DateFormat('MMM dd').format(date);
+    } catch (_) {
+      return "";
+    }
   }
 
   // Fallback entity to render the Skeleton properly.
@@ -559,9 +717,13 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       createdAt: "2026-02-21T00:00:00+00:00",
       paidBy: ExpenseUserEntity(id: "", fullName: "User Name"),
       createdBy: ExpenseUserEntity(id: "", fullName: "User Name"),
+      updatedAt: null,
+      updatedBy: null,
+      comments: const [],
       splits: const [
         ExpenseSplitEntity(type: "you_owe", amount: 500, userId: "1", fullName: "Test User"),
         ExpenseSplitEntity(type: "participant", amount: 500, userId: "2", fullName: "Test User"),
       ],
     );
   }
+}

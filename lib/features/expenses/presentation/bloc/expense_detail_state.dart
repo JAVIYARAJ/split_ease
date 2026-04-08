@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:intl/intl.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_detail_entity.dart';
 
 abstract class ExpenseDetailState extends Equatable {
@@ -12,7 +13,7 @@ abstract class ExpenseDetailState extends Equatable {
 class ExpenseDetailInitial extends ExpenseDetailState {}
 
 class ExpenseDetailLoading extends ExpenseDetailState {
-  const ExpenseDetailLoading({bool hasChanges = false}) : super(hasChanges: hasChanges);
+  const ExpenseDetailLoading({super.hasChanges});
 }
 
 class ExpenseDetailLoaded extends ExpenseDetailState {
@@ -20,13 +21,28 @@ class ExpenseDetailLoaded extends ExpenseDetailState {
   final String currentUserId;
   final String? currentUserRole;
 
-  const ExpenseDetailLoaded(this.expenseDetail, this.currentUserId, {this.currentUserRole, bool hasChanges = false}) : super(hasChanges: hasChanges);
+  const ExpenseDetailLoaded(this.expenseDetail, this.currentUserId, {this.currentUserRole, super.hasChanges});
 
   /// Logic Moved from UI: Gets first name of the creator.
   String get creatorFirstName => expenseDetail.createdBy.fullName.split(' ').first;
 
   /// Logic Moved from UI: Gets display name for the group.
   String get groupDisplayName => (expenseDetail.group?.name ?? "").isNotEmpty ? expenseDetail.group!.name! : "Non-group";
+
+  /// Logic Moved from UI: Gets first name of the editor if updated.
+  String? get updatedByFirstName => expenseDetail.updatedBy?.fullName.split(' ').first;
+
+  /// Logic Moved from UI: Gets formatted updated timestamp.
+  String? get formattedUpdatedAt {
+    if (expenseDetail.updatedAt == null) return null;
+    try {
+      final parsed = DateTime.parse(expenseDetail.updatedAt!);
+      // For updated time, show more detail (HH:mm)
+      return DateFormat('MMM dd, yyyy HH:mm').format(parsed);
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// Permission: Can the current user edit or delete this expense?
   bool get canManageExpense {
@@ -62,7 +78,7 @@ class ExpenseDetailLoaded extends ExpenseDetailState {
 class ExpenseDetailError extends ExpenseDetailState {
   final String message;
 
-  const ExpenseDetailError(this.message, {bool hasChanges = false}) : super(hasChanges: hasChanges);
+  const ExpenseDetailError(this.message, {super.hasChanges});
 
   @override
   List<Object?> get props => [message, hasChanges];

@@ -11,6 +11,9 @@ class ExpenseDetailEntity extends Equatable {
   final ExpenseUserEntity paidBy;
   final ExpenseUserEntity createdBy;
   final String? notes;
+  final String? updatedAt;
+  final ExpenseUserEntity? updatedBy;
+  final List<ExpenseCommentEntity> comments;
   final List<ExpenseSplitEntity> splits;
 
   const ExpenseDetailEntity({
@@ -24,6 +27,9 @@ class ExpenseDetailEntity extends Equatable {
     this.group,
     required this.paidBy,
     required this.createdBy,
+    this.updatedAt,
+    this.updatedBy,
+    required this.comments,
     required this.splits,
   });
 
@@ -39,6 +45,9 @@ class ExpenseDetailEntity extends Equatable {
         group,
         paidBy,
         createdBy,
+        updatedAt,
+        updatedBy,
+        comments,
         splits,
       ];
 }
@@ -91,4 +100,19 @@ class ExpenseSplitEntity extends Equatable {
   @override
   List<Object?> get props => [type, avatar, amount, userId, fullName];
 }
+class ExpenseCommentEntity extends Equatable {
+  final String id;
+  final String content;
+  final String createdAt;
+  final ExpenseUserEntity user;
 
+  const ExpenseCommentEntity({
+    required this.id,
+    required this.content,
+    required this.createdAt,
+    required this.user,
+  });
+
+  @override
+  List<Object?> get props => [id, content, createdAt, user];
+}

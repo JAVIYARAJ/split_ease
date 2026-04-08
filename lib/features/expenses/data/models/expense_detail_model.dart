@@ -12,7 +12,10 @@ class ExpenseDetailModel extends ExpenseDetailEntity {
     required super.paidBy,
     required super.createdBy,
     required super.splits,
-    super.notes
+    required super.comments,
+    super.notes,
+    super.updatedAt,
+    super.updatedBy,
   });
 
   factory ExpenseDetailModel.fromJson(Map<String, dynamic> json) {
@@ -30,6 +33,11 @@ class ExpenseDetailModel extends ExpenseDetailEntity {
       splits: (json['splits'] as List)
           .map((e) => ExpenseSplitModel.fromJson(e as Map<String, dynamic>))
           .toList(),
+      comments: (json['comments'] as List? ?? [])
+          .map((e) => ExpenseCommentModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      updatedAt: json['updated_at'] as String?,
+      updatedBy: json['updated_by'] != null ? ExpenseUserModel.fromJson(json['updated_by']) : null,
     );
   }
 }
@@ -87,4 +95,20 @@ class ExpenseSplitModel extends ExpenseSplitEntity {
     );
   }
 }
+class ExpenseCommentModel extends ExpenseCommentEntity {
+  const ExpenseCommentModel({
+    required super.id,
+    required super.content,
+    required super.createdAt,
+    required super.user,
+  });
 
+  factory ExpenseCommentModel.fromJson(Map<String, dynamic> json) {
+    return ExpenseCommentModel(
+      id: json['id'] as String,
+      content: json['comment'] as String,
+      createdAt: json['created_at'] as String,
+      user: ExpenseUserModel.fromJson(json['user']),
+    );
+  }
+}

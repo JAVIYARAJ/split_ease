@@ -633,7 +633,18 @@ class _ActionButtons extends StatelessWidget {
             label: "Settle up",
             icon: Icons.account_balance_wallet_rounded,
             color: AppColors.primary,
-            onPressed: () {},
+            onPressed: () {
+              final state = context.read<GroupDetailBloc>().state;
+              if (state.expenseHistory?.memberBalances != null) {
+                NavigationService.pushNamed(
+                  AppRoutes.settleUpSelection,
+                  args: {
+                    'balances': state.expenseHistory!.memberBalances,
+                    'groupId': state.groupEntity?.id,
+                  },
+                );
+              }
+            },
           ),
           const SizedBox(width: 8),
           _buildActionButton(
