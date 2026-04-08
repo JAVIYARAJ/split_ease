@@ -39,16 +39,15 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
   }
 
   @override
-
   Future<Either<Failure, ExpenseDetailEntity>> getExpenseDetail(String expenseId) async {
-    //try {
+    try {
       final result = await remoteDataSource.getExpenseDetail(expenseId);
       return Right(result);
-    // } on ServerException catch (e) {
-    //   return Left(Failure(message: e.message));
-    // } catch (e) {
-    //   return Left(Failure(message: e.toString()));
-    // }
+    } on ServerException catch (e) {
+      return Left(Failure(message: e.message));
+    } catch (e) {
+      return Left(Failure(message: e.toString()));
+    }
   }
   @override
   Future<Either<Failure, void>> deleteExpense(String expenseId) async {

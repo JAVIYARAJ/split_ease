@@ -16,7 +16,7 @@ class GroupExpenseModel extends GroupExpenseEntity {
 
   factory GroupExpenseModel.fromJson(Map<String, dynamic> json) {
     return GroupExpenseModel(
-      expenseId: json['expense_id'] as String,
+      expenseId: (json['expense_id'] ?? json["id"])  as String?,
       type: json['type'] as String,
       paidBy: json['paid_by'] as String,
       paidByName: json['paid_by_name'] as String,
@@ -67,7 +67,7 @@ class GroupExpenseHistoryModel extends GroupExpenseHistoryEntity {
       expenses: expensesList,
       memberBalances: memberBalancesList,
       overallBalance: (json['overall_balance'] as num).toDouble(),
-      youAreOwed: json['you_are_owed'] as bool,
+      youAreOwed: json['you_are_owed'] as bool?,
     );
   }
 }

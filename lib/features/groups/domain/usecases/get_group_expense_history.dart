@@ -16,7 +16,7 @@ class GetGroupExpenseHistory implements UseCase<GroupExpenseHistoryEntity, Group
 }
 
 class GroupExpenseHistoryParam {
-  final String groupId;
+  final String? groupId;
 
   GroupExpenseHistoryParam(this.groupId);
 }

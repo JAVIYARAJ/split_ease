@@ -6,7 +6,7 @@ class GroupExpenseHistoryEntity extends Equatable {
   final List<GroupExpenseEntity>? expenses;
   final List<GroupMemberBalanceEntity>? memberBalances;
   final double overallBalance;
-  final bool youAreOwed;
+  final bool? youAreOwed;
 
   const GroupExpenseHistoryEntity({
     required this.expenses,

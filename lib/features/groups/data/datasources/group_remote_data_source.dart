@@ -15,7 +15,7 @@ abstract interface class GroupRemoteDataSource {
 
   Future<List<GroupModel>> getAllGroups();
 
-  Future<GroupModel> getGroupDetail(String id);
+  Future<GroupModel> getGroupDetail(String? id);
 
   Future<bool> checkInviteCode(String code);
 
@@ -33,7 +33,7 @@ abstract interface class GroupRemoteDataSource {
 
   Future<void> addMultipleFriendsToGroup(String groupId, List<String> userIds, {Map<String, String>? roles});
 
-  Future<GroupExpenseHistoryModel> getGroupExpenseHistory(String groupId);
+  Future<GroupExpenseHistoryModel> getGroupExpenseHistory(String? groupId);
 
   Future<List<GroupMemberModel>> getGroupMembers(String groupId);
   
@@ -93,7 +93,7 @@ class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
   }
 
   @override
-  Future<GroupModel> getGroupDetail(String id) async {
+  Future<GroupModel> getGroupDetail(String? id) async {
     try {
       var response = await client.rpc("get_group_detail",params: {
         "p_group_id":id
@@ -219,7 +219,7 @@ class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
   }
 
   @override
-  Future<GroupExpenseHistoryModel> getGroupExpenseHistory(String groupId) async {
+  Future<GroupExpenseHistoryModel> getGroupExpenseHistory(String? groupId) async {
     try {
       final response = await client.rpc(
         'get_group_detail_dashboard_rpc',

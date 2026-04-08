@@ -57,7 +57,7 @@ class GroupRepositoryImpl implements GroupRepository {
   }
 
   @override
-  Future<Either<Failure, GroupEntity>> getGroupDetail(String id) async{
+  Future<Either<Failure, GroupEntity>> getGroupDetail(String? id) async{
     try{
       var response = await dataSource.getGroupDetail(id);
       return right(response);
@@ -147,12 +147,12 @@ class GroupRepositoryImpl implements GroupRepository {
   }
 
   @override
-  Future<Either<Failure, GroupExpenseHistoryEntity>> getGroupExpenseHistory(String groupId) async {
+  Future<Either<Failure, GroupExpenseHistoryEntity>> getGroupExpenseHistory(String? groupId) async {
     try {
       final model = await dataSource.getGroupExpenseHistory(groupId);
       return right(model);
     } on ServerException catch (error) {
-       return left(Failure(message: error.message));
+      return left(Failure(message: error.message));
     }
   }
 

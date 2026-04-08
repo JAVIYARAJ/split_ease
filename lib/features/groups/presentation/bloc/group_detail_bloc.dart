@@ -25,7 +25,6 @@ class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
     emit(state.copyWith(status: GroupDetailStatus.loading, hasChanges: event.hasChanges || state.hasChanges));
     try {
       final id = event.groupId ?? state.groupEntity?.id;
-      if (id == null) return;
       var response = await getGroupDetail(GroupDetailParam(id));
       response.fold(
         (l) {
@@ -43,10 +42,7 @@ class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
   Future<void> _onLoadGroupExpenseHistory(LoadGroupExpenseHistory event, Emitter<GroupDetailState> emit) async {
     emit(state.copyWith(expenseStatus: GroupDetailExpenseStatus.loading));
     try {
-      String? groupId = state.groupEntity?.id ?? event.groupId;
-
-      if(groupId == null) return;
-
+      final String? groupId = state.groupEntity?.id ?? event.groupId;
       final response = await getGroupExpenseHistory(GroupExpenseHistoryParam(groupId));
       response.fold(
         (l) {

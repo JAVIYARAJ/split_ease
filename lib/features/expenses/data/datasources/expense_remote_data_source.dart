@@ -55,9 +55,8 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
   }
 
   @override
-
   Future<ExpenseDetailModel> getExpenseDetail(String expenseId) async {
-   // try {
+    try {
       final response = await client.rpc(
         'get_expense_detail_rpc',
         params: {
@@ -67,9 +66,9 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
 
       // The RPC returns a JSON object.
       return ExpenseDetailModel.fromJson(response as Map<String, dynamic>);
-    // } catch (e) {
-    //   throw ServerException(message: e.toString());
-    // }
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
   }
 
   @override

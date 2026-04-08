@@ -436,80 +436,68 @@ class _BreakdownCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              
+
+              // ── Per-group rows ─────────────────────────────────────
               ...friend.groupBreakdown.map((g) {
                 final bool gOwed = g.balance > 0;
-                final Color gColor = gOwed ? AppColors.successGreen : AppColors.errorRed;
-                final String gText = gOwed ? "Owes you" : "You owe";
+                final bool isZero = g.balance == 0;
+                final Color gColor = isZero ? AppColors.iconGrey : (gOwed ? AppColors.successGreen : AppColors.errorRed);
+                final String gText = isZero ? "Settled up ✓" : (gOwed ? "Owes you" : "You owe");
 
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: AppColors.backgroundLightGrey,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(Icons.groups_rounded, size: 20, color: AppColors.iconGrey),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(g.groupName, style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textBlack)),
-                            Text(gText, style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey, fontWeight: FontWeight.w500)),
-                          ],
-                        ),
-                      ),
-                      Text(
-                        "₹${formatter.format(g.balance.abs())}",
-                        style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 16, color: gColor),
-                      ),
-                    ],
-                  ),
+                return _BreakdownRow(
+                  icon: Icons.groups_rounded,
+                  label: g.groupName,
+                  subLabel: gText,
+                  amount: isZero ? null : "₹${formatter.format(g.balance.abs())}",
+                  color: gColor,
+                  isSettled: isZero,
+                  onTap: isZero
+                      ? null
+                      : () {
+                          NavigationService.pushNamed(
+                            AppRoutes.recordPayment,
+                            args: {
+                              'targetUserId': friend.id,
+                              'targetUserName': friend.name,
+                              'targetUserAvatar': friend.imageUrl,
+                              'balance': g.balance,
+                              'groupId': g.groupId,
+                            },
+                          );
+                        },
                 );
               }),
 
-              if (friend.nonGroupBalance != 0) ...[
+              // ── Non-group row ──────────────────────────────────────
+              if (friend.nonGroupBalance != 0 || friend.groupBreakdown.isEmpty) ...[
                 Builder(
                   builder: (context) {
                     final bool ngOwed = friend.nonGroupBalance > 0;
-                    final Color ngColor = ngOwed ? AppColors.successGreen : AppColors.errorRed;
-                    final String ngText = ngOwed ? "Owes you" : "You owe";
+                    final bool isZero = friend.nonGroupBalance == 0;
+                    final Color ngColor = isZero ? AppColors.iconGrey : (ngOwed ? AppColors.successGreen : AppColors.errorRed);
+                    final String ngText = isZero ? "Settled up ✓" : (ngOwed ? "Owes you" : "You owe");
 
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: AppColors.backgroundLightGrey,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(Icons.person_rounded, size: 20, color: AppColors.iconGrey),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text("Non-group", style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textBlack)),
-                                Text(ngText, style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey, fontWeight: FontWeight.w500)),
-                              ],
-                            ),
-                          ),
-                          Text(
-                            "₹${formatter.format(friend.nonGroupBalance.abs())}",
-                            style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 16, color: ngColor),
-                          ),
-                        ],
-                      ),
+                    return _BreakdownRow(
+                      icon: Icons.person_rounded,
+                      label: "Non-group",
+                      subLabel: ngText,
+                      amount: isZero ? null : "₹${formatter.format(friend.nonGroupBalance.abs())}",
+                      color: ngColor,
+                      isSettled: isZero,
+                      onTap: isZero
+                          ? null
+                          : () {
+                              NavigationService.pushNamed(
+                                AppRoutes.recordPayment,
+                                args: {
+                                  'targetUserId': friend.id,
+                                  'targetUserName': friend.name,
+                                  'targetUserAvatar': friend.imageUrl,
+                                  'balance': friend.nonGroupBalance,
+                                  'groupId': null, // ← non-group: null groupId
+                                },
+                              );
+                            },
                     );
                   },
                 ),
@@ -518,6 +506,86 @@ class _BreakdownCard extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Reusable tappable breakdown row used for both group and non-group entries
+class _BreakdownRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String subLabel;
+  final String? amount;
+  final Color color;
+  final bool isSettled;
+  final VoidCallback? onTap;
+
+  const _BreakdownRow({
+    required this.icon,
+    required this.label,
+    required this.subLabel,
+    required this.amount,
+    required this.color,
+    required this.isSettled,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          decoration: BoxDecoration(
+            color: isSettled ? AppColors.backgroundLightGrey : color.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSettled ? AppColors.borderGreyLight : color.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: isSettled ? AppColors.borderGreyLight : color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 18, color: isSettled ? AppColors.iconGrey : color),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label, style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textBlack)),
+                    Text(subLabel, style: GoogleFonts.outfit(fontSize: 12, color: color, fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              ),
+              if (!isSettled && amount != null) ...[
+                Text(amount!, style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 15, color: color)),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(8)),
+                  child: Text("Settle", style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
+                ),
+              ] else ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  decoration: BoxDecoration(color: AppColors.borderGreyLight, borderRadius: BorderRadius.circular(8)),
+                  child: Text("Done", style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.iconGrey)),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

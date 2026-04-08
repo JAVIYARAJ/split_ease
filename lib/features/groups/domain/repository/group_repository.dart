@@ -15,7 +15,7 @@ abstract interface class GroupRepository {
 
   Future<Either<Failure, List<GroupEntity>>> getAllGroups();
 
-  Future<Either<Failure,GroupEntity>> getGroupDetail(String id);
+  Future<Either<Failure,GroupEntity>> getGroupDetail(String? id);
 
   Future<Either<Failure, String?>> joinGroup(String code);
 
@@ -33,7 +33,7 @@ abstract interface class GroupRepository {
 
   Future<Either<Failure, void>> addMultipleFriendsToGroup(String groupId, List<String> userIds, {Map<String, String>? roles});
 
-  Future<Either<Failure, GroupExpenseHistoryEntity>> getGroupExpenseHistory(String groupId);
+  Future<Either<Failure, GroupExpenseHistoryEntity>> getGroupExpenseHistory(String? groupId);
 
   Future<Either<Failure, List<GroupMemberEntity>>> getGroupMembers(String groupId);
 

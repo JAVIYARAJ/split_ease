@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import 'package:split_ease/core/presentation/widgets/base_screen.dart';
 import 'package:split_ease/core/presentation/widgets/custom_refresh_indicator.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
@@ -27,6 +28,7 @@ class GroupDetailPage extends StatefulWidget {
 
 class _GroupDetailPageState extends State<GroupDetailPage> {
   final ValueNotifier<bool> _canPop = ValueNotifier<bool>(false);
+  String? _groupId; // null means non-group (personal) expense context
 
   void _onBack() {
     _canPop.value = true;
@@ -49,10 +51,10 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       if (!mounted) return;
       final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-      if (args?["group_id"] != null) {
-        context.read<GroupDetailBloc>().add(LoadGroupDetails(groupId: args?["group_id"]));
-        context.read<GroupDetailBloc>().add(LoadGroupExpenseHistory(groupId: args?["group_id"]));
-      }
+      _groupId = args?["group_id"] as String?;
+      setState(() {}); // rebuild with resolved groupId
+      context.read<GroupDetailBloc>().add(LoadGroupDetails(groupId: _groupId));
+      context.read<GroupDetailBloc>().add(LoadGroupExpenseHistory(groupId: _groupId));
     });
     super.initState();
   }
@@ -104,35 +106,40 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
           child: BaseScreen(
         useSafeArea: false,
         backgroundColor: AppColors.backgroundLightGrey,
-        floatingActionButton: BlocBuilder<GroupDetailBloc, GroupDetailState>(
-          builder: (context, state) {
-            final hasMembers = (state.groupEntity?.members?.length ?? 0) > 1;
-            if (!hasMembers) return const SizedBox.shrink();
-            
-            return FloatingActionButton.extended(
-              onPressed: _openAddExpense,
-              backgroundColor: AppColors.primaryTeal,
-              icon: const Icon(Icons.receipt_long, color: Colors.white),
-              label: Text(
-                "Add expense",
-                style: GoogleFonts.openSans(color: Colors.white, fontWeight: FontWeight.w600),
+        floatingActionButton: _groupId == null
+            ? null // No FAB for non-group context
+            : BlocBuilder<GroupDetailBloc, GroupDetailState>(
+                builder: (context, state) {
+                  final hasMembers = (state.groupEntity?.members?.length ?? 0) > 1;
+                  if (!hasMembers) return const SizedBox.shrink();
+
+                  return FloatingActionButton.extended(
+                    onPressed: _openAddExpense,
+                    backgroundColor: AppColors.primaryTeal,
+                    icon: const Icon(Icons.receipt_long, color: Colors.white),
+                    label: Text(
+                      "Add expense",
+                      style: GoogleFonts.openSans(color: Colors.white, fontWeight: FontWeight.w600),
+                    ),
+                  );
+                },
               ),
-            );
-          },
-        ),
         child: CustomRefreshIndicator(
           onRefresh: () async {
             context.read<GroupDetailBloc>().add(LoadGroupExpenseHistory());
           },
           child: CustomScrollView(
             slivers: [
-              _GroupDetailAppBar(onBack: _onBack),
+              _GroupDetailAppBar(onBack: _onBack, isNonGroup: _groupId == null),
               // 1. Group info & Balance summary
               BlocBuilder<GroupDetailBloc, GroupDetailState>(
                 builder: (context, state) {
                   final isLoading = state.status == GroupDetailStatus.loading;
                   final hasGroup = state.groupEntity != null;
                   
+                  // Hide group info panel entirely in non-group context
+                  if (_groupId == null) return const SliverToBoxAdapter(child: SizedBox());
+
                   // Show shimmer while group is loading
                   if (isLoading) {
                     return const SliverToBoxAdapter(
@@ -157,9 +164,10 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
               // 2. Transaction List / Empty States
               BlocBuilder<GroupDetailBloc, GroupDetailState>(
                 builder: (context, state) {
-                  final isHistoryLoading = state.expenseStatus == GroupDetailExpenseStatus.loading || 
-                                          state.status == GroupDetailStatus.loading;
-                  
+                  // Show shimmer only while expense history is actively loading (or before first load)
+                  final isHistoryLoading = state.expenseStatus == GroupDetailExpenseStatus.loading ||
+                                          state.expenseStatus == GroupDetailExpenseStatus.initial;
+
                   if (isHistoryLoading) {
                     return const _ShimmerTransactionList();
                   }
@@ -181,14 +189,17 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
 
                   if (state.expenseStatus == GroupDetailExpenseStatus.success &&
                       state.expenseHistory != null) {
-                    final hasMembers = (state.groupEntity?.members?.length ?? 0) > 1;
+                    // For non-group: skip member count check entirely — always show expenses
+                    final hasMembers = _groupId == null ||
+                        (state.groupEntity?.members?.length ?? 0) > 1;
                     return _TransactionList(
                       expenses: state.expenseHistory?.expenses ?? [],
                       hasMembers: hasMembers,
-                      groupId: state.groupEntity?.id,
+                      groupId: _groupId,
+                      isNonGroup: _groupId == null,
                     );
                   }
-                  
+
                   return const SliverToBoxAdapter(child: SizedBox());
                 },
               ),
@@ -385,7 +396,8 @@ class _GroupDetailInfo extends StatelessWidget {
 
 class _GroupDetailAppBar extends StatelessWidget {
   final VoidCallback onBack;
-  const _GroupDetailAppBar({required this.onBack});
+  final bool isNonGroup;
+  const _GroupDetailAppBar({required this.onBack, this.isNonGroup = false});
 
   @override
   Widget build(BuildContext context) {
@@ -398,6 +410,8 @@ class _GroupDetailAppBar extends StatelessWidget {
         onPressed: onBack,
       ),
       actions: [
+        // Hide settings for non-group context
+        if (!isNonGroup)
           IconButton(
             icon: const Icon(Icons.settings_outlined, color: Colors.white),
             onPressed: () async {
@@ -493,33 +507,34 @@ class _GroupDetailAppBar extends StatelessWidget {
                     ),
                   ),
 
-                  // 4. Member Count (Fades out)
-                  Positioned(
-                    left: 20,
-                    bottom: 20,
-                    child: Opacity(
-                      opacity: memberOpacity,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white24, width: 1),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.people_outline, color: Colors.white, size: 16),
-                            const SizedBox(width: 6),
-                            Text(
-                              "${groupEntity?.members?.length ?? 0} people",
-                              style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
-                            ),
-                          ],
+                  // 4. Member Count pill — hidden in non-group context
+                  if (!isNonGroup)
+                    Positioned(
+                      left: 20,
+                      bottom: 20,
+                      child: Opacity(
+                        opacity: memberOpacity,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.9),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white24, width: 1),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.people_outline, color: Colors.white, size: 16),
+                              const SizedBox(width: 6),
+                              Text(
+                                "${groupEntity?.members?.length ?? 0} people",
+                                style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
                 ],
               );
             },
@@ -539,6 +554,7 @@ class _BalanceSummary extends StatelessWidget {
       builder: (context, state) {
         final history = state.expenseHistory;
         final isHistoryLoading = state.expenseStatus == GroupDetailExpenseStatus.loading;
+        final groupId = state.groupEntity?.id;
 
         // ── Skeletonizer for the balance section ──
         if (isHistoryLoading) {
@@ -550,6 +566,8 @@ class _BalanceSummary extends StatelessWidget {
                 _FakeLine(width: 240, height: 18),
                 const SizedBox(height: 10),
                 _FakeLine(width: 190, height: 14),
+                const SizedBox(height: 16),
+                _FakeLine(width: double.infinity, height: 56),
               ],
             ),
           );
@@ -557,67 +575,179 @@ class _BalanceSummary extends StatelessWidget {
 
         if (history == null) return const SizedBox();
 
-        final bool youAreOwed = history.youAreOwed;
         final double overall = history.overallBalance;
-        final balanceColor = youAreOwed ? AppColors.successGreen : AppColors.errorRed;
-        final overallLabel = youAreOwed ? "You are owed" : "You owe";
-        final memberLabel = youAreOwed ? "owes you" : "you owe";
+        final bool youAreOwed = history.youAreOwed?? false;
+        final formatter = NumberFormat('#,##0.##', 'en_IN');
+        final balanceColor = overall == 0
+            ? AppColors.textGrey
+            : (youAreOwed ? AppColors.successGreen : AppColors.errorRed);
+        final overallLabel = overall == 0
+            ? "You are settled up"
+            : (youAreOwed ? "You are owed" : "You owe");
         final List<GroupMemberBalanceEntity> memberBalances = history.memberBalances ?? [];
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ── Overall headline ──────────────────────────
             RichText(
               text: TextSpan(
                 style: GoogleFonts.outfit(fontSize: 16, color: AppColors.textBlack),
                 children: [
-                  TextSpan(text: "$overallLabel "),
-                  TextSpan(
-                    text: _formatCurrency(overall.abs()),
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.w700, color: balanceColor),
-                  ),
-                  const TextSpan(text: " overall"),
+                  TextSpan(text: overallLabel),
+                  if (overall != 0) ...
+                    [
+                      const TextSpan(text: " "),
+                      TextSpan(
+                        text: '₹${formatter.format(overall.abs())}',
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.w700, color: balanceColor),
+                      ),
+                      const TextSpan(text: " overall"),
+                    ],
                 ],
               ),
             ),
-            const SizedBox(height: 8),
-            ...memberBalances.map(
-              (m) => _buildBalanceLine(
-                m.fullName,
-                _formatCurrency(m.balance.abs()),
-                memberLabel,
-                balanceColor,
-              ),
-            ),
+
+            if (memberBalances.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              // ── Per-member settle rows ─────────────────────
+              ...memberBalances.map((m) => _MemberSettleRow(
+                    member: m,
+                    groupId: groupId,
+                    formatter: formatter,
+                  )),
+            ],
           ],
         );
       },
     );
   }
+}
 
-  Widget _buildBalanceLine(String name, String amount, String label, Color color) {
+/// Tappable row for a single member's balance — tapping opens RecordPaymentPage
+class _MemberSettleRow extends StatelessWidget {
+  final GroupMemberBalanceEntity member;
+  final String? groupId;
+  final NumberFormat formatter;
+
+  const _MemberSettleRow({
+    required this.member,
+    required this.groupId,
+    required this.formatter,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isSettled = member.balance == 0;
+    final bool youAreOwed = member.balance > 0; // positive = they owe you
+    final Color color = isSettled
+        ? AppColors.iconGrey
+        : (youAreOwed ? AppColors.successGreen : AppColors.errorRed);
+    final String directionText = isSettled
+        ? "Settled up"
+        : (youAreOwed ? "owes you" : "you owe");
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4.0),
-      child: RichText(
-        text: TextSpan(
-          style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textGrey, fontWeight: FontWeight.w500),
-          children: [
-            TextSpan(text: "$name $label "),
-            TextSpan(
-              text: amount,
-              style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: color),
+      padding: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        onTap: isSettled
+            ? null
+            : () {
+                NavigationService.pushNamed(
+                  AppRoutes.recordPayment,
+                  args: {
+                    'targetUserId': member.userId,
+                    'targetUserName': member.fullName,
+                    'targetUserAvatar': member.avatar,
+                    'balance': member.balance,
+                    'groupId': groupId,
+                  },
+                );
+              },
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: isSettled
+                ? AppColors.backgroundLightGrey
+                : color.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isSettled
+                  ? AppColors.borderGreyLight
+                  : color.withValues(alpha: 0.25),
             ),
-          ],
+          ),
+          child: Row(
+            children: [
+              AppAvatar(url: member.avatar, radius: 18),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      member.fullName,
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textBlack,
+                      ),
+                    ),
+                    Text(
+                      isSettled
+                          ? "Settled up ✓"
+                          : "$directionText ₹${formatter.format(member.balance.abs())}",
+                      style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: color,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!isSettled) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    "Settle",
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ] else ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.borderGreyLight,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    "Done",
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.iconGrey,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
   }
-
-  String _formatCurrency(double amount) {
-    final formatter = NumberFormat('#,##0.##', 'en_IN');
-    return '₹${formatter.format(amount)}';
-  }
 }
+
 
 class _ActionButtons extends StatelessWidget {
   const _ActionButtons();
@@ -701,16 +831,19 @@ class _TransactionList extends StatelessWidget {
   final List<GroupExpenseEntity> expenses;
   final bool hasMembers;
   final String? groupId;
+  final bool isNonGroup;
 
   const _TransactionList({
     required this.expenses,
     this.hasMembers = true,
     this.groupId,
+    this.isNonGroup = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (!hasMembers) {
+    // In non-group context we skip the member-count gate entirely
+    if (!isNonGroup && !hasMembers) {
       return SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 64, horizontal: 32),
