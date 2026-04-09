@@ -2,22 +2,20 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import 'package:split_ease/core/presentation/widgets/base_screen.dart';
 import 'package:split_ease/core/presentation/widgets/custom_refresh_indicator.dart';
+import 'package:split_ease/core/routing/app_routes.dart';
+import 'package:split_ease/core/routing/navigation_service.dart';
+import 'package:split_ease/core/services/data_refresh_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
+import 'package:split_ease/core/utils/navigation_utils.dart';
+import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
+import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
 import 'package:split_ease/features/groups/domain/entities/group_expense_entity.dart';
 import 'package:split_ease/features/groups/domain/entities/group_member_balance_entity.dart';
 import 'package:split_ease/features/groups/presentation/bloc/group_detail_bloc.dart';
-import 'package:split_ease/core/routing/app_routes.dart';
-
-import 'package:split_ease/core/routing/navigation_service.dart';
-import 'package:split_ease/core/services/data_refresh_service.dart';
-import 'package:split_ease/core/utils/navigation_utils.dart';
-import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
-import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
-import 'package:intl/intl.dart';
 
 class GroupDetailPage extends StatefulWidget {
   const GroupDetailPage({super.key});
@@ -608,146 +606,12 @@ class _BalanceSummary extends StatelessWidget {
               ),
             ),
 
-            if (memberBalances.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              // ── Per-member settle rows ─────────────────────
-              ...memberBalances.map((m) => _MemberSettleRow(
-                    member: m,
-                    groupId: groupId,
-                    formatter: formatter,
-                  )),
             ],
-          ],
-        );
-      },
-    );
+          );
+        },
+      );
+    }
   }
-}
-
-/// Tappable row for a single member's balance — tapping opens RecordPaymentPage
-class _MemberSettleRow extends StatelessWidget {
-  final GroupMemberBalanceEntity member;
-  final String? groupId;
-  final NumberFormat formatter;
-
-  const _MemberSettleRow({
-    required this.member,
-    required this.groupId,
-    required this.formatter,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final bool isSettled = member.balance == 0;
-    final bool youAreOwed = member.balance > 0; // positive = they owe you
-    final Color color = isSettled
-        ? AppColors.iconGrey
-        : (youAreOwed ? AppColors.successGreen : AppColors.errorRed);
-    final String directionText = isSettled
-        ? "Settled up"
-        : (youAreOwed ? "owes you" : "you owe");
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        onTap: isSettled
-            ? null
-            : () {
-                NavigationService.pushNamed(
-                  AppRoutes.recordPayment,
-                  args: {
-                    'targetUserId': member.userId,
-                    'targetUserName': member.fullName,
-                    'targetUserAvatar': member.avatar,
-                    'balance': member.balance,
-                    'groupId': groupId,
-                  },
-                );
-              },
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: isSettled
-                ? AppColors.backgroundLightGrey
-                : color.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isSettled
-                  ? AppColors.borderGreyLight
-                  : color.withValues(alpha: 0.25),
-            ),
-          ),
-          child: Row(
-            children: [
-              AppAvatar(url: member.avatar, radius: 18),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      member.fullName,
-                      style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textBlack,
-                      ),
-                    ),
-                    Text(
-                      isSettled
-                          ? "Settled up ✓"
-                          : "$directionText ₹${formatter.format(member.balance.abs())}",
-                      style: GoogleFonts.outfit(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: color,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (!isSettled) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    "Settle",
-                    style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ] else ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.borderGreyLight,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    "Done",
-                    style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.iconGrey,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 
 class _ActionButtons extends StatelessWidget {
   const _ActionButtons();
