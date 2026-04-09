@@ -89,7 +89,11 @@ class _FeedbackSheetState extends State<FeedbackSheet> {
             left: 24,
             right: 24,
             top: 24,
-            bottom: bottomInset > 0 ? bottomInset + 24 : 32,
+            bottom: bottomInset > 0 
+                ? bottomInset + 24 
+                : (MediaQuery.of(context).padding.bottom > 0 
+                    ? MediaQuery.of(context).padding.bottom + 16 
+                    : 32),
           ),
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 400),

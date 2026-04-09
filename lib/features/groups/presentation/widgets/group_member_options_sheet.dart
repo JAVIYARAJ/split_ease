@@ -38,7 +38,7 @@ class GroupMemberOptionsSheet extends StatelessWidget {
     final bool isOwed = balance > 0.01;
 
     return Container(
-      padding: const EdgeInsets.only(bottom: 40),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 24),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
