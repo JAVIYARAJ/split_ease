@@ -1,31 +1,58 @@
 enum ActivityType {
-  settlement, // "You added 'Settle all balances'"
-  expense,    // "You added 'Aj tak amount'"
-  payment,    // "You recorded a payment"
-  modification, // "Meet K. deleted..."
-  addToGroup, // "Meet K. added Kavan p."
+  settlement,
+  expense,
+  payment,
+  modification,
+  added,
+  roleUpdated,
+  unknown,
 }
 
 class ActivityEntity {
-  final String id;
-  final ActivityType type;
-  final String title; // E.g. "You added 'Settle all balances'"
-  final String? subtitle; // E.g. "You get back ₹608.28"
-  final double? amount;
-  final bool isPositive; // For coloring (Green vs Orange)
-  final DateTime timestamp;
-  final String? imageUrl; // For group icon or user icon
-  final String? activityId;
+  final String activityId;
+  final String? actorId; // ID of the person who performed the action
+  final String type; // Raw type string
+  final String actorName;
+  final String? groupName;
+  final String? description;
+  final String? amountType;
+  final double? balanceEffect;
+  final Map<String, dynamic>? metadata;
+  final String? referenceUserName;
+  final String? referenceUserId;
+  final DateTime createdAt;
+  final bool isUnread;
 
   const ActivityEntity({
-    required this.id,
+    required this.activityId,
+    this.actorId,
     required this.type,
-    required this.title,
-    this.subtitle,
-    this.amount,
-    required this.isPositive,
-    required this.timestamp,
-    this.imageUrl,
-    this.activityId
+    required this.actorName,
+    this.groupName,
+    this.description,
+    this.amountType,
+    this.balanceEffect,
+    this.metadata,
+    this.referenceUserName,
+    this.referenceUserId,
+    required this.createdAt,
+    this.isUnread = false,
   });
+
+  ActivityType get activityAction {
+    switch (type) {
+      case 'settlement':
+        return ActivityType.settlement;
+      case 'expense':
+        return ActivityType.expense;
+      case 'payment':
+        return ActivityType.payment;
+      case 'added':
+        return ActivityType.added;
+      case 'role_updated':
+        return ActivityType.roleUpdated;
+      default:
+        return ActivityType.unknown;
+    }
+  }
 }

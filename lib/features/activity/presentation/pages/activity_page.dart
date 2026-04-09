@@ -90,7 +90,7 @@ class ActivityPage extends StatelessWidget {
                   return ActivityListItem(
                     activity: activity,
                     onTap: isLoading ? null : () async {
-                      if (activity.type == ActivityType.expense && activity.activityId != null) {
+                      if (activity.activityAction == ActivityType.expense && activity.activityId.isNotEmpty) {
                         NavigationUtils.handleResult(
                           context: context,
                           navigation: NavigationService.pushNamed(AppRoutes.expanseDetail, args: {"expanse_id": activity.activityId}),
@@ -117,14 +117,15 @@ class ActivityPage extends StatelessWidget {
     return List.generate(
       8,
       (index) => ActivityEntity(
-        id: index.toString(),
-        type: ActivityType.expense,
-        title: "Dummy activity description text",
-        subtitle: "You get back ₹00.00",
-        isPositive: true,
-        timestamp: DateTime.now(),
+        activityId: index.toString(),
+        type: 'expense',
+        actorId: 'dummy_id',
+        actorName: 'Milan Chudasama',
+        description: 'Dummy activity description text',
+        amountType: 'you_are_owed',
+        balanceEffect: 0.0,
+        createdAt: DateTime.now(),
       ),
     );
   }
 }
-

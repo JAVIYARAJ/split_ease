@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:split_ease/core/common/cubit/app_user_cubit.dart';
+import 'package:split_ease/features/activity/presentation/utils/activity_ui_extension.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../domain/entities/activity_entity.dart';
 
@@ -16,6 +19,20 @@ class ActivityListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Get current user info for personalization
+    final userState = context.read<AppUserCubit>().state;
+    String? currentUserId;
+    String? currentUserName;
+    
+    if (userState is AppUserLoggedIn) {
+      currentUserId = userState.user.id;
+      currentUserName = userState.user.name;
+    }
+
+    final title = activity.getDisplayTitle(currentUserId, currentUserName: currentUserName);
+    final subtitle = activity.displaySubtitle;
+    final isPositive = activity.isPositiveEffect;
+
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -38,7 +55,7 @@ class ActivityListItem extends StatelessWidget {
                       // Title
                       Expanded(
                         child: Text(
-                          activity.title,
+                          title,
                           style: GoogleFonts.outfit(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -52,7 +69,7 @@ class ActivityListItem extends StatelessWidget {
                       
                       // Timestamp (Right Aligned)
                       Text(
-                        _formatDate(activity.timestamp),
+                        _formatDate(activity.createdAt),
                         style: GoogleFonts.outfit(
                           fontSize: 13,
                           color: AppColors.iconGrey,
@@ -64,13 +81,13 @@ class ActivityListItem extends StatelessWidget {
                   const SizedBox(height: 4),
                   
                   // Subtitle (Amount detail)
-                  if (activity.subtitle != null)
+                  if (subtitle != null)
                     Text(
-                      activity.subtitle!,
+                      subtitle,
                       style: GoogleFonts.outfit(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: activity.isPositive ? AppColors.successGreen : AppColors.warningOrange,
+                        color: isPositive ? AppColors.successGreen : AppColors.warningOrange,
                       ),
                     ),
                 ],
@@ -83,49 +100,17 @@ class ActivityListItem extends StatelessWidget {
   }
 
   Widget _buildIcon() {
-    IconData iconData;
-    Color iconColor;
-    Color bgColor;
-    
-    switch (activity.type) {
-      case ActivityType.settlement:
-        iconData = Icons.account_balance_wallet_rounded;
-        iconColor = AppColors.primary;
-        bgColor = AppColors.primary.withValues(alpha: 0.1);
-        break;
-      case ActivityType.expense:
-        iconData = Icons.receipt_long_rounded;
-        iconColor = AppColors.warningOrange;
-        bgColor = AppColors.warningOrange.withValues(alpha: 0.1);
-        break;
-      case ActivityType.payment:
-        iconData = Icons.payments_rounded;
-        iconColor = AppColors.successGreen;
-        bgColor = AppColors.successGreen.withValues(alpha: 0.1);
-        break;
-      case ActivityType.modification:
-        iconData = Icons.edit_note_rounded;
-        iconColor = Colors.blue.shade600;
-        bgColor = Colors.blue.shade600.withValues(alpha: 0.1);
-        break;
-      case ActivityType.addToGroup:
-        iconData = Icons.group_add_rounded;
-        iconColor = Colors.purple.shade500;
-        bgColor = Colors.purple.shade500.withValues(alpha: 0.1);
-        break;
-    }
-
     return Container(
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: bgColor,
+        color: activity.iconBgColor,
         shape: BoxShape.circle,
       ),
       child: Stack(
         children: [
           Center(
-            child: Icon(iconData, color: iconColor, size: 24),
+            child: Icon(activity.iconData, color: activity.iconColor, size: 24),
           ),
           // Small circle overlay to highlight nature of activity
           Positioned(
@@ -135,7 +120,7 @@ class ActivityListItem extends StatelessWidget {
               width: 14,
               height: 14,
               decoration: BoxDecoration(
-                color: activity.isPositive ? AppColors.successGreen : (activity.subtitle != null ? AppColors.warningOrange : iconColor),
+                color: activity.isPositiveEffect ? AppColors.successGreen : (activity.displaySubtitle != null ? AppColors.warningOrange : activity.iconColor),
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 2),
               ),
@@ -157,4 +142,3 @@ class ActivityListItem extends StatelessWidget {
     }
   }
 }
-
