@@ -62,6 +62,18 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
   }
 
   @override
+  Future<Either<Failure, void>> restoreExpense(String expenseId) async {
+    try {
+      await remoteDataSource.restoreExpense(expenseId);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(Failure(message: e.message));
+    } catch (e) {
+      return Left(Failure(message: e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, List<ExpenseUserEntity>>> getExpenseParticipants({String? groupId, String? friendUserId}) async {
     try {
       final result = await remoteDataSource.getExpenseParticipants(groupId: groupId, friendUserId: friendUserId);

@@ -15,6 +15,7 @@ class ExpenseDetailEntity extends Equatable {
   final ExpenseUserEntity? updatedBy;
   final List<ExpenseCommentEntity> comments;
   final List<ExpenseSplitEntity> splits;
+  final bool isDeleted;
 
   const ExpenseDetailEntity({
     required this.id,
@@ -31,6 +32,7 @@ class ExpenseDetailEntity extends Equatable {
     this.updatedBy,
     required this.comments,
     required this.splits,
+    this.isDeleted = false,
   });
 
   @override
@@ -49,6 +51,7 @@ class ExpenseDetailEntity extends Equatable {
         updatedBy,
         comments,
         splits,
+        isDeleted,
       ];
 }
 

@@ -16,6 +16,7 @@ class ExpenseDetailModel extends ExpenseDetailEntity {
     super.notes,
     super.updatedAt,
     super.updatedBy,
+    super.isDeleted,
   });
 
   factory ExpenseDetailModel.fromJson(Map<String, dynamic> json) {
@@ -38,6 +39,7 @@ class ExpenseDetailModel extends ExpenseDetailEntity {
           .toList(),
       updatedAt: json['updated_at'] as String?,
       updatedBy: json['updated_by'] != null ? ExpenseUserModel.fromJson(json['updated_by']) : null,
+      isDeleted: json['is_deleted'] as bool? ?? false,
     );
   }
 }

@@ -80,6 +80,7 @@ import 'package:split_ease/features/expenses/domain/usecases/settle_up_usecase.d
 import 'package:split_ease/features/expenses/presentation/bloc/settle_up/settle_up_cubit.dart';
 
 import 'package:split_ease/features/expenses/domain/usecases/get_expense_detail_usecase.dart';
+import 'package:split_ease/features/expenses/domain/usecases/restore_expense_usecase.dart';
 import 'package:split_ease/features/expenses/domain/usecases/get_expense_participants_usecase.dart';
 import 'features/groups/domain/usecases/group_insert_icon.dart';
 import 'features/groups/presentation/bloc/groups_bloc.dart';
@@ -166,6 +167,7 @@ void _expense() {
   sl.registerLazySingleton(() => GetExpenseParticipantsUsecase(repository: sl()));
   sl.registerLazySingleton(() => AddExpenseCommentUseCase(sl()));
   sl.registerLazySingleton(() => SettleUpUseCase(sl()));
+  sl.registerLazySingleton(() => RestoreExpenseUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<ExpenseRepository>(() => ExpenseRepositoryImpl(remoteDataSource: sl()));
@@ -192,6 +194,7 @@ void _expense() {
   sl.registerFactory(() => ExpenseDetailBloc(
         sl<GetExpenseDetailUseCase>(),
         sl<DeleteExpenseUseCase>(),
+        sl<RestoreExpenseUseCase>(),
         sl<GetGroupMembers>(),
         sl<AddExpenseCommentUseCase>(),
         sl<AppUserCubit>(),

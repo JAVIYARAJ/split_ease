@@ -9,6 +9,7 @@ abstract class ExpenseRepository {
   Future<Either<Failure, void>> updateExpense(UpdateExpenseParams params);
   Future<Either<Failure, ExpenseDetailEntity>> getExpenseDetail(String expenseId);
   Future<Either<Failure, void>> deleteExpense(String expenseId);
+  Future<Either<Failure, void>> restoreExpense(String expenseId);
   Future<Either<Failure, List<ExpenseUserEntity>>> getExpenseParticipants({String? groupId, String? friendUserId});
   Future<Either<Failure, void>> addExpenseComment({required String expenseId, required String comment});
   Future<Either<Failure, void>> settleUp({

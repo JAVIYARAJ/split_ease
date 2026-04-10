@@ -92,7 +92,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             },
             child: BaseScreen(
               useSafeArea: true,
-              backgroundColor: AppColors.backgroundLightGrey, // Using a gentle background for card styling
+              backgroundColor: AppColors.backgroundLightGrey, 
               appBar: AppBar(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
@@ -111,7 +111,11 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                     builder: (context, state) {
                       if (state is! ExpenseDetailLoaded) return const SizedBox.shrink();
 
-                      // Only show edit/delete if the user has permissions (creator or owner/admin of group)
+                      // If deleted, don't show edit/delete but show a restoration option in the banner/body instead
+                      if (state.isDeleted) {
+                        return const SizedBox.shrink();
+                      }
+
                       if (!state.canManageExpense) {
                         return const SizedBox.shrink();
                       }
@@ -150,9 +154,15 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 listener: (context, state) {
                   if (state is ExpenseDeleted) {
                     AppAlerts.showSuccess(context, 'Expense deleted successfully');
-                    Navigator.of(context).pop(true); // Return true on deletion
+                    // In a detail page, we might want to stay but show the deleted state, 
+                    // or pop back. Assuming we pop for now as before.
+                    Navigator.of(context).pop(true); 
                   } else if (state is ExpenseDeleteError) {
-                    AppAlerts.showError(context, 'Failed to delete expense: ${state.message}');
+                    AppAlerts.showError(context, state.message);
+                  } else if (state is ExpenseRestored) {
+                    AppAlerts.showSuccess(context, 'Expense restored successfully');
+                  } else if (state is ExpenseRestoreError) {
+                    AppAlerts.showError(context, state.message);
                   }
                 },
                 child: BlocBuilder<ExpenseDetailBloc, ExpenseDetailState>(
@@ -161,13 +171,19 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                       return _buildErrorState(state.message);
                     }
 
-                    final bool isLoading = state is ExpenseDetailLoading || state is ExpenseDetailInitial || state is ExpenseDeleteLoading;
+                    final bool isLoading = state is ExpenseDetailLoading || 
+                                         state is ExpenseDetailInitial || 
+                                         state is ExpenseDeleteLoading ||
+                                         state is ExpenseRestoreLoading;
+                                         
                     final entity = state is ExpenseDetailLoaded ? state.expenseDetail : _getMockEntity();
+                    final bool isDeleted = state is ExpenseDetailLoaded && state.isDeleted;
 
                     return Skeletonizer(
                       enabled: isLoading,
                       child: Column(
                         children: [
+                          if (isDeleted) _buildDeletedBanner(context, entity.id, (state as ExpenseDetailLoaded).canManageExpense),
                           Expanded(
                             child: SingleChildScrollView(
                               physics: const AlwaysScrollableScrollPhysics(),
@@ -176,7 +192,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
-                                    _buildHeaderAmount(entity),
+                                    _buildHeaderAmount(entity, isDeleted),
                                     const SizedBox(height: 32),
                                     _buildQuickInfo(state is ExpenseDetailLoaded ? state : ExpenseDetailLoaded(_getMockEntity(), "")),
                                     if (state is ExpenseDetailLoaded && state.expenseDetail.updatedBy != null) ...[
@@ -184,7 +200,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                                       _buildLastUpdatedInfo(state),
                                     ],
                                     const SizedBox(height: 24),
-                                    _buildActionGrid(entity),
+                                    _buildActionGrid(entity, isDeleted),
                                     const SizedBox(height: 24),
                                     _buildSectionTitle("Paid By"),
                                     const SizedBox(height: 8),
@@ -198,18 +214,19 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                                     ],
                                     _buildSectionTitle("Comments"),
                                     const SizedBox(height: 8),
-                                    _buildCommentsList(entity, state is ExpenseDetailLoaded ? state.currentUserId : ""),
+                                    _buildCommentsList(entity, state is ExpenseDetailLoaded ? state.currentUserId : "", isDeleted),
                                     const SizedBox(height: 24),
                                     _buildSectionTitle("Split Details"),
                                     const SizedBox(height: 8),
                                     _buildSplitsList(entity),
-                                    const SizedBox(height: 80), // Bottom padding
+                                    const SizedBox(height: 80), 
                                   ],
                                 ),
                               ),
                             ),
                           ),
                           // Sticky Comments Section at the Bottom
+                          if (!isDeleted)
                           Container(
                             color: AppColors.backgroundLightGrey,
                             padding: EdgeInsets.only(
@@ -239,13 +256,118 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     );
   }
 
+  Widget _buildDeletedBanner(BuildContext context, String expenseId, bool canRestore) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.errorRed.withValues(alpha: 0.1),
+            AppColors.errorRed.withValues(alpha: 0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.errorRed.withValues(alpha: 0.2), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.errorRed.withValues(alpha: 0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.errorRed.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.delete_outline_rounded, color: AppColors.errorRed, size: 22),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Expense Deleted",
+                  style: GoogleFonts.outfit(
+                    color: AppColors.errorRed,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  "This item is no longer active.",
+                  style: GoogleFonts.outfit(
+                    color: AppColors.errorRed.withValues(alpha: 0.7),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (canRestore)
+            Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              elevation: 0,
+              child: InkWell(
+                onTap: () {
+                  context.read<ExpenseDetailBloc>().add(RestoreExpenseEvent(expenseId));
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white, width: 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.history_rounded, size: 16, color: AppColors.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        "UNDO",
+                        style: GoogleFonts.outfit(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   void _showDeleteConfirmationDialog(BuildContext context, String expanseId) {
     showDialog(
       context: context,
       builder: (ctx) {
         return AlertDialog(
           title: Text('Delete Expense', style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
-          content: Text('Are you sure you want to delete this expense? This action cannot be undone.', style: GoogleFonts.outfit()),
+          content: Text('Are you sure you want to delete this expense? This will hide it and revert its metabolic effect on balances.', style: GoogleFonts.outfit()),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
@@ -291,7 +413,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     );
   }
 
-  Widget _buildHeaderAmount(ExpenseDetailEntity entity) {
+  Widget _buildHeaderAmount(ExpenseDetailEntity entity, bool isDeleted) {
     final formatter = NumberFormat('#,##0.00', 'en_IN');
 
     return Column(
@@ -314,14 +436,25 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
         Text(
           entity.description,
           textAlign: TextAlign.center,
-          style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+          style: GoogleFonts.outfit(
+            fontSize: 22, 
+            fontWeight: FontWeight.w700, 
+            color: isDeleted ? AppColors.textGrey : AppColors.textBlack,
+            decoration: isDeleted ? TextDecoration.lineThrough : null,
+          ),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 8),
         Text(
           "₹${formatter.format(entity.totalAmount)}",
-          style: GoogleFonts.outfit(fontSize: 36, fontWeight: FontWeight.w700, letterSpacing: -1, color: AppColors.textBlack),
+          style: GoogleFonts.outfit(
+            fontSize: 36, 
+            fontWeight: FontWeight.w700, 
+            letterSpacing: -1, 
+            color: isDeleted ? AppColors.textGrey : AppColors.textBlack,
+            decoration: isDeleted ? TextDecoration.lineThrough : null,
+          ),
         ),
       ],
     );
@@ -396,18 +529,21 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     );
   }
 
-  Widget _buildActionGrid(ExpenseDetailEntity entity) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildActionButton(Icons.receipt_rounded, "Receipt", () async {
-            final path = await ExpensePdfGenerator.generatePdf(entity);
-            if (mounted) {
-              NavigationService.pushNamed(AppRoutes.expensePdfPreview, args: {'pdfPath': path, 'expenseDescription': entity.description});
-            }
-          }),
-        ),
-      ],
+  Widget _buildActionGrid(ExpenseDetailEntity entity, bool isDeleted) {
+    return Opacity(
+      opacity: isDeleted ? 0.5 : 1.0,
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildActionButton(Icons.receipt_rounded, "Receipt", isDeleted ? () {} : () async {
+              final path = await ExpensePdfGenerator.generatePdf(entity);
+              if (mounted) {
+                NavigationService.pushNamed(AppRoutes.expensePdfPreview, args: {'pdfPath': path, 'expenseDescription': entity.description});
+              }
+            }),
+          ),
+        ],
+      ),
     );
   }
 
@@ -473,7 +609,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
   Widget _buildNotesSection(String notes) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF9C4).withValues(alpha: 0.3), // Very light yellow sticky note feel
+        color: const Color(0xFFFFF9C4).withValues(alpha: 0.3), 
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFFFF176).withValues(alpha: 0.5)),
       ),
@@ -597,7 +733,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     );
   }
 
-  Widget _buildCommentsList(ExpenseDetailEntity entity, String currentUserId) {
+  Widget _buildCommentsList(ExpenseDetailEntity entity, String currentUserId, bool isDeleted) {
     if (entity.comments.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(16),
@@ -615,78 +751,81 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       );
     }
 
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: entity.comments.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final comment = entity.comments[index];
-        final bool isMe = comment.user.id == currentUserId;
-
-        return Align(
-          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isMe ? AppColors.primary.withValues(alpha: 0.05) : AppColors.surfaceWhite,
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(16),
-                topRight: const Radius.circular(16),
-                bottomLeft: Radius.circular(isMe ? 16 : 0),
-                bottomRight: Radius.circular(isMe ? 0 : 16),
-              ),
-              border: Border.all(color: isMe ? AppColors.primary.withValues(alpha: 0.1) : AppColors.borderGreyLight),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (!isMe) ...[
-                  AppAvatar(url: comment.user.avatar, radius: 16, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
-                  const SizedBox(width: 12),
-                ],
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (!isMe) ...[
-                            Text(
-                              comment.user.fullName,
-                              style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textBlack),
-                            ),
-                            const SizedBox(width: 8),
-                          ],
-                          Text(
-                            _formatCommentDate(comment.createdAt),
-                            style: GoogleFonts.outfit(fontSize: 10, color: AppColors.textGrey),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        comment.content,
-                        textAlign: isMe ? TextAlign.right : TextAlign.left,
-                        style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textBlack.withValues(alpha: 0.8)),
-                      ),
-                    ],
-                  ),
+    return Opacity(
+      opacity: isDeleted ? 0.6 : 1.0,
+      child: ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: entity.comments.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final comment = entity.comments[index];
+          final bool isMe = comment.user.id == currentUserId;
+    
+          return Align(
+            alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+            child: Container(
+              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isMe ? AppColors.primary.withValues(alpha: 0.05) : AppColors.surfaceWhite,
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(16),
+                  topRight: const Radius.circular(16),
+                  bottomLeft: Radius.circular(isMe ? 16 : 0),
+                  bottomRight: Radius.circular(isMe ? 0 : 16),
                 ),
-                if (isMe) ...[
-                  const SizedBox(width: 12),
-                  AppAvatar(url: comment.user.avatar, radius: 16, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+                border: Border.all(color: isMe ? AppColors.primary.withValues(alpha: 0.1) : AppColors.borderGreyLight),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (!isMe) ...[
+                    AppAvatar(url: comment.user.avatar, radius: 16, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+                    const SizedBox(width: 12),
+                  ],
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (!isMe) ...[
+                              Text(
+                                comment.user.fullName,
+                                style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            Text(
+                              _formatCommentDate(comment.createdAt),
+                              style: GoogleFonts.outfit(fontSize: 10, color: AppColors.textGrey),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          comment.content,
+                          textAlign: isMe ? TextAlign.right : TextAlign.left,
+                          style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textBlack.withValues(alpha: 0.8)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isMe) ...[
+                    const SizedBox(width: 12),
+                    AppAvatar(url: comment.user.avatar, radius: 16, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 

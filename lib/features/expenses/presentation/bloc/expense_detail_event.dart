@@ -25,6 +25,15 @@ class DeleteExpenseEvent extends ExpenseDetailEvent {
   List<Object> get props => [expenseId];
 }
 
+class RestoreExpenseEvent extends ExpenseDetailEvent {
+  final String expenseId;
+
+  const RestoreExpenseEvent(this.expenseId);
+
+  @override
+  List<Object> get props => [expenseId];
+}
+
 class MarkExpenseAsChanged extends ExpenseDetailEvent {}
 
 class AddExpenseCommentEvent extends ExpenseDetailEvent {

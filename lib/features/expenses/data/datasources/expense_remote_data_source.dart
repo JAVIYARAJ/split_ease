@@ -12,6 +12,7 @@ abstract class ExpenseRemoteDataSource {
   Future<void> updateExpense(UpdateExpenseParams params);
   Future<ExpenseDetailModel> getExpenseDetail(String expenseId);
   Future<void> deleteExpense(String expenseId);
+  Future<void> restoreExpense(String expenseId);
   Future<List<ExpenseUserModel>> getExpenseParticipants({String? groupId, String? friendUserId});
   Future<void> addExpenseComment({required String expenseId, required String comment});
   Future<void> settleUp({
@@ -76,6 +77,20 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
     try {
       await client.rpc(
         'delete_expense_rpc',
+        params: {
+          'p_expense_id': expenseId,
+        },
+      );
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+  
+  @override
+  Future<void> restoreExpense(String expenseId) async {
+    try {
+      await client.rpc(
+        'restore_expense_rpc',
         params: {
           'p_expense_id': expenseId,
         },

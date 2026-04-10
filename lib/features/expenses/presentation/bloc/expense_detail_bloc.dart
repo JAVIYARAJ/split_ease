@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:split_ease/core/common/cubit/app_user_cubit.dart';
 import 'package:split_ease/features/expenses/domain/usecases/get_expense_detail_usecase.dart';
 import 'package:split_ease/features/expenses/domain/usecases/delete_expense_usecase.dart';
+import 'package:split_ease/features/expenses/domain/usecases/restore_expense_usecase.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_event.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_state.dart';
 import 'package:split_ease/features/expenses/domain/usecases/add_expense_comment_usecase.dart';
@@ -13,17 +14,27 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
   /// Logic Coordinator for the Expense Detail Page.
   /// 
   /// Manages fetching detailed information about a single expense, 
-  /// including participants, summaries, and deleting the expense.
+  /// including participants, summaries, and deleting/restoring the expense.
   final GetExpenseDetailUseCase _getExpenseDetailUseCase;
   final DeleteExpenseUseCase _deleteExpenseUseCase;
+  final RestoreExpenseUseCase _restoreExpenseUseCase;
   final GetGroupMembers _getGroupMembers;
   final AddExpenseCommentUseCase _addExpenseCommentUseCase;
   final AppUserCubit _appUserCubit;
   final DataRefreshCubit _dataRefreshCubit;
 
-  ExpenseDetailBloc(this._getExpenseDetailUseCase, this._deleteExpenseUseCase, this._getGroupMembers, this._addExpenseCommentUseCase, this._appUserCubit, this._dataRefreshCubit) : super(ExpenseDetailInitial()) {
+  ExpenseDetailBloc(
+    this._getExpenseDetailUseCase, 
+    this._deleteExpenseUseCase, 
+    this._restoreExpenseUseCase,
+    this._getGroupMembers, 
+    this._addExpenseCommentUseCase, 
+    this._appUserCubit, 
+    this._dataRefreshCubit
+  ) : super(ExpenseDetailInitial()) {
     on<FetchExpenseDetailEvent>(_onFetchExpenseDetail);
     on<DeleteExpenseEvent>(_onDeleteExpense);
+    on<RestoreExpenseEvent>(_onRestoreExpense);
     on<MarkExpenseAsChanged>(_onMarkExpenseAsChanged);
     on<AddExpenseCommentEvent>(_onAddExpenseComment);
   }
@@ -105,8 +116,6 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
             if (currentState.expenseDetail.group?.id != null) {
               _dataRefreshCubit.markForRefresh(RefreshType.groupDetail, id: currentState.expenseDetail.group!.id);
             }
-            // For now mark generic friend details for refresh. 
-            // Better: identify the friend from the expense detail splits.
              _dataRefreshCubit.markForRefresh(RefreshType.friendDetail); 
           }
           
@@ -115,17 +124,54 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
       );
     }
 
+  Future<void> _onRestoreExpense(
+    RestoreExpenseEvent event,
+    Emitter<ExpenseDetailState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is ExpenseDetailLoaded) {
+      if (!currentState.canManageExpense) {
+        emit(const ExpenseRestoreError("You do not have permission to restore this expense."));
+        return;
+      }
+    }
+
+    emit(ExpenseRestoreLoading());
+    final result = await _restoreExpenseUseCase(event.expenseId);
+    
+    result.fold(
+      (failure) => emit(ExpenseRestoreError(failure.message)),
+      (_) {
+        _dataRefreshCubit.markMultipleForRefresh([
+          RefreshType.groups,
+          RefreshType.friends,
+          RefreshType.activity,
+        ]);
+
+        if (currentState is ExpenseDetailLoaded) {
+          if (currentState.expenseDetail.group?.id != null) {
+            _dataRefreshCubit.markForRefresh(RefreshType.groupDetail, id: currentState.expenseDetail.group!.id);
+          }
+           _dataRefreshCubit.markForRefresh(RefreshType.friendDetail); 
+        }
+        
+        emit(ExpenseRestored(event.expenseId));
+        // Refresh detail to show it's no longer deleted
+        add(FetchExpenseDetailEvent(event.expenseId));
+      },
+    );
+  }
+
   Future<void> _onAddExpenseComment(
     AddExpenseCommentEvent event,
     Emitter<ExpenseDetailState> emit,
   ) async {
     final result = await _addExpenseCommentUseCase(expenseId: event.expenseId, comment: event.comment);
     result.fold(
-      (failure) => null, // We might want to show an error state if needed, but for now just refresh or ignore
+      (failure) => null, 
       (_) {
-        // Refresh details to show the new comment
         add(FetchExpenseDetailEvent(event.expenseId));
-        add(MarkExpenseAsChanged()); // Signal that data has changed (for parent screen refresh)
+        add(MarkExpenseAsChanged()); 
       },
     );
   }

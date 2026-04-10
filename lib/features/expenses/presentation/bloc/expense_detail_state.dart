@@ -32,6 +32,9 @@ class ExpenseDetailLoaded extends ExpenseDetailState {
   /// Logic Moved from UI: Gets first name of the editor if updated.
   String? get updatedByFirstName => expenseDetail.updatedBy?.fullName.split(' ').first;
 
+  /// Status of the expense
+  bool get isDeleted => expenseDetail.isDeleted;
+
   /// Logic Moved from UI: Gets formatted updated timestamp.
   String? get formattedUpdatedAt {
     if (expenseDetail.updatedAt == null) return null;
@@ -94,6 +97,25 @@ class ExpenseDeleteError extends ExpenseDetailState {
   final String message;
 
   const ExpenseDeleteError(this.message);
+
+  @override
+  List<Object?> get props => [message, hasChanges];
+}
+
+class ExpenseRestoreLoading extends ExpenseDetailState {}
+
+class ExpenseRestored extends ExpenseDetailState {
+  final String expenseId;
+  const ExpenseRestored(this.expenseId) : super(hasChanges: true);
+
+  @override
+  List<Object?> get props => [expenseId, hasChanges];
+}
+
+class ExpenseRestoreError extends ExpenseDetailState {
+  final String message;
+
+  const ExpenseRestoreError(this.message);
 
   @override
   List<Object?> get props => [message, hasChanges];
