@@ -95,7 +95,7 @@ class ActivityPage extends StatelessWidget {
                       activity: activity,
                       onTap: isLoading ? null : () async {
                         final targetId = activity.expenseId ?? activity.entityId ?? activity.activityId;
-                        if ((activity.activityAction == ActivityType.expense || activity.activityAction == ActivityType.settlement || activity.activityAction == ActivityType.modification || activity.activityAction == ActivityType.deleted) && targetId.isNotEmpty) {
+                        if ((activity.activityAction == ActivityType.expense || activity.activityAction == ActivityType.settlement || activity.activityAction == ActivityType.modification || activity.activityAction == ActivityType.deleted || activity.activityAction == ActivityType.restored) && targetId.isNotEmpty) {
                           NavigationUtils.handleResult(
                             context: context,
                             navigation: NavigationService.pushNamed(AppRoutes.expanseDetail, args: {"expanse_id": targetId}),
