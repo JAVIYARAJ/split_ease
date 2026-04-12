@@ -10,6 +10,7 @@ import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
+import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
 import 'package:split_ease/core/utils/navigation_utils.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
@@ -403,9 +404,11 @@ class _GroupDetailAppBar extends StatelessWidget {
       expandedHeight: 200.0,
       pinned: true,
       backgroundColor: Colors.transparent,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+      leadingWidth: 80,
+      leading: AppBackButton(
         onPressed: onBack,
+        color: Colors.white,
+        backgroundColor: Colors.white24,
       ),
       actions: [
         // Hide settings for non-group context

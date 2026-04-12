@@ -8,6 +8,7 @@ import 'package:split_ease/core/presentation/widgets/custom_refresh_indicator.da
 import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
+import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
 import 'package:split_ease/features/friends/domain/entities/friend_entity.dart';
 import 'package:split_ease/features/friends/domain/entities/friend_expense_entity.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friend_detail_bloc.dart';
@@ -131,9 +132,10 @@ class _FriendDetailPageState extends State<FriendDetailPage> {
                 pinned: true,
                 backgroundColor: const Color(0xFFF9FAFB),
                 surfaceTintColor: Colors.transparent,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textBlack, size: 20),
+                leadingWidth: 80,
+                leading: AppBackButton(
                   onPressed: _onBack,
+                  backgroundColor: AppColors.surfaceWhite,
                 ),
                 actions: [
                   IconButton(

@@ -28,51 +28,96 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  void _showVerificationDialog(BuildContext context) {
+  void _showVerificationDialog(BuildContext loginContext) {
     showDialog(
-      context: context,
+      context: loginContext,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        contentPadding: const EdgeInsets.all(24),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.mark_email_unread_rounded, color: AppColors.primary, size: 40),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              "Verify Your Identity",
-              textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.textBlack),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              "It looks like you haven't confirmed your email address yet. Please check your inbox to activate your account.",
-              textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(fontSize: 15, color: AppColors.textGrey, height: 1.5),
-            ),
-            const SizedBox(height: 32),
-            AppPrimaryButton(
-              text: "Check Inbox",
-              onPressed: () => AuthUtils.openMailApp(),
-            ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                "I'll do it later",
-                style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textGrey),
-              ),
-            ),
-          ],
+      builder: (dialogContext) => BlocProvider.value(
+        value: loginContext.read<LoginBloc>(),
+        child: BlocListener<LoginBloc, LoginState>(
+          listener: (context, state) {
+            if (state.status == LoginStatus.resendSuccess) {
+              Future.delayed(const Duration(seconds: 2), () {
+                if (dialogContext.mounted) {
+                  Navigator.pop(dialogContext);
+                }
+              });
+            }
+          },
+          child: BlocBuilder<LoginBloc, LoginState>(
+            builder: (context, state) {
+              final bool isSent = state.status == LoginStatus.resendSuccess;
+              final bool isResendLoading = state.status == LoginStatus.resendLoading;
+
+              return AlertDialog(
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                contentPadding: const EdgeInsets.all(24),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isSent ? Icons.mark_email_read_rounded : Icons.mark_email_unread_rounded,
+                        color: AppColors.primary,
+                        size: 40,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      isSent ? "Verification Sent!" : "Verify Your Identity",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.textBlack),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      isSent
+                          ? "A new verification link has been sent to your email. Please check your inbox."
+                          : "It looks like you haven't confirmed your email address yet. Please check your inbox to activate your account.",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(fontSize: 15, color: AppColors.textGrey, height: 1.5),
+                    ),
+                    const SizedBox(height: 32),
+                    AppPrimaryButton(
+                      text: isSent ? "Open Mail App" : "Check Inbox",
+                      onPressed: () => AuthUtils.openMailApp(),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: (isSent || isResendLoading)
+                          ? null
+                          : () {
+                              context.read<LoginBloc>().add(ResendEmail(email: _emailController.text.trim()));
+                            },
+                      child: isResendLoading
+                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                          : Text(
+                              isSent ? "Email Sent Successfully" : "Resend Verification Link",
+                              style: GoogleFonts.outfit(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: isSent ? AppColors.textGrey : AppColors.primary,
+                              ),
+                            ),
+                    ),
+                    const SizedBox(height: 4),
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      child: Text(
+                        "Close",
+                        style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textGrey),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -99,6 +144,8 @@ class _LoginPageState extends State<LoginPage> {
         } else if (state.status == LoginStatus.success) {
           AppAlerts.showSuccess(context, state.message);
           NavigationService.pushReplacement(AppRoutes.home);
+        } else if (state.status == LoginStatus.resendSuccess) {
+          AppAlerts.showSuccess(context, state.message);
         } else if (state.status == LoginStatus.registerNavigation) {
           NavigationService.pushReplacement(AppRoutes.register);
         }

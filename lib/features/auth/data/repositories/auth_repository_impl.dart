@@ -43,4 +43,14 @@ class AuthRepositoryImpl implements AuthRepository {
       return left(Failure(message: e.message));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> resendConfirmationEmail({required String email}) async {
+    try {
+      await authRemoteDataSource.resendConfirmationEmail(email: email);
+      return right(null);
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    }
+  }
 }

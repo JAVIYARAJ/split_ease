@@ -8,6 +8,7 @@ class StaggeredEntryColumn extends StatefulWidget {
   final double verticalOffset;
   final MainAxisAlignment mainAxisAlignment;
   final CrossAxisAlignment crossAxisAlignment;
+  final bool animate;
 
   const StaggeredEntryColumn({
     super.key,
@@ -18,6 +19,7 @@ class StaggeredEntryColumn extends StatefulWidget {
     this.verticalOffset = 20.0,
     this.mainAxisAlignment = MainAxisAlignment.start,
     this.crossAxisAlignment = CrossAxisAlignment.center,
+    this.animate = true,
   });
 
   @override
@@ -26,6 +28,7 @@ class StaggeredEntryColumn extends StatefulWidget {
 
 class _StaggeredEntryColumnState extends State<StaggeredEntryColumn> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  bool _hasAnimated = false;
 
   @override
   void initState() {
@@ -35,8 +38,19 @@ class _StaggeredEntryColumnState extends State<StaggeredEntryColumn> with Single
       duration: widget.totalDuration,
     );
 
-    // Start immediately
-    _controller.forward();
+    if (widget.animate) {
+      _controller.forward();
+      _hasAnimated = true;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant StaggeredEntryColumn oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.animate && !_hasAnimated) {
+      _controller.forward();
+      _hasAnimated = true;
+    }
   }
 
   @override

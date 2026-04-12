@@ -107,12 +107,7 @@ class _HomePageState extends State<HomePage> {
                 IndexedStack(
                   index: state.tabIndex,
                   children: [
-                    Center(
-                      child: Text(
-                        "Home Tab Content",
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black54),
-                      ),
-                    ),
+                    const _HomeComingSoon(),
                     const FriendsPage(),
                     const GroupsPage(),
                     const ActivityPage(),
@@ -248,6 +243,194 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── Coming Soon Dashboard Design ──
+
+class _HomeComingSoon extends StatelessWidget {
+  const _HomeComingSoon();
+
+  @override
+  Widget build(BuildContext context) {
+    final userState = context.watch<AppUserCubit>().state;
+    final String name = (userState is AppUserLoggedIn) ? (userState.user.name.split(' ').first) : "Splitting";
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.only(top: 80, left: 24, right: 24, bottom: 120),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. Welcome Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Hey $name,",
+                    style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textGrey),
+                  ),
+                  Text(
+                    "The Laboratory",
+                    style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -1.0),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.bolt_rounded, size: 14, color: AppColors.primary),
+                    const SizedBox(width: 4),
+                    Text(
+                      "BETA",
+                      style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: AppColors.primary, letterSpacing: 1.0),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 48),
+
+          // 2. Feature Roadmap Section
+          Text(
+            "EXPLORING THE FUTURE",
+            style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1.5, color: AppColors.iconGrey),
+          ),
+          const SizedBox(height: 24),
+          _buildRoadmapCard(
+            title: "Smart Settlement",
+            desc: "AI-driven algorithms to minimize your total group transactions.",
+            icon: Icons.auto_awesome_rounded,
+            color: const Color(0xFF673AB7),
+            status: "Developing",
+          ),
+          const SizedBox(height: 16),
+          _buildRoadmapCard(
+            title: "Analytics Hub",
+            desc: "Visual insight into your spending habits across every group.",
+            icon: Icons.bar_chart_rounded,
+            color: const Color(0xFF009688),
+            status: "Coming Soon",
+          ),
+          const SizedBox(height: 16),
+          _buildRoadmapCard(
+            title: "Auto-Scan Receipts",
+            desc: "Snapshot your receipt and let our vision engine split the items.",
+            icon: Icons.camera_rounded,
+            color: const Color(0xFFFF9800),
+            status: "Coming Soon",
+          ),
+
+          const SizedBox(height: 48),
+
+          // 3. Immersive Placeholder Content
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.5)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+                      child: const Icon(Icons.insights_rounded, color: AppColors.primary),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("Spending Activity", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textBlack)),
+                          Text("Real-time data engine", style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                // Skeletal Lines
+                _buildSkeletalLine(double.infinity),
+                const SizedBox(height: 12),
+                _buildSkeletalLine(200),
+                const SizedBox(height: 12),
+                _buildSkeletalLine(150),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoadmapCard({
+    required String title,
+    required String desc,
+    required IconData icon,
+    required Color color,
+    required String status,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(title, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textBlack)),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(8)),
+                      child: Text(status, style: GoogleFonts.outfit(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.textGrey)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(desc, style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey, height: 1.4)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSkeletalLine(double width) {
+    return Container(
+      height: 8,
+      width: width,
+      decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(4)),
     );
   }
 }

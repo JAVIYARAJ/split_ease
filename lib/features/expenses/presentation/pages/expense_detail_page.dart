@@ -9,6 +9,7 @@ import 'package:split_ease/core/presentation/widgets/base_screen.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
+import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
 import 'package:split_ease/core/utils/navigation_utils.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_detail_entity.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_bloc.dart';
@@ -97,10 +98,10 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 backgroundColor: Colors.transparent,
                 elevation: 0,
                 scrolledUnderElevation: 0,
-                centerTitle: true,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textBlack),
+                leadingWidth: 80,
+                leading: AppBackButton(
                   onPressed: _onBack,
+                  backgroundColor: AppColors.surfaceWhite,
                 ),
                 title: Text(
                   "Expense Details",

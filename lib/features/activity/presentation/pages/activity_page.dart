@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:split_ease/core/presentation/widgets/custom_refresh_indicator.dart';
-import 'package:split_ease/features/activity/domain/entities/activity_entity.dart';
-import '../../../../../core/presentation/widgets/base_screen.dart';
-import '../../../../../core/theme/app_colors.dart';
-
-import '../../../../core/routing/app_routes.dart';
-import '../../../../core/routing/navigation_service.dart';
-import '../widgets/activity_list_item.dart';
-import '../bloc/activity_bloc.dart';
-import '../../../../../core/presentation/widgets/app_empty_state.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
 import 'package:split_ease/core/utils/navigation_utils.dart';
-import 'package:intl/intl.dart';
+import 'package:split_ease/features/activity/domain/entities/activity_entity.dart';
+
+import '../../../../../core/presentation/widgets/app_empty_state.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../core/routing/app_routes.dart';
+import '../../../../core/routing/navigation_service.dart';
+import '../bloc/activity_bloc.dart';
+import '../widgets/activity_list_item.dart';
 
 class ActivityPage extends StatelessWidget {
   const ActivityPage({super.key});
@@ -29,48 +28,17 @@ class ActivityPage extends StatelessWidget {
           context.read<ActivityBloc>().add(LoadActivities());
         }
       },
-      child: BaseScreen(
+      child: Scaffold(
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          title: Text(
-            'Activity Log',
-            style: GoogleFonts.outfit(
-              color: AppColors.textBlack,
-              fontWeight: FontWeight.w700,
-              fontSize: 22,
-            ),
-          ),
-          centerTitle: false,
-          backgroundColor: Colors.white,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.search, color: AppColors.textBlack, size: 26),
-              onPressed: () {},
-            ),
-            const SizedBox(width: 8),
-          ],
-        ),
-        child: BlocBuilder<ActivityBloc, ActivityState>(
+        body: BlocBuilder<ActivityBloc, ActivityState>(
           builder: (context, state) {
             final isLoading = state is ActivityLoading;
-            
+
             if (state is ActivityError) {
               return Center(child: Text(state.message));
             }
 
-            final List<ActivityEntity> activities = (state is ActivityLoaded) 
-                ? state.activities 
-                : _getDummyActivities();
-
-            if (!isLoading && activities.isEmpty) {
-              return const AppEmptyState(
-                icon: Icons.history_rounded,
-                title: "No Activities Yet",
-                subtitle: "When you add expenses, settle debts, or get added to groups, your recent activities will appear here.",
-              );
-            }
+            final List<ActivityEntity> activities = (state is ActivityLoaded) ? state.activities : [];
 
             final groupedActivities = _groupActivities(activities);
 
@@ -78,37 +46,68 @@ class ActivityPage extends StatelessWidget {
               onRefresh: () async {
                 context.read<ActivityBloc>().add(LoadActivities());
               },
-              child: Skeletonizer(
-                enabled: isLoading,
-                child: ListView.builder(
-                  itemCount: groupedActivities.length,
-                  padding: const EdgeInsets.only(bottom: 100),
-                  itemBuilder: (context, index) {
-                    final item = groupedActivities[index];
-                    
-                    if (item is String) {
-                      return _buildSectionHeader(item);
-                    }
-                    
-                    final activity = item as ActivityEntity;
-                    return ActivityListItem(
-                      activity: activity,
-                      onTap: isLoading ? null : () async {
-                        final targetId = activity.expenseId ?? activity.entityId ?? activity.activityId;
-                        if ((activity.activityAction == ActivityType.expense || activity.activityAction == ActivityType.settlement || activity.activityAction == ActivityType.modification || activity.activityAction == ActivityType.deleted || activity.activityAction == ActivityType.restored) && targetId.isNotEmpty) {
-                          NavigationUtils.handleResult(
-                            context: context,
-                            navigation: NavigationService.pushNamed(AppRoutes.expanseDetail, args: {"expanse_id": targetId}),
-                            refreshType: RefreshType.activity,
-                            onRefresh: () {
-                              context.read<ActivityBloc>().add(LoadActivities());
-                            },
-                          );
-                        }
-                      },
-                    );
-                  },
-                ),
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  _buildAppBar(context),
+                  if (!isLoading && activities.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: const AppEmptyState(
+                        icon: Icons.history_rounded,
+                        title: "No Activity Found",
+                        subtitle: "Your split history is empty. Time to start sharing expenses!",
+                      ),
+                    )
+                  else
+                    Skeletonizer.sliver(
+                      enabled: isLoading,
+                      child: SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate((context, index) {
+                            final item = groupedActivities[index];
+
+                            // Calculate stagger delay
+                            final double delay = (index * 0.05).clamp(0.0, 0.5);
+
+                            if (item is String) {
+                              return _buildStaggeredWrapper(delay: delay, child: _buildSectionHeader(item));
+                            }
+
+                            final activity = item as ActivityEntity;
+                            return _buildStaggeredWrapper(
+                              delay: delay,
+                              child: ActivityListItem(
+                                activity: activity,
+                                onTap: isLoading
+                                    ? null
+                                    : () async {
+                                        final targetId = activity.expenseId ?? activity.entityId ?? activity.activityId;
+                                        if ((activity.activityAction == ActivityType.expense ||
+                                                activity.activityAction == ActivityType.settlement ||
+                                                activity.activityAction == ActivityType.modification ||
+                                                activity.activityAction == ActivityType.deleted ||
+                                                activity.activityAction == ActivityType.restored) &&
+                                            targetId.isNotEmpty) {
+                                          NavigationUtils.handleResult(
+                                            context: context,
+                                            navigation: NavigationService.pushNamed(AppRoutes.expanseDetail, args: {"expanse_id": targetId}),
+                                            refreshType: RefreshType.activity,
+                                            onRefresh: () {
+                                              context.read<ActivityBloc>().add(LoadActivities());
+                                            },
+                                          );
+                                        }
+                                      },
+                              ),
+                            );
+                          }, childCount: groupedActivities.length),
+                        ),
+                      ),
+                    ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 120)),
+                ],
               ),
             );
           },
@@ -117,29 +116,73 @@ class ActivityPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-      color: Colors.white,
-      child: Text(
-        title.toUpperCase(),
-        style: GoogleFonts.outfit(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          color: AppColors.iconGrey,
-          letterSpacing: 1.2,
+  Widget _buildAppBar(BuildContext context) {
+    return SliverAppBar(
+      pinned: true,
+      backgroundColor: Colors.white,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      toolbarHeight: 80,
+      automaticallyImplyLeading: false,
+      title: Padding(
+        padding: const EdgeInsets.only(left: 4.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Recent Activity",
+              style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -1.0),
+            ),
+            Text(
+              "Track transactions & updates",
+              style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textGrey),
+            ),
+          ],
         ),
+      ),
+      actions: [
+        IconButton(
+          onPressed: () {},
+          icon: const Icon(Icons.search_rounded, color: AppColors.textBlack),
+          style: IconButton.styleFrom(backgroundColor: AppColors.backgroundLightGrey, padding: const EdgeInsets.all(12)),
+        ),
+        const SizedBox(width: 16),
+      ],
+    );
+  }
+
+  Widget _buildStaggeredWrapper({required Widget child, required double delay}) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: Duration(milliseconds: (400 + (delay * 1000)).toInt()),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(offset: Offset(0, 20 * (1 - value)), child: child),
+        );
+      },
+      child: child,
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 32, 16, 12),
+      child: Text(
+        title,
+        style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: 2.0),
       ),
     );
   }
 
   List<dynamic> _groupActivities(List<ActivityEntity> activities) {
     if (activities.isEmpty) return [];
-    
+
     final List<dynamic> grouped = [];
     String? lastHeader;
-    
+
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
@@ -147,7 +190,7 @@ class ActivityPage extends StatelessWidget {
     for (var activity in activities) {
       final date = DateTime(activity.createdAt.year, activity.createdAt.month, activity.createdAt.day);
       String header;
-      
+
       if (date == today) {
         header = "Today";
       } else if (date == yesterday) {
@@ -157,32 +200,14 @@ class ActivityPage extends StatelessWidget {
       } else {
         header = DateFormat('MMMM yyyy').format(date);
       }
-      
+
       if (header != lastHeader) {
         grouped.add(header);
         lastHeader = header;
       }
       grouped.add(activity);
     }
-    
-    return grouped;
-  }
 
-  List<ActivityEntity> _getDummyActivities() {
-    return List.generate(
-      10,
-      (index) => ActivityEntity(
-        activityId: index.toString(),
-        type: 'expense',
-        actorId: 'dummy_id',
-        actorName: 'Milan Chudasama',
-        description: 'Dummy activity description text',
-        amountType: 'you_are_owed',
-        balanceEffect: 0.0,
-        createdAt: DateTime.now().subtract(Duration(days: index ~/ 3)),
-        expenseId: 'dummy_expense_id',
-        isUnread: index < 2,
-      ),
-    );
+    return grouped;
   }
 }

@@ -14,6 +14,7 @@ import 'package:split_ease/features/activity/domain/usecases/get_activity_feed_u
 import 'package:split_ease/features/activity/presentation/bloc/activity_bloc.dart';
 import 'package:split_ease/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:split_ease/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:split_ease/features/auth/domain/usecases/resend_confirmation_email.dart';
 import 'package:split_ease/features/auth/domain/usecases/user_sign_up.dart';
 import 'package:split_ease/features/auth/presentation/login/bloc/login_bloc.dart';
 import 'package:split_ease/features/auth/presentation/register/bloc/register_bloc.dart';
@@ -337,7 +338,7 @@ void _home() {
 void _auth() {
   // 1. Data Sources (Lowest Level)
   // Handles raw data fetching (API calls, Database, etc.)
-  sl.registerFactory<AuthRemoteDataSource>(() => AuthDataSourceDataSourceImpl(client: sl<SupabaseClient>()));
+  sl.registerFactory<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(client: sl<SupabaseClient>()));
 
   // 2. Repositories (Data Layer Abstraction)
   // Acts as a bridge between Data Sources and Domain Layer.
@@ -349,10 +350,15 @@ void _auth() {
   // Encapsulates specific business logic. ViewModels/Blocs interact with these.
   sl.registerFactory(() => UserLogin(authRepository: sl<AuthRepository>()));
   sl.registerFactory(() => UserSignUp(authRepository: sl<AuthRepository>()));
+  sl.registerFactory(() => ResendConfirmationEmail(sl<AuthRepository>()));
 
   // 4. Blocs / State Management (Presentation Layer)
   // Receives user input, calls Use Cases, and emits States to the UI.
-  sl.registerFactory(() => LoginBloc(sl<UserLogin>(), sl<AppUserCubit>()));
+  sl.registerFactory(() => LoginBloc(
+        userLogin: sl<UserLogin>(),
+        resendConfirmationEmail: sl<ResendConfirmationEmail>(),
+        appUserCubit: sl<AppUserCubit>(),
+      ));
   sl.registerFactory(() => RegisterBloc(sl<UserSignUp>(), sl<AppUserCubit>()));
 }
 
