@@ -9,12 +9,13 @@ abstract interface class AuthRemoteDataSource {
   Future<UserModel> loginWithEmailPassword({required String email, required String password});
 
   Future<UserModel?> getCurrentUser();
+  Future<void> resendConfirmationEmail({required String email});
 }
 
-class AuthDataSourceDataSourceImpl implements AuthRemoteDataSource {
+class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final SupabaseClient client;
 
-  AuthDataSourceDataSourceImpl({required this.client});
+  AuthRemoteDataSourceImpl({required this.client});
 
   @override
   Future<UserModel> loginWithEmailPassword({required String email, required String password}) async {
@@ -52,6 +53,18 @@ class AuthDataSourceDataSourceImpl implements AuthRemoteDataSource {
         return UserModel.fromSupabaseUser(user);
       }
       return null;
+    } catch (e) {
+      throw ServerException(message: ErrorMessageUtils.generate(e));
+    }
+  }
+
+  @override
+  Future<void> resendConfirmationEmail({required String email}) async {
+    try {
+      await client.auth.resend(
+        type: OtpType.signup,
+        email: email,
+      );
     } catch (e) {
       throw ServerException(message: ErrorMessageUtils.generate(e));
     }

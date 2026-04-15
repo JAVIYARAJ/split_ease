@@ -1,6 +1,7 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class ProfileAvatar extends StatelessWidget {
@@ -20,23 +21,14 @@ class ProfileAvatar extends StatelessWidget {
     return Center(
       child: Stack(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.borderGrey, width: 2),
-            ),
-            child: CircleAvatar(
-              radius: 60,
-              backgroundColor: AppColors.backgroundLightGrey,
-              backgroundImage: pickedImage != null
-                  ? FileImage(pickedImage!)
-                  : (avatarUrl != null && avatarUrl!.isNotEmpty)
-                      ? NetworkImage(avatarUrl!) as ImageProvider
-                      : null,
-              child: (pickedImage == null && (avatarUrl == null || avatarUrl!.isEmpty))
-                  ? const Icon(Icons.person, size: 60, color: AppColors.iconGrey)
-                  : null,
-            ),
+          AppAvatar(
+            url: avatarUrl,
+            file: pickedImage,
+            radius: 60,
+            iconSize: 60,
+            backgroundColor: AppColors.backgroundLightGrey,
+            iconColor: AppColors.iconGrey,
+            border: Border.all(color: AppColors.borderGrey, width: 2),
           ),
           Positioned(
             bottom: 4,

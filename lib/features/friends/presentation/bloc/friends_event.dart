@@ -12,3 +12,8 @@ class FriendQrJoinEvent extends FriendsEvent{
 }
 
 class LoadUnreadFriendRequestCount extends FriendsEvent {}
+
+class ToggleFriendsFab extends FriendsEvent {
+  final bool isExtended;
+  ToggleFriendsFab(this.isExtended);
+}

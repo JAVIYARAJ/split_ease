@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
+import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import 'package:split_ease/features/friends/domain/entities/friend_request_entity.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friend_requests_bloc.dart';
 
@@ -34,22 +35,9 @@ class FriendRequestTile extends StatelessWidget {
           // ── Avatar ──
           GestureDetector(
             onLongPress: () => _showFullImage(context),
-            child: CircleAvatar(
+            child: AppAvatar(
+              url: request.avatarUrl,
               radius: 26,
-              backgroundImage: request.avatarUrl != null
-                  ? NetworkImage(request.avatarUrl!)
-                  : null,
-              backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-              child: request.avatarUrl == null
-                  ? Text(
-                      request.fullName[0].toUpperCase(),
-                      style: GoogleFonts.outfit(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
-                      ),
-                    )
-                  : null,
             ),
           ),
 

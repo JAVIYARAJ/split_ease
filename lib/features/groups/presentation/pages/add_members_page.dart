@@ -7,6 +7,11 @@ import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/groups/domain/entities/group_friend_entity.dart';
 import 'package:split_ease/features/groups/presentation/bloc/add_members_bloc.dart';
 import 'package:split_ease/injection_container.dart';
+import 'package:split_ease/core/common/cubit/app_user_cubit.dart';
+import 'package:split_ease/core/presentation/widgets/app_empty_state.dart';
+import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
+import 'package:split_ease/core/routing/app_routes.dart';
+import 'package:split_ease/core/routing/navigation_service.dart';
 
 class AddMembersPage extends StatefulWidget {
   final String groupId;
@@ -19,7 +24,6 @@ class AddMembersPage extends StatefulWidget {
 
 class _AddMembersPageState extends State<AddMembersPage> {
   final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
 
   @override
   void dispose() {
@@ -115,12 +119,49 @@ class _AddMembersPageState extends State<AddMembersPage> {
       );
     }
 
-    final alreadyInGroup = state.alreadyInGroup;
-    final notInGroup = state.notInGroup;
+    if (state.status == AddMembersStatus.loaded && state.friends.isEmpty) {
+      return BlocBuilder<AppUserCubit, AppUserState>(
+        builder: (context, userState) {
+          return AppEmptyState(
+            icon: Icons.person_add_rounded,
+            title: 'No Friends Yet',
+            subtitle: 'You don\'t have any friends on SplitEase yet. Share your profile QR code with others to start splitting expenses!',
+            actionButton: ElevatedButton.icon(
+              onPressed: () {
+                if (userState is AppUserLoggedIn) {
+                  NavigationService.pushNamed(
+                    AppRoutes.userQr,
+                    args: {
+                      'userId': userState.user.id,
+                      'userName': userState.user.name,
+                      'userAvatar': userState.user.avatarUrl,
+                    },
+                  );
+                }
+              },
+              icon: const Icon(Icons.qr_code_rounded, color: Colors.white),
+              label: Text(
+                "Share My QR",
+                style: GoogleFonts.openSans(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryTeal,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+              ),
+            ),
+          );
+        },
+      );
+    }
 
-    // Apply search filter
-    final filteredInGroup = _filterFriends(alreadyInGroup);
-    final filteredNotInGroup = _filterFriends(notInGroup);
+    final filteredInGroup = state.filteredInGroup;
+    final filteredNotInGroup = state.filteredNotInGroup;
 
     return Column(
       children: [
@@ -129,7 +170,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
           child: TextField(
             controller: _searchController,
-            onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
+            onChanged: (value) => context.read<AddMembersBloc>().add(ChangeSearchQuery(value)),
             style: GoogleFonts.openSans(fontSize: 16, color: AppColors.textBlack),
             decoration: InputDecoration(
               hintText: 'Search friends by name...',
@@ -190,7 +231,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
                       Icon(Icons.search_off_rounded, size: 48, color: AppColors.textGrey.withValues(alpha: 0.3)),
                       const SizedBox(height: 16),
                       Text(
-                        _searchQuery.isNotEmpty ? 'No friends match "$_searchQuery"' : 'No friends found',
+                        state.searchQuery.isNotEmpty ? 'No friends match "${state.searchQuery}"' : 'No friends found',
                         style: GoogleFonts.openSans(fontSize: 16, color: AppColors.textGrey),
                       ),
                     ],
@@ -201,14 +242,6 @@ class _AddMembersPageState extends State<AddMembersPage> {
         ),
       ],
     );
-  }
-
-  List<GroupFriendEntity> _filterFriends(List<GroupFriendEntity> friends) {
-    if (_searchQuery.isEmpty) return friends;
-    return friends.where((f) {
-      return f.fullName.toLowerCase().contains(_searchQuery) ||
-          (f.email?.toLowerCase().contains(_searchQuery) ?? false);
-    }).toList();
   }
 
   Widget _buildSectionHeader(String title) {
@@ -243,35 +276,15 @@ class _AddMembersPageState extends State<AddMembersPage> {
           child: Row(
             children: [
               // Avatar
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.backgroundLightGrey,
-                  image: friend.avatarUrl != null
-                      ? DecorationImage(
-                          image: CachedNetworkImageProvider(friend.avatarUrl!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child: friend.avatarUrl == null
-                    ? Center(
-                        child: Text(
-                          friend.fullName.isNotEmpty ? friend.fullName[0].toUpperCase() : '?',
-                          style: GoogleFonts.openSans(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primaryTeal,
-                          ),
-                        ),
-                      )
-                    : null,
+              AppAvatar(
+                url: friend.avatarUrl,
+                radius: 25,
+                backgroundColor: AppColors.backgroundLightGrey,
+                iconColor: AppColors.primaryTeal,
               ),
               const SizedBox(width: 16),
 
-              // Name + subtitle
+              // Name + subtitle + Role selection
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -296,6 +309,25 @@ class _AddMembersPageState extends State<AddMembersPage> {
                           color: AppColors.textGrey.withValues(alpha: 0.8),
                         ),
                       ),
+                    ] else if (isSelected) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          _buildRoleChip(
+                            context,
+                            friend.userId,
+                            role: 'user',
+                            isSelected: context.read<AddMembersBloc>().state.selectedRoles[friend.userId] == 'user',
+                          ),
+                          const SizedBox(width: 8),
+                          _buildRoleChip(
+                            context,
+                            friend.userId,
+                            role: 'admin',
+                            isSelected: context.read<AddMembersBloc>().state.selectedRoles[friend.userId] == 'admin',
+                          ),
+                        ],
+                      ),
                     ],
                   ],
                 ),
@@ -303,25 +335,77 @@ class _AddMembersPageState extends State<AddMembersPage> {
 
               // Selection Indicator
               if (!isDisabled)
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isSelected ? AppColors.primaryTeal : Colors.transparent,
-                    border: Border.all(
-                      color: isSelected ? AppColors.primaryTeal : AppColors.borderGrey,
-                      width: 2,
+                GestureDetector(
+                  onTap: () => context.read<AddMembersBloc>().add(ToggleFriendSelection(friend.userId)),
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isSelected ? AppColors.primaryTeal : Colors.transparent,
+                      border: Border.all(
+                        color: isSelected ? AppColors.primaryTeal : AppColors.borderGrey,
+                        width: 2,
+                      ),
                     ),
+                    child: isSelected
+                        ? const Icon(Icons.check, color: Colors.white, size: 16)
+                        : null,
                   ),
-                  child: isSelected
-                      ? const Icon(Icons.check, color: Colors.white, size: 16)
-                      : null,
                 )
               else
                  Icon(Icons.check_circle, color: AppColors.textGrey.withValues(alpha: 0.3), size: 24),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleChip(BuildContext context, String userId, {required String role, required bool isSelected}) {
+    final Color roleColor = role == 'user' 
+        ? AppColors.primaryTeal 
+        : (role == 'admin' ? Colors.blue : AppColors.errorRed);
+
+    final IconData icon = role == 'user' 
+        ? Icons.person_outline 
+        : (role == 'admin' ? Icons.shield_outlined : Icons.verified_user_outlined);
+
+    return InkWell(
+      onTap: () => context.read<AddMembersBloc>().add(ChangeFriendRole(userId, role)),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected 
+              ? roleColor.withValues(alpha: 0.1)
+              : Colors.transparent,
+          border: Border.all(
+            color: isSelected 
+                ? roleColor
+                : AppColors.borderGrey.withValues(alpha: 0.5),
+            width: 1,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 14,
+              color: isSelected ? roleColor : AppColors.textGrey,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              role.toUpperCase(),
+              style: GoogleFonts.outfit(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: isSelected ? roleColor : AppColors.textGrey,
+              ),
+            ),
+          ],
         ),
       ),
     );

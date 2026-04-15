@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:screenshot/screenshot.dart';
@@ -7,6 +8,8 @@ import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/core/utils/clipboard_utils.dart';
 import 'package:split_ease/core/utils/file_utils.dart';
+import 'package:split_ease/core/presentation/widgets/animations/staggered_entry_column.dart';
+import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
 
 class UserQrPage extends StatefulWidget {
   final String userId;
@@ -26,12 +29,11 @@ class UserQrPage extends StatefulWidget {
 
 class _UserQrPageState extends State<UserQrPage> {
   final ScreenshotController _screenshotController = ScreenshotController();
-  bool _isSharing = false;
+  final ValueNotifier<bool> _isSharing = ValueNotifier<bool>(false);
 
   Future<void> _shareQrCode() async {
-    setState(() {
-      _isSharing = true;
-    });
+    HapticFeedback.mediumImpact();
+    _isSharing.value = true;
 
     try {
       final imageBytes = await _screenshotController.capture();
@@ -49,12 +51,14 @@ class _UserQrPageState extends State<UserQrPage> {
         AppAlerts.showError(context, 'Failed to share QR code');
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isSharing = false;
-        });
-      }
+      _isSharing.value = false;
     }
+  }
+
+  @override
+  void dispose() {
+    _isSharing.dispose();
+    super.dispose();
   }
 
   @override
@@ -63,25 +67,28 @@ class _UserQrPageState extends State<UserQrPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
-          "My Code",
-          style: GoogleFonts.openSans(
+          "My QR Code",
+          style: GoogleFonts.outfit(
             color: AppColors.textBlack,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w900,
+            fontSize: 20,
+            letterSpacing: -0.5,
           ),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textBlack),
-          onPressed: () => Navigator.pop(context),
-        ),
+        scrolledUnderElevation: 0,
+        leadingWidth: 80,
+        leading: AppBackButton(onPressed: () => Navigator.pop(context)),
       ),
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        child: Column(
+        child: StaggeredEntryColumn(
+          verticalOffset: 30,
           children: [
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
             Center(
               child: Screenshot(
                 controller: _screenshotController,
@@ -89,15 +96,15 @@ class _UserQrPageState extends State<UserQrPage> {
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(32),
                     boxShadow: [
                       BoxShadow(
                         color: AppColors.primary.withValues(alpha: 0.1),
-                        blurRadius: 32,
-                        offset: const Offset(0, 8),
+                        blurRadius: 40,
+                        offset: const Offset(0, 12),
                       ),
                     ],
-                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.1), width: 1),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.1), width: 1.5),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -116,23 +123,31 @@ class _UserQrPageState extends State<UserQrPage> {
                           color: AppColors.textBlack,
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 28),
                       Text(
                         widget.userName,
-                        style: GoogleFonts.openSans(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
+                        style: GoogleFonts.outfit(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
                           color: AppColors.textBlack,
+                          letterSpacing: -0.5,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        "Split Ease",
-                        style: GoogleFonts.openSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                          letterSpacing: 2.0,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        child: Text(
+                          "SPLIT EASE",
+                          style: GoogleFonts.outfit(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.primary,
+                            letterSpacing: 2.0,
+                          ),
                         ),
                       ),
                     ],
@@ -142,52 +157,40 @@ class _UserQrPageState extends State<UserQrPage> {
             ),
             const SizedBox(height: 48),
             Text(
-              "Share this code with friends to let them add you easily.",
-              style: GoogleFonts.openSans(
-                fontSize: 16,
+              "Friends can scan this tag with their camera to add you to their network instantly.",
+              style: GoogleFonts.outfit(
+                fontSize: 15,
                 color: AppColors.textGrey,
+                fontWeight: FontWeight.w500,
+                height: 1.5,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 32),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _isSharing ? null : _shareQrCode,
-                    icon: _isSharing
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.share_rounded, size: 20),
-                    label: Text(_isSharing ? "Sharing..." : "Share"),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      side: const BorderSide(color: AppColors.primary),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      textStyle: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      ClipboardUtils.copyToClipboard(context, widget.userId, successMessage: "User ID copied!");
-                    },
-                    icon: const Icon(Icons.copy_rounded, size: 20),
-                    label: const Text("Copy ID"),
+            const SizedBox(height: 48),
+            SizedBox(
+              width: double.infinity,
+              child: ValueListenableBuilder<bool>(
+                valueListenable: _isSharing,
+                builder: (context, isSharing, child) {
+                  return ElevatedButton.icon(
+                    onPressed: isSharing ? null : _shareQrCode,
+                    icon: isSharing
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white))
+                        : const Icon(Icons.share_rounded, size: 22),
+                    label: Text(isSharing ? "HOLD ON..." : "SHARE TAG"),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: AppColors.textBlack,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      padding: const EdgeInsets.symmetric(vertical: 22),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                       elevation: 0,
-                      textStyle: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.w600),
+                      textStyle: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.0),
                     ),
-                  ),
-                ),
-              ],
+                  );
+                },
+              ),
             ),
+            const SizedBox(height: 40),
           ],
         ),
       ),

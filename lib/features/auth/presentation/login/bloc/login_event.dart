@@ -9,3 +9,9 @@ final class LoginUser extends LoginEvent {
 
   LoginUser({required this.email, required this.password});
 }
+
+final class ResendEmail extends LoginEvent {
+  final String email;
+
+  ResendEmail({required this.email});
+}

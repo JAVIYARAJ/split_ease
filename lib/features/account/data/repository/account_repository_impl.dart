@@ -19,6 +19,13 @@ class AccountRepositoryImpl implements AccountRepository {
       return left(Failure(message: error.message));
     }
   }
-
-
+  @override
+  Future<Either<Failure, bool>> submitAppFeedback(int rating, String description) async {
+    try {
+      var response = await accountRemoteDataSource.submitAppFeedback(rating, description);
+      return right(response);
+    } on ServerException catch (error) {
+      return left(Failure(message: error.message));
+    }
+  }
 }

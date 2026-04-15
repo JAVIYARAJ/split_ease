@@ -1,6 +1,7 @@
 
 // --- Light Theme Auth Field ---
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/app_colors.dart';
 
@@ -41,9 +42,11 @@ class _AuthFieldState extends State<AuthField> {
         if (widget.label != null) ...[
           Text(
             widget.label!,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textBlack.withValues(alpha: 0.8),
+            ),
           ),
           const SizedBox(height: 8),
         ],
@@ -53,23 +56,29 @@ class _AuthFieldState extends State<AuthField> {
           readOnly: widget.isReadyOnly,
           validator: widget.validator,
           autovalidateMode: AutovalidateMode.onUserInteraction,
-          style: Theme.of(context).textTheme.bodyLarge,
+          style: GoogleFonts.outfit(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textBlack,
+          ),
           cursorColor: AppColors.primary,
           decoration: InputDecoration(
             hintText: widget.hint,
-            hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textGrey,
-                ),
+            hintStyle: GoogleFonts.outfit(
+              fontSize: 14,
+              color: AppColors.textGrey,
+              fontWeight: FontWeight.w400,
+            ),
             filled: true,
-            fillColor: AppColors.surfaceWhite,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            fillColor: Colors.grey.withValues(alpha: 0.03),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.borderGrey),
+              borderSide: const BorderSide(color: AppColors.borderGreyLight),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.borderGrey),
+              borderSide: const BorderSide(color: AppColors.borderGreyLight),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),

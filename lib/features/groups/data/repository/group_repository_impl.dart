@@ -4,7 +4,9 @@ import 'package:fpdart/fpdart.dart';
 import 'package:split_ease/core/error/exception.dart';
 import 'package:split_ease/core/error/failure.dart';
 import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
+import 'package:split_ease/features/groups/domain/entities/group_expense_history_entity.dart';
 import 'package:split_ease/features/groups/domain/entities/group_friend_entity.dart';
+import 'package:split_ease/features/groups/domain/entities/group_member_entity.dart';
 
 import '../../domain/repository/group_repository.dart';
 import '../datasources/group_remote_data_source.dart';
@@ -13,6 +15,16 @@ class GroupRepositoryImpl implements GroupRepository {
   final GroupRemoteDataSource dataSource;
 
   GroupRepositoryImpl({required this.dataSource});
+
+  @override
+  Future<Either<Failure, List<GroupMemberEntity>>> getGroupMembers(String groupId) async {
+    try {
+      final response = await dataSource.getGroupMembers(groupId);
+      return right(response);
+    } on ServerException catch (error) {
+      return left(Failure(message: error.message));
+    }
+  }
 
   @override
   Future<Either<Failure, String>> insertGroupIcon(File file) async {
@@ -45,7 +57,7 @@ class GroupRepositoryImpl implements GroupRepository {
   }
 
   @override
-  Future<Either<Failure, GroupEntity>> getGroupDetail(String id) async{
+  Future<Either<Failure, GroupEntity>> getGroupDetail(String? id) async{
     try{
       var response = await dataSource.getGroupDetail(id);
       return right(response);
@@ -85,6 +97,16 @@ class GroupRepositoryImpl implements GroupRepository {
   }
 
   @override
+  Future<Either<Failure, bool>> removeGroupMember(String groupId, String userId) async {
+    try {
+      var response = await dataSource.removeMember(groupId, userId);
+      return right(response);
+    } on ServerException catch (error) {
+      return left(Failure(message: error.message));
+    }
+  }
+
+  @override
   Future<Either<Failure, bool>> deleteGroup(String groupId) async {
     try {
       var response = await dataSource.deleteGroup(groupId);
@@ -115,10 +137,40 @@ class GroupRepositoryImpl implements GroupRepository {
   }
 
   @override
-  Future<Either<Failure, void>> addMultipleFriendsToGroup(String groupId, List<String> userIds) async {
+  Future<Either<Failure, void>> addMultipleFriendsToGroup(String groupId, List<String> userIds, {Map<String, String>? roles}) async {
     try {
-      await dataSource.addMultipleFriendsToGroup(groupId, userIds);
+      await dataSource.addMultipleFriendsToGroup(groupId, userIds, roles: roles);
       return right(null);
+    } on ServerException catch (error) {
+      return left(Failure(message: error.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, GroupExpenseHistoryEntity>> getGroupExpenseHistory(String? groupId) async {
+    try {
+      final model = await dataSource.getGroupExpenseHistory(groupId);
+      return right(model);
+    } on ServerException catch (error) {
+      return left(Failure(message: error.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<GroupEntity>>> getCommonGroupsForUsers(List<String> userIds) async {
+    try {
+      final response = await dataSource.getCommonGroupsForUsers(userIds);
+      return right(response);
+    } on ServerException catch (error) {
+      return left(Failure(message: error.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> updateGroupMemberRole(String groupId, String userId, String newRole) async {
+    try {
+      final response = await dataSource.updateGroupMemberRole(groupId, userId, newRole);
+      return right(response);
     } on ServerException catch (error) {
       return left(Failure(message: error.message));
     }

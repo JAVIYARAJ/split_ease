@@ -1,19 +1,18 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:split_ease/core/presentation/widgets/base_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/core/utils/app_validators.dart';
 import 'package:split_ease/features/auth/presentation/register/bloc/register_bloc.dart';
-import 'package:split_ease/core/presentation/widgets/animations/staggered_entry_column.dart';
-import 'package:split_ease/features/auth/presentation/widgets/rotating_logo.dart';
+import 'package:split_ease/features/auth/presentation/widgets/auth_background.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/widgets/auth_field.dart';
 import '../../login/widgets/primary_button.dart';
 import '../../login/widgets/social_button.dart';
 import '../../../../../core/config/feature_flags.dart';
+import 'register_success_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -23,11 +22,9 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  // Local State
-  bool _isObscured = true;
+  final ValueNotifier<bool> _isObscured = ValueNotifier<bool>(true);
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -37,6 +34,7 @@ class _RegisterPageState extends State<RegisterPage> {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _isObscured.dispose();
     super.dispose();
   }
 
@@ -45,227 +43,252 @@ class _RegisterPageState extends State<RegisterPage> {
     return BlocListener<RegisterBloc, RegisterState>(
       listener: (context, state) {
         if (state is RegisterSuccess) {
-          AppAlerts.showSuccess(context, state.message);
-          NavigationService.pop();
+           Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const RegisterSuccessPage()),
+          );
         } else if (state is RegisterFailure) {
           AppAlerts.showError(context, state.message);
         }
       },
-      child: BaseScreen(
-        backgroundColor: AppColors.backgroundWhite,
-        extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textBlack, size: 20),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
-        child: Stack(
-          children: [
-            // 1. Ambient Background ( consistent with Login )
-            Positioned(
-              top: -80,
-              right: -80, // Different position for variety
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.primary.withValues(alpha: 0.1)),
-                child: BackdropFilter(filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80), child: const SizedBox()),
-              ),
-            ),
-            Positioned(
-              bottom: 100,
-              left: -50,
-              child: Container(
-                width: 250,
-                height: 250,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.primary.withValues(alpha: 0.05)),
-                child: BackdropFilter(filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80), child: const SizedBox()),
-              ),
-            ),
-
-            // 2. Main Content
-            Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: StaggeredEntryColumn(
-                  children: [
-                    const SizedBox(height: 80),
-
-                    // Logo
-                    const RotatingLogo(),
-                    const SizedBox(height: 24),
-
-                    // Header
-                    Text(
-                      "Create Account",
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textBlack,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      "Join Split Ease today and start managing\nyour expenses effortlessly.",
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textGrey,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-
-                    // White Form Card
-                    Container(
-                      padding: const EdgeInsets.all(24),
+      child: AuthBackground(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 1. Refined Navigation & Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: () => NavigationService.pop(),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 10))],
-                        border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.5)),
+                        color: AppColors.backgroundLightGrey,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          children: [
-                            // --- 1. Full Name Field (New) ---
-                            AuthField(
-                              label: "Full Name",
-                              hint: "John Doe",
-                              controller: _nameController,
-                              icon: Icons.person_outline_rounded,
-                              validator: AppValidators.validateName,
-                            ),
-
-                            const SizedBox(height: 20),
-
-                            // --- 2. Email Field ---
-                            AuthField(
-                              label: "Email Address",
-                              hint: "user@splitease.com",
-                              controller: _emailController,
-                              icon: Icons.email_outlined,
-                              validator: AppValidators.validateEmail,
-                            ),
-
-                            const SizedBox(height: 20),
-
-                            // --- 3. Password Field ---
-                            AuthField(
-                              label: "Password",
-                              hint: "Create a strong password",
-                              isPassword: true,
-                              isObscured: _isObscured,
-                              controller: _passwordController,
-                              icon: Icons.lock_outline_rounded,
-                              onToggleVisibility: () {
-                                setState(() {
-                                  _isObscured = !_isObscured;
-                                });
-                              },
-                              validator: AppValidators.validatePasswordRegister,
-                            ),
-
-                          const SizedBox(height: 30),
-
-                          // Sign Up Button
-                          BlocBuilder<RegisterBloc, RegisterState>(
-                            builder: (_, state) {
-                              return AppPrimaryButton(
-                                isLoading: state is RegisterLoading,
-                                text: "Sign Up",
-                                onPressed: () {
-                                  // Handle Registration Logic
-                                  if (_formKey.currentState!.validate()) {
-                                    context.read<RegisterBloc>().add(
-                                          RegisterUser(
-                                            email: _emailController.text.trim(),
-                                            name: _nameController.text.trim(),
-                                            password: _passwordController.text.trim(),
-                                          ),
-                                        );
-                                  }
-                                },
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),),
-
-                    if (FeatureFlags.isSocialAuthEnabled) ...[
-                      const SizedBox(height: 30),
-
-                      // Divider
-                      Row(
-                        children: [
-                          const Expanded(child: Divider(color: AppColors.borderGrey)),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text("Or sign up with",
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 13)),
-                          ),
-                          const Expanded(child: Divider(color: AppColors.borderGrey)),
-                        ],
-                      ),
-
-                      const SizedBox(height: 30),
-
-                      // Social Buttons
-                      Row(
-                        children: [
-                          Expanded(
-                            child: SocialButton(
-                              text: "Google",
-                              onPressed: () {},
-                              icon: const Text(
-                                "G",
-                                style: TextStyle(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 18,
-                                    fontFamily: 'Roboto'),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: SocialButton(
-                              text: "Apple",
-                              onPressed: () {},
-                              icon: const Icon(Icons.apple, color: Colors.black, size: 22),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-
-                    const SizedBox(height: 40),
-
-                    // Footer (Navigate back to Login)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      child: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textBlack),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
                       children: [
-                        Text("Already have an account? ", style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textGrey, fontSize: 14)),
-                        GestureDetector(
-                          onTap: () {
-                            NavigationService.pop();
-                          },
-                          child: const Text(
-                            "Log In",
-                            style: TextStyle(color: Color(0xFFDAB318), fontWeight: FontWeight.bold, fontSize: 14),
+                        const Icon(Icons.flash_on_rounded, size: 14, color: AppColors.primary),
+                        const SizedBox(width: 4),
+                        Text(
+                          "INSTANT ACCESS",
+                          style: GoogleFonts.outfit(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                            color: AppColors.primary,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 30),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 32),
+
+              // 2. Immersive Greeting
+              Text(
+                "Create Account",
+                style: GoogleFonts.outfit(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textBlack,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Join thousands of users splitting expenses\neasily every single day.",
+                style: GoogleFonts.outfit(
+                  fontSize: 15,
+                  color: AppColors.textGrey,
+                  height: 1.5,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+
+              const SizedBox(height: 48),
+
+              // 3. Optimized Form Layout
+              Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    // Enhanced Name Field
+                    AuthField(
+                      label: "Full Name",
+                      hint: "John Doe",
+                      controller: _nameController,
+                      icon: Icons.person_outline_rounded,
+                      validator: AppValidators.validateName,
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Enhanced Email Field
+                    AuthField(
+                      label: "Work Email",
+                      hint: "yourname@provider.com",
+                      controller: _emailController,
+                      icon: Icons.mail_outline_rounded,
+                      validator: AppValidators.validateEmail,
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Enhanced Password Field
+                    ValueListenableBuilder<bool>(
+                      valueListenable: _isObscured,
+                      builder: (context, isObscured, child) {
+                        return AuthField(
+                          label: "Secure Password",
+                          hint: "Min. 6 characters",
+                          isPassword: true,
+                          isObscured: isObscured,
+                          controller: _passwordController,
+                          icon: Icons.lock_outline_rounded,
+                          onToggleVisibility: () {
+                            _isObscured.value = !_isObscured.value;
+                          },
+                          validator: AppValidators.validatePasswordRegister,
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
-            ),
-          ],
+
+              const SizedBox(height: 40),
+
+              // 4. Primary Action with Security Hint
+              Column(
+                children: [
+                   BlocBuilder<RegisterBloc, RegisterState>(
+                    builder: (_, state) {
+                      return AppPrimaryButton(
+                        isLoading: state is RegisterLoading,
+                        text: "Create My Account",
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            context.read<RegisterBloc>().add(
+                                  RegisterUser(
+                                    email: _emailController.text.trim(),
+                                    name: _nameController.text.trim(),
+                                    password: _passwordController.text.trim(),
+                                  ),
+                                );
+                          }
+                        },
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.verified_user_rounded, size: 14, color: AppColors.textGrey.withValues(alpha: 0.5)),
+                      const SizedBox(width: 6),
+                      Text(
+                        "Your data is encrypted and secure",
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: AppColors.textGrey.withValues(alpha: 0.6),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 40),
+
+              // 5. Social Options
+              if (FeatureFlags.isSocialAuthEnabled) ...[
+                Row(
+                  children: [
+                    const Expanded(child: Divider(thickness: 1)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        "OR SIGNUP WITH",
+                        style: GoogleFonts.outfit(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.2,
+                          color: AppColors.iconGrey,
+                        ),
+                      ),
+                    ),
+                    const Expanded(child: Divider(thickness: 1)),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SocialButton(
+                        text: "Google",
+                        onPressed: () {},
+                        icon: Image.network(
+                          'https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo_2013_Google.png', // Temporary indicator
+                          height: 14,
+                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.g_mobiledata, color: Colors.blue),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: SocialButton(
+                        text: "Apple",
+                        onPressed: () {},
+                        icon: const Icon(Icons.apple, color: Colors.black, size: 20),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+
+              const SizedBox(height: 48),
+
+              // 6. Seamless Transition to Login
+              Center(
+                child: RichText(
+                  text: TextSpan(
+                    style: GoogleFonts.outfit(fontSize: 15, color: AppColors.textGrey),
+                    children: [
+                      const TextSpan(text: "Already a member? "),
+                      WidgetSpan(
+                        alignment: PlaceholderAlignment.middle,
+                        child: GestureDetector(
+                          onTap: () => NavigationService.pop(),
+                          child: Text(
+                            "Sign In",
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
     );

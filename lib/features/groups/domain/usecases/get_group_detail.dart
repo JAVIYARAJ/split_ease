@@ -17,7 +17,7 @@ class GetGroupDetail implements UseCase<GroupEntity, GroupDetailParam> {
 }
 
 class GroupDetailParam {
-  final String id;
+  final String? id;
 
   GroupDetailParam(this.id);
 }

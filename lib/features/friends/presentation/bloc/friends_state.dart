@@ -11,6 +11,7 @@ class FriendsState {
   final FriendJoinStatus joinStatus;
   final String joinErrorMessage;
   final int unreadRequestCount;
+  final bool isFabExtended;
 
   const FriendsState({
     this.status = FriendsStatus.initial,
@@ -19,6 +20,7 @@ class FriendsState {
     this.joinStatus = FriendJoinStatus.initial,
     this.joinErrorMessage = '',
     this.unreadRequestCount = 0,
+    this.isFabExtended = true,
   });
 
   FriendsState copyWith({
@@ -28,6 +30,7 @@ class FriendsState {
     FriendJoinStatus? joinStatus,
     String? joinErrorMessage,
     int? unreadRequestCount,
+    bool? isFabExtended,
   }) {
     return FriendsState(
       status: status ?? this.status,
@@ -36,6 +39,8 @@ class FriendsState {
       joinStatus: joinStatus ?? this.joinStatus,
       joinErrorMessage: joinErrorMessage ?? this.joinErrorMessage,
       unreadRequestCount: unreadRequestCount ?? this.unreadRequestCount,
+      isFabExtended: isFabExtended ?? this.isFabExtended,
     );
   }
+
 }
