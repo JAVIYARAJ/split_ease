@@ -15,7 +15,3 @@ class GetAllGroups implements UseCase<List<GroupEntity>,NoParams> {
   }
 }
 
-
-class NoParams{
-
-}

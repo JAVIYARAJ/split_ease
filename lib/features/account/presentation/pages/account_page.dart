@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/config/feature_flags.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
+import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/account/presentation/bloc/account_bloc.dart';
 import '../../../../../core/common/cubit/app_user_cubit.dart';
-import '../../../../../core/presentation/widgets/base_screen.dart';
+import 'package:split_ease/core/presentation/widgets/app_image_view.dart';
+import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
+import 'package:split_ease/core/presentation/widgets/profile_picture_dialog.dart';
+import 'package:split_ease/core/presentation/widgets/feedback_sheet.dart';
+import 'package:split_ease/core/presentation/widgets/animations/staggered_entry_column.dart';
+import 'package:flutter/services.dart';
+import 'package:split_ease/features/home/presentation/bloc/home_bloc.dart';
+import 'package:split_ease/features/home/presentation/bloc/home_state.dart';
+import 'package:split_ease/features/friends/presentation/bloc/friends_bloc.dart';
+import 'package:split_ease/features/groups/presentation/bloc/groups_bloc.dart';
 
 class AccountPage extends StatelessWidget {
   const AccountPage({super.key});
@@ -22,12 +31,13 @@ class AccountPage extends StatelessWidget {
           NavigationService.pushAndRemoveUntil(AppRoutes.login);
         } else if (state.status == AccountStatus.failure) {
           AppAlerts.showError(context, state.message);
-        }else if(state.status == AccountStatus.profileUpdated) {
-          AppAlerts.showSuccess(context, state.message);
         }
       },
       child: BlocBuilder<AppUserCubit, AppUserState>(
         builder: (context, userState) {
+          final homeState = context.watch<HomeBloc>().state;
+          final bool isVisible = homeState.tabIndex == 4;
+
           String userName = "User";
           String userEmail = "email@example.com";
           String? userAvatar;
@@ -38,201 +48,38 @@ class AccountPage extends StatelessWidget {
             userAvatar = userState.user.avatarUrl;
           }
 
-          return BaseScreen(
+          return Scaffold(
             backgroundColor: Colors.white,
-            appBar: AppBar(
-              backgroundColor: Colors.white,
-              elevation: 0,
-              title: Text(
-                "Account",
-                style: GoogleFonts.openSans(color: Colors.black87, fontSize: 20, fontWeight: FontWeight.w600),
-              ),
-              centerTitle: true,
-              leading: IconButton(
-                icon: const Icon(Icons.search, color: Colors.black87, size: 28),
-                onPressed: () {},
-              ),
-            ),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 10),
-                  // 1. Profile Section
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Row(
+            body: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                _buildAppBar(context),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: StaggeredEntryColumn(
+                      animate: isVisible,
+                      verticalOffset: 30,
                       children: [
-                        Stack(
-                          alignment: Alignment.bottomRight,
-                          children: [
-                            CircleAvatar(
-                              radius: 36,
-                              backgroundColor: const Color(0xFFA00030),
-                              backgroundImage: userAvatar != null ? NetworkImage(userAvatar) : null,
-                              child: userAvatar == null ? const Icon(Icons.person, size: 40, color: Colors.white24) : null,
-                            ),
-                            GestureDetector(
-                              onTap: () => _showImagePickerModal(context),
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[800],
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 2),
-                                ),
-                                child: const Icon(Icons.camera_alt, color: Colors.white, size: 12),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                userName,
-                                style: GoogleFonts.openSans(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
-                              ),
-                              Text(userEmail, style: GoogleFonts.openSans(fontSize: 14, color: Colors.grey[600])),
-                            ],
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {},
-                          child: Text(
-                            "Edit",
-                            style: GoogleFonts.openSans(
-                              color: const Color(0xFF00C853), // Green
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
+                        _buildProfileHero(context, userName, userEmail, userAvatar, userState),
+                        const SizedBox(height: 16),
+                        _buildUserStats(context),
+                        const SizedBox(height: 32),
+                        if (FeatureFlags.isSubscriptionEnabled) ...[
+                          _buildProBanner(),
+                          const SizedBox(height: 32),
+                        ],
+                        _buildQuickActions(context, userState),
+                        const SizedBox(height: 32),
+                        _buildSettingsList(context),
+                        const SizedBox(height: 48),
+                        _buildLogoutSection(context),
+                        const SizedBox(height: 120),
                       ],
                     ),
                   ),
-
-                  const SizedBox(height: 24),
-
-                  // 2. Pro Banner
-                  if (FeatureFlags.isSubscriptionEnabled) ...[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          gradient: LinearGradient(
-                            colors: [
-                              const Color(0xFFF3E5F5), // Light purple
-                              Colors.deepPurple.shade50,
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: Column(
-                            children: [
-                              // Diamond Icon (simulated)
-                              const Icon(Icons.diamond, size: 40, color: Colors.deepPurple),
-                              const SizedBox(height: 12),
-                              RichText(
-                                textAlign: TextAlign.center,
-                                text: TextSpan(
-                                  style: GoogleFonts.openSans(fontSize: 16, color: Colors.black87),
-                                  children: [
-                                    const TextSpan(text: "Do more with "),
-                                    TextSpan(
-                                      text: "Splitwise Pro",
-                                      style: GoogleFonts.openSans(fontWeight: FontWeight.bold),
-                                    ),
-                                    const TextSpan(text: "."),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  onPressed: () {},
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF7E40C8), // Purple
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    elevation: 0,
-                                  ),
-                                  child: Text(
-                                    "Get Splitwise Pro",
-                                    style: GoogleFonts.openSans(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 20),
-
-                  // 3. Settings List
-                  _buildListItem(icon: Icons.qr_code_scanner, title: "Scan code", onTap: () {}),
-                  _buildListItem(icon: Icons.diamond_outlined, title: "Splitwise Pro", iconColor: Colors.deepPurple, onTap: () {}),
-
-                  const SizedBox(height: 20),
-                  _buildSectionHeader("Preferences"),
-                  _buildListItem(
-                    // No icon in screenshot for these? Actually regular lists usually don't have icons in Settings on iOS/Splitwise?
-                    // Looking at the second screenshot, "Notifications", "Security" seem to NOT have icons on the left?
-                    // Wait, the screenshot shows "Scan code" has an icon. "Splitwise Pro" has an icon.
-                    // "Notifications" and "Security" do NOT show icons in the second screenshot provided?
-                    // Let me re-examine the user's second screenshot.
-                    // Ah, looking closely at uploaded_image_1... "Scan code" has QR icon. "Splitwise Pro" has diamond.
-                    // "Preferences" is a header. "Notifications" does NOT have an icon. "Security" does NOT have an icon.
-                    // "Feedback" is a header. "Rate Splitwise" NO icon. "Contact us" NO icon.
-                    title: "Notifications",
-                    onTap: () {},
-                  ),
-                  _buildListItem(title: "Security", onTap: () {}),
-
-                  const SizedBox(height: 20),
-                  _buildSectionHeader("Feedback"),
-                  _buildListItem(title: "Rate Splitwise", onTap: () {}),
-                  _buildListItem(title: "Contact us", onTap: () {}),
-
-                  const SizedBox(height: 40),
-
-                  // 4. Footer
-                  Center(
-                    child: TextButton(
-                      onPressed: () => _showLogoutConfirmationDialog(context),
-                      child: Text(
-                        "Log out",
-                        style: GoogleFonts.openSans(color: const Color(0xFF00C853), fontSize: 16, fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Center(
-                    child: Column(
-                      children: [
-                        Text("Made with :) in Providence, RI, USA", style: GoogleFonts.openSans(color: Colors.grey, fontSize: 12)),
-                        Text("Copyright © 2026 Splitwise, Inc.", style: GoogleFonts.openSans(color: Colors.grey, fontSize: 12)),
-                        Text("P.S. Kittens!", style: GoogleFonts.openSans(color: Colors.grey, fontSize: 12)),
-                        const SizedBox(height: 8),
-                        Text("25.12.2/985", style: GoogleFonts.openSans(color: Colors.grey, fontSize: 12)),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 100), // Bottom padding
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },
@@ -240,63 +87,331 @@ class AccountPage extends StatelessWidget {
     );
   }
 
+  Widget _buildAppBar(BuildContext context) {
+    return SliverAppBar(
+      pinned: true,
+      backgroundColor: Colors.white,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      toolbarHeight: 80,
+      centerTitle: false,
+      automaticallyImplyLeading: false,
+      title: Padding(
+        padding: const EdgeInsets.only(left: 8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Profile",
+              style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -1.0),
+            ),
+            Text(
+              "Account & Application Settings",
+              style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textGrey),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileHero(BuildContext context, String name, String email, String? avatar, AppUserState userState) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundLightGrey,
+        borderRadius: BorderRadius.circular(40),
+        image: DecorationImage(
+          image: const NetworkImage('https://www.transparenttextures.com/patterns/cubes.png'),
+          opacity: 0.03,
+          repeat: ImageRepeat.repeat,
+        ),
+      ),
+      child: Column(
+        children: [
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.mediumImpact();
+              ProfilePictureDialog.show(
+                context,
+                avatarUrl: avatar,
+                heroTag: 'account_profile_pic',
+              );
+            },
+            child: Hero(
+              tag: 'account_profile_pic',
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(color: AppColors.primary.withValues(alpha: 0.2), blurRadius: 30, spreadRadius: 5),
+                  ],
+                ),
+                child: Stack(
+                  children: [
+                    AppAvatar(
+                      url: avatar,
+                      radius: 55,
+                      iconSize: 55,
+                      backgroundColor: Colors.white,
+                      iconColor: AppColors.primary.withValues(alpha: 0.5),
+                    ),
+                    Positioned(
+                      bottom: 4,
+                      right: 4,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))]),
+                        child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 14),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            name,
+            style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -0.5),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(100)),
+            child: Text(
+              email,
+              style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUserStats(BuildContext context) {
+    final friendsCount = context.watch<FriendsBloc>().state.friends.length;
+    final groupsCount = context.watch<GroupsBloc>().state.groups.length;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildStatItem("Friends", friendsCount.toString(), Icons.people_outline_rounded),
+          _buildDividerVert(),
+          _buildStatItem("Groups", groupsCount.toString(), Icons.layers_outlined),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDividerVert() {
+    return Container(height: 24, width: 1, color: AppColors.borderGrey.withValues(alpha: 0.5));
+  }
+
+  Widget _buildStatItem(String label, String value, IconData icon) {
+    return Column(
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: AppColors.textGrey),
+            const SizedBox(width: 4),
+            Text(value, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textBlack)),
+          ],
+        ),
+        Text(label, style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textGrey)),
+      ],
+    );
+  }
+
+  Widget _buildProBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 10)),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "UPGRADE TO PRO",
+                  style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.white.withValues(alpha: 0.6), letterSpacing: 1.5),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Get Advanced Stats",
+                  style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {},
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: AppColors.primary,
+              shape: CircleBorder(),
+              padding: EdgeInsets.all(16),
+            ),
+            child: Icon(Icons.arrow_forward_rounded),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActions(BuildContext context, AppUserState userState) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildActionCard(
+            icon: Icons.qr_code_rounded,
+            title: "My QR",
+            color: Color(0xFF673AB7),
+            onTap: () {
+              HapticFeedback.lightImpact();
+              if (userState is AppUserLoggedIn) {
+                NavigationService.pushNamed(AppRoutes.userQr, args: {
+                  'userId': userState.user.id,
+                  'userName': userState.user.name,
+                  'userAvatar': userState.user.avatarUrl,
+                });
+              }
+            },
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildActionCard(
+            icon: Icons.edit_note_rounded,
+            title: "Edit Profile",
+            color: Color(0xFF009688),
+            onTap: () {
+              HapticFeedback.lightImpact();
+              if (userState is AppUserLoggedIn) {
+                NavigationService.pushNamed(AppRoutes.editProfile, args: userState.user);
+              }
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionCard({required IconData icon, required String title, required Color color, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: color.withValues(alpha: 0.1)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(height: 12),
+            Text(title, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsList(BuildContext context) {
+    return Column(
+      children: [
+        _buildSectionHeader("PREFERENCES"),
+        _buildSettingItem(icon: Icons.notifications_none_rounded, title: "Notifications", onTap: () {}),
+        const SizedBox(height: 24),
+        _buildSectionHeader("SUPPORT"),
+        _buildSettingItem(icon: Icons.star_outline_rounded, title: "Rate SplitEase", onTap: () => FeedbackSheet.show(context)),
+        _buildSettingItem(icon: Icons.mail_outline_rounded, title: "Contact Support", onTap: () {}),
+        _buildSettingItem(icon: Icons.info_outline_rounded, title: "About", onTap: () {}),
+      ],
+    );
+  }
+
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.only(left: 20, bottom: 8, top: 8),
-      child: Text(
-        title,
-        style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
+      padding: const EdgeInsets.only(left: 4, bottom: 12),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          title,
+          style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w900, color: AppColors.textGrey, letterSpacing: 1.5),
+        ),
       ),
     );
   }
 
-  Widget _buildListItem({IconData? icon, Color? iconColor, required String title, required VoidCallback onTap}) {
-    return ListTile(
-      onTap: onTap,
-      leading: icon != null
-          ? Icon(icon, color: iconColor ?? Colors.black87, size: 24)
-          : null,
-      title: Text(
-        title,
-        style: GoogleFonts.openSans(fontSize: 16, color: Colors.black87, fontWeight: FontWeight.w400),
-      ),
-      trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-      minLeadingWidth: icon != null ? 24 : 0,
-    );
-  }
-
-  void _showImagePickerModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
-      ),
-      builder: (_) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+  Widget _buildSettingItem({required IconData icon, required String title, required VoidCallback onTap}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.borderGrey.withValues(alpha:0.5)),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
             children: [
-              ListTile(
-                leading: const Icon(Icons.camera_alt, color: Colors.black87),
-                title: Text("Take Photo", style: GoogleFonts.openSans(fontSize: 16)),
-                onTap: () {
-                  Navigator.pop(context);
-                  context.read<AccountBloc>().add(AccountImagePicked(ImageSource.camera));
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library, color: Colors.black87),
-                title: Text("Choose from Gallery", style: GoogleFonts.openSans(fontSize: 16)),
-                onTap: () {
-                  Navigator.pop(context);
-                  context.read<AccountBloc>().add(AccountImagePicked(ImageSource.gallery));
-                },
-              ),
+              Icon(icon, color: AppColors.textGrey, size: 22),
+              const SizedBox(width: 16),
+              Text(title, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack)),
+              const Spacer(),
+              Icon(Icons.chevron_right_rounded, color: AppColors.iconGrey, size: 20),
             ],
           ),
-        );
-      },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoutSection(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: TextButton.icon(
+            onPressed: () => _showLogoutConfirmationDialog(context),
+            icon: const Icon(Icons.logout_rounded, size: 20),
+            label: Text("Sign Out", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700)),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.errorRed,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: AppColors.errorRed.withValues(alpha: 0.1),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          "SplitEase v1.0.0 (BETA)",
+          style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey.withValues(alpha: 0.5), fontWeight: FontWeight.w600),
+        ),
+      ],
     );
   }
 
@@ -305,81 +420,45 @@ class AccountPage extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Dismiss',
-      transitionDuration: const Duration(milliseconds: 200),
+      transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, animation, secondaryAnimation) => Container(),
       transitionBuilder: (_, animation, secondaryAnimation, child) {
         return ScaleTransition(
           scale: CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
           child: Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.rectangle,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black26, blurRadius: 10.0, offset: Offset(0.0, 10.0)),
-                ],
-              ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+            child: Padding(
+              padding: const EdgeInsets.all(32),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF0F0), // Light red bg
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 32),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    "Log out?",
-                    style: GoogleFonts.openSans(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "Are you sure you want to log out of your account?", // clearer text
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.openSans(fontSize: 16, color: Colors.grey[600]),
+                    decoration: BoxDecoration(color: AppColors.errorRed.withValues(alpha: 0.1), shape: BoxShape.circle),
+                    child: const Icon(Icons.logout_rounded, color: AppColors.errorRed, size: 32),
                   ),
                   const SizedBox(height: 24),
+                  Text("End Session?", style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.textBlack)),
+                  const SizedBox(height: 8),
+                  Text("Are you sure you want to log out?", textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 15, color: AppColors.textGrey)),
+                  const SizedBox(height: 32),
                   Row(
                     children: [
                       Expanded(
                         child: TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            backgroundColor: Colors.grey[100],
-                          ),
-                          child: Text(
-                            "Cancel",
-                            style: GoogleFonts.openSans(fontSize: 16, color: Colors.black54, fontWeight: FontWeight.w600),
-                          ),
+                          onPressed: () => Navigator.pop(context),
+                          child: Text("Stay", style: GoogleFonts.outfit(fontWeight: FontWeight.w700, color: AppColors.textGrey)),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
                             Navigator.of(context).pop();
                             context.read<AccountBloc>().add(AccountLogoutEvent());
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.redAccent,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            elevation: 0,
-                          ),
-                          child: Text(
-                            "Log out",
-                            style: GoogleFonts.openSans(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600),
-                          ),
+                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.errorRed, foregroundColor: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), padding: const EdgeInsets.symmetric(vertical: 14)),
+                          child: Text("Sign Out", style: GoogleFonts.outfit(fontWeight: FontWeight.w700)),
                         ),
                       ),
                     ],

@@ -4,6 +4,9 @@ import 'package:split_ease/features/auth/presentation/login/bloc/login_bloc.dart
 import 'package:split_ease/features/auth/presentation/login/pages/login_page.dart';
 import 'package:split_ease/features/auth/presentation/register/bloc/register_bloc.dart';
 import 'package:split_ease/features/auth/presentation/register/pages/register_page.dart';
+import 'package:split_ease/features/expenses/presentation/bloc/expense_bloc.dart';
+import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_bloc.dart';
+import 'package:split_ease/features/expenses/presentation/pages/expense_detail_page.dart';
 import 'package:split_ease/features/groups/presentation/bloc/group_detail_bloc.dart';
 import 'package:split_ease/features/groups/presentation/bloc/join_group_bloc.dart';
 import 'package:split_ease/features/home/presentation/pages/home_page.dart';
@@ -17,9 +20,27 @@ import '../../injection_container.dart';
 import '../../features/groups/presentation/pages/create_group_page.dart';
 import '../../features/groups/presentation/pages/enter_invite_code_page.dart';
 import '../../features/groups/presentation/pages/group_detail_page.dart';
+import '../../features/friends/presentation/bloc/friend_detail_bloc.dart';
+import '../../features/friends/presentation/pages/friend_detail_page.dart';
 import 'app_routes.dart';
 
 // Import pages
+import '../../features/expenses/presentation/pages/add_expense_page.dart';
+import '../../features/expenses/presentation/pages/payer_selection_page.dart';
+import '../../features/expenses/presentation/pages/split_options_page.dart';
+import '../../features/expenses/presentation/pages/date_selection_page.dart';
+import '../../features/groups/presentation/pages/group_settings_page.dart';
+import '../../features/groups/presentation/pages/add_members_page.dart';
+import '../../features/friends/presentation/pages/friend_requests_page.dart';
+import '../../features/groups/presentation/pages/qr_scanner_page.dart';
+import '../../features/profile/presentation/pages/edit_profile_page.dart';
+import '../../features/account/presentation/pages/user_qr_page.dart';
+import '../../features/expenses/presentation/pages/expense_pdf_preview_page.dart';
+import '../../features/expenses/presentation/pages/expense_note_page.dart';
+import '../../features/auth/domain/entities/user_entity.dart';
+import '../../features/expenses/presentation/pages/settle_up_selection_page.dart';
+import '../../features/expenses/presentation/pages/record_payment_page.dart';
+import '../../features/expenses/presentation/bloc/settle_up/settle_up_cubit.dart';
 
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -60,12 +81,20 @@ class RouteGenerator {
             BlocProvider(
               create: (context) => sl<CreateGroupBloc>(),
               child: const CreateGroupPage(),
-            ),settings: RouteSettings(name: settings.name,arguments: settings.arguments));
+            ), settings: RouteSettings(name: settings.name, arguments: settings.arguments));
       case AppRoutes.groupDetail:
         return MaterialPageRoute(builder: (_) =>
             BlocProvider(
               create: (context) => sl<GroupDetailBloc>(),
               child: GroupDetailPage(),
+            ),
+            settings: RouteSettings(arguments: settings.arguments, name: settings.name)
+        );
+      case AppRoutes.friendDetail:
+        return MaterialPageRoute(builder: (_) =>
+            BlocProvider(
+              create: (context) => sl<FriendDetailBloc>(),
+              child: const FriendDetailPage(),
             ),
             settings: RouteSettings(arguments: settings.arguments, name: settings.name)
         );
@@ -75,6 +104,103 @@ class RouteGenerator {
               create: (context) => sl<JoinGroupBloc>(),
               child: EnterInviteCodePage(),
             ));
+      case AppRoutes.addExpense:
+        return MaterialPageRoute(
+            builder: (_) =>
+                BlocProvider(
+                  create: (context) => sl<ExpenseBloc>(),
+                  child: AddExpensePage(),
+                ),
+            settings: RouteSettings(arguments: settings.arguments, name: settings.name));
+      case AppRoutes.payerSelection:
+        return MaterialPageRoute(
+            builder: (_) => const PayerSelectionPage(),
+            settings: RouteSettings(arguments: settings.arguments, name: settings.name));
+      case AppRoutes.splitOptions:
+        return MaterialPageRoute(
+            builder: (_) => const SplitOptionsPage(),
+            settings: RouteSettings(arguments: settings.arguments, name: settings.name));
+      case AppRoutes.dateSelection:
+        return MaterialPageRoute(
+            builder: (_) => const DateSelectionPage(),
+            settings: RouteSettings(arguments: settings.arguments, name: settings.name));
+      case AppRoutes.expanseDetail:
+        return MaterialPageRoute(builder: (_) =>
+            BlocProvider(
+              create: (context) => sl<ExpenseDetailBloc>(),
+              child: const ExpenseDetailPage(),
+            ),
+            settings: RouteSettings(arguments: settings.arguments, name: settings.name)
+        );
+      case AppRoutes.addMembers:
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => AddMembersPage(groupId: args['groupId']),
+          settings: RouteSettings(arguments: settings.arguments, name: settings.name),
+        );
+      case AppRoutes.groupSettings:
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => GroupSettingsPage(groupId: args['groupId']),
+          settings: RouteSettings(arguments: settings.arguments, name: settings.name),
+        );
+      case AppRoutes.friendRequests:
+        return MaterialPageRoute(
+          builder: (_) => const FriendRequestsPage(),
+          settings: RouteSettings(arguments: settings.arguments, name: settings.name),
+        );
+      case AppRoutes.qrScanner:
+        return MaterialPageRoute(
+          builder: (_) => const QrScannerPage(),
+          settings: RouteSettings(arguments: settings.arguments, name: settings.name),
+        );
+      case AppRoutes.editProfile:
+        final user = settings.arguments as UserEntity;
+        return MaterialPageRoute(
+          builder: (_) => EditProfilePage(user: user),
+          settings: RouteSettings(arguments: settings.arguments, name: settings.name),
+        );
+      case AppRoutes.userQr:
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => UserQrPage(
+            userId: args['userId'],
+            userName: args['userName'],
+            userAvatar: args['userAvatar'],
+          ),
+          settings: RouteSettings(arguments: settings.arguments, name: settings.name),
+        );
+      case AppRoutes.expensePdfPreview:
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => ExpensePdfPreviewPage(
+            pdfPath: args['pdfPath'],
+            expenseDescription: args['expenseDescription'],
+          ),
+          settings: RouteSettings(arguments: settings.arguments, name: settings.name),
+        );
+      case AppRoutes.expenseNote:
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => ExpenseNotePage(
+            initialNote: args['initialNote'] ?? '',
+            maxCharacters: args['maxCharacters'] ?? 1000,
+          ),
+          settings: RouteSettings(arguments: settings.arguments, name: settings.name),
+        );
+      case AppRoutes.settleUpSelection:
+        return MaterialPageRoute(
+          builder: (_) => const SettleUpSelectionPage(),
+          settings: RouteSettings(arguments: settings.arguments, name: settings.name),
+        );
+      case AppRoutes.recordPayment:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => sl<SettleUpCubit>(),
+            child: const RecordPaymentPage(),
+          ),
+          settings: RouteSettings(arguments: settings.arguments, name: settings.name),
+        );
       default:
         return _errorRoute();
     }

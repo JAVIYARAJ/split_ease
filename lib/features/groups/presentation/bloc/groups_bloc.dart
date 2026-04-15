@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:split_ease/features/groups/domain/usecases/get_all_groups.dart';
 
+import '../../../../core/usecases/use_case.dart';
 import '../../domain/entities/group_entity.dart';
 
 part 'groups_event.dart';
@@ -14,7 +15,9 @@ class GroupsBloc extends Bloc<GroupsEvent, GroupsState> {
 
   GroupsBloc({required this.getAllGroups}) : super(const GroupsState()) {
     on<LoadGroups>(_onLoadGroups);
+    on<ToggleGroupsFab>((event, emit) => emit(state.copyWith(isFabExtended: event.isExtended)));
   }
+
 
   Future<void> _onLoadGroups(LoadGroups event, Emitter<GroupsState> emit) async {
     try {

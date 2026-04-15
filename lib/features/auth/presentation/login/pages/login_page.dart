@@ -1,15 +1,14 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:split_ease/core/presentation/widgets/base_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/core/utils/app_validators.dart';
 import 'package:split_ease/features/auth/presentation/login/bloc/login_bloc.dart';
-import 'package:split_ease/core/presentation/widgets/animations/staggered_entry_column.dart';
-import 'package:split_ease/features/auth/presentation/widgets/rotating_logo.dart';
+import 'package:split_ease/features/auth/presentation/widgets/auth_background.dart';
 
+import 'package:split_ease/core/utils/auth_utils.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/widgets/auth_field.dart';
 import '../widgets/primary_button.dart';
@@ -25,14 +24,110 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  bool _isObscured = true;
-  final TextEditingController _emailController = TextEditingController(text: "test@mailinator.com");
-  final TextEditingController _passwordController = TextEditingController(text: "Test@123");
+  final ValueNotifier<bool> _isObscured = ValueNotifier<bool>(true);
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  void _showVerificationDialog(BuildContext loginContext) {
+    showDialog(
+      context: loginContext,
+      barrierDismissible: false,
+      builder: (dialogContext) => BlocProvider.value(
+        value: loginContext.read<LoginBloc>(),
+        child: BlocListener<LoginBloc, LoginState>(
+          listener: (context, state) {
+            if (state.status == LoginStatus.resendSuccess) {
+              Future.delayed(const Duration(seconds: 2), () {
+                if (dialogContext.mounted) {
+                  Navigator.pop(dialogContext);
+                }
+              });
+            }
+          },
+          child: BlocBuilder<LoginBloc, LoginState>(
+            builder: (context, state) {
+              final bool isSent = state.status == LoginStatus.resendSuccess;
+              final bool isResendLoading = state.status == LoginStatus.resendLoading;
+
+              return AlertDialog(
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                contentPadding: const EdgeInsets.all(24),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isSent ? Icons.mark_email_read_rounded : Icons.mark_email_unread_rounded,
+                        color: AppColors.primary,
+                        size: 40,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      isSent ? "Verification Sent!" : "Verify Your Identity",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.textBlack),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      isSent
+                          ? "A new verification link has been sent to your email. Please check your inbox."
+                          : "It looks like you haven't confirmed your email address yet. Please check your inbox to activate your account.",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(fontSize: 15, color: AppColors.textGrey, height: 1.5),
+                    ),
+                    const SizedBox(height: 32),
+                    AppPrimaryButton(
+                      text: isSent ? "Open Mail App" : "Check Inbox",
+                      onPressed: () => AuthUtils.openMailApp(),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: (isSent || isResendLoading)
+                          ? null
+                          : () {
+                              context.read<LoginBloc>().add(ResendEmail(email: _emailController.text.trim()));
+                            },
+                      child: isResendLoading
+                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                          : Text(
+                              isSent ? "Email Sent Successfully" : "Resend Verification Link",
+                              style: GoogleFonts.outfit(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: isSent ? AppColors.textGrey : AppColors.primary,
+                              ),
+                            ),
+                    ),
+                    const SizedBox(height: 4),
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      child: Text(
+                        "Close",
+                        style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textGrey),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _isObscured.dispose();
     super.dispose();
   }
 
@@ -41,220 +136,234 @@ class _LoginPageState extends State<LoginPage> {
     return BlocListener<LoginBloc, LoginState>(
       listener: (context, state) {
         if (state.status == LoginStatus.failure) {
-          AppAlerts.showError(context, state.message);
+          if (state.message.toLowerCase().contains('email not confirmed')) {
+            _showVerificationDialog(context);
+          } else {
+            AppAlerts.showError(context, state.message);
+          }
         } else if (state.status == LoginStatus.success) {
           AppAlerts.showSuccess(context, state.message);
           NavigationService.pushReplacement(AppRoutes.home);
+        } else if (state.status == LoginStatus.resendSuccess) {
+          AppAlerts.showSuccess(context, state.message);
         } else if (state.status == LoginStatus.registerNavigation) {
           NavigationService.pushReplacement(AppRoutes.register);
         }
       },
-      child: BaseScreen(
-        backgroundColor: AppColors.backgroundWhite,
-        extendBodyBehindAppBar: true,
-        child: Stack(
-          children: [
-            // 1. Static Ambient Background (Clean, no breathing)
-            Positioned(
-              top: -100,
-              left: -100,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.primary.withValues(alpha: 0.1)),
-                child: BackdropFilter(filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80), child: const SizedBox()),
+      child: AuthBackground(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 1. Hero Content & Illustration
+              const SizedBox(height: 20),
+              // Using the generated illustration path from context
+              Image.asset(
+                'assets/images/welcome_illustration.png', // Assuming user added to assets, but for demo I'll use a placeholder or Container with icon if asset not ready
+                height: 200,
+                width: double.infinity,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => _buildFallbackIllustration(),
               ),
-            ),
-            Positioned(
-              bottom: -50,
-              right: -50,
-              child: Container(
-                width: 250,
-                height: 250,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.primary.withValues(alpha: 0.05)),
-                child: BackdropFilter(filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80), child: const SizedBox()),
+              const SizedBox(height: 32),
+              
+              Text(
+                "Experience Effortless\nExpense Tracking",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textBlack,
+                  height: 1.2,
+                ),
               ),
-            ),
-
-            // 2. Main Content
-            Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: StaggeredEntryColumn(
+              const SizedBox(height: 12),
+              Text(
+                "Split bills, track debt, and settle up with\nfriends—all in one beautiful place.",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(
+                  fontSize: 15,
+                  color: AppColors.textGrey,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 48),
+              // 3. Simple Form
+              Form(
+                key: _formKey,
+                child: Column(
                   children: [
-                    const SizedBox(height: 60),
-
-                    // Inside build method:
-                    // Logo
-                    const RotatingLogo(),
-                    const SizedBox(height: 24),
-
-                    // Titles
-                    RichText(
-                      textAlign: TextAlign.center,
-                      text: TextSpan(
-                        style: Theme.of(
-                          context,
-                        ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, height: 1.2, color: AppColors.textBlack),
-                        children: const [
-                          TextSpan(text: "Welcome Back to\n"),
-                          TextSpan(
-                            text: "Split Ease",
-                            style: TextStyle(color: Color(0xFFDAB318)),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      "Track shared expenses, manage group bills,\nand travel debt-free.",
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textGrey, height: 1.5),
-                    ),
-                    const SizedBox(height: 40),
-
-                    // White Card Form
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 10))],
-                        border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.5)),
-                      ),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          children: [
-                            // Email
-                            AuthField(
-                              label: "Email Address",
-                              hint: "user@splitease.com",
-                              controller: _emailController,
-                              icon: Icons.email_outlined,
-                              validator: AppValidators.validateEmail,
-                            ),
-
-                            const SizedBox(height: 20),
-
-                            // Password
-                            AuthField(
-                              label: "Password",
-                              hint: "• • • • • •",
-                              isPassword: true,
-                              isObscured: _isObscured,
-                              controller: _passwordController,
-                              icon: Icons.lock_outline_rounded,
-                              validator: AppValidators.validatePasswordLogin,
-                              onToggleVisibility: () {
-                                setState(() {
-                                  _isObscured = !_isObscured;
-                                });
-                              },
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            if (FeatureFlags.isForgotPasswordEnabled) ...[
-                              // Forgot PW
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton(
-                                  onPressed: () {},
-                                  child: const Text(
-                                    "Forgot Password?",
-                                    style: TextStyle(color: Color(0xFFDAB318), fontSize: 13, fontWeight: FontWeight.w600),
-                                  ),
-                                ),
-                              ),
-                            ],
-                            const SizedBox(height: 24),
-                            BlocBuilder<LoginBloc, LoginState>(
-                              buildWhen: (previous, current) => previous != current,
-                              builder: (context, state) {
-                                return AppPrimaryButton(
-                                  isLoading: state.status == LoginStatus.loading,
-                                  text: "Log In",
-                                  onPressed: () {
-                                    if (_formKey.currentState!.validate()) {
-                                      context.read<LoginBloc>().add(LoginUser(email: _emailController.text, password: _passwordController.text));
-                                    }
-                                  },
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    if (FeatureFlags.isSocialAuthEnabled) ...[
-                      const SizedBox(height: 30),
-
-                      // Divider
-                      Row(
-                        children: [
-                          const Expanded(child: Divider(color: AppColors.borderGrey)),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text("Or continue with", style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 13)),
-                          ),
-                          const Expanded(child: Divider(color: AppColors.borderGrey)),
-                        ],
-                      ),
-
-                      const SizedBox(height: 30),
-
-                      // Socials
-                      Row(
-                        children: [
-                          Expanded(
-                            child: SocialButton(
-                              text: "Google",
-                              onPressed: () {},
-                              icon: const Text(
-                                "G",
-                                style: TextStyle(color: Colors.red, fontWeight: FontWeight.w900, fontSize: 18, fontFamily: 'Roboto'),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: SocialButton(
-                              text: "Apple",
-                              onPressed: () {},
-                              icon: const Icon(Icons.apple, color: Colors.black, size: 22),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-
-                    const SizedBox(height: 40),
-
-                    // Footer
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text("New to Split Ease? ", style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textGrey, fontSize: 14)),
-                        GestureDetector(
-                          onTap: () {
-                            NavigationService.pushNamed(AppRoutes.register);
-                          },
-                          child: const Text(
-                            "Register",
-                            style: TextStyle(color: Color(0xFFDAB318), fontWeight: FontWeight.bold, fontSize: 14),
-                          ),
-                        ),
-                      ],
+                    AuthField(
+                      label: "Email",
+                      hint: "Enter your email",
+                      controller: _emailController,
+                      icon: Icons.alternate_email_rounded,
+                      validator: AppValidators.validateEmail,
                     ),
                     const SizedBox(height: 20),
+                    ValueListenableBuilder<bool>(
+                      valueListenable: _isObscured,
+                      builder: (context, isObscured, child) {
+                        return AuthField(
+                          label: "Password",
+                          hint: "Enter your password",
+                          isPassword: true,
+                          isObscured: isObscured,
+                          controller: _passwordController,
+                          icon: Icons.lock_rounded,
+                          validator: AppValidators.validatePasswordLogin,
+                          onToggleVisibility: () {
+                            _isObscured.value = !_isObscured.value;
+                          },
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
-            ),
-          ],
+              
+              const SizedBox(height: 12),
+              if (FeatureFlags.isForgotPasswordEnabled)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {},
+                    child: Text(
+                      "Forgot Password?",
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+
+              const SizedBox(height: 32),
+
+              // 4. Action
+              BlocBuilder<LoginBloc, LoginState>(
+                builder: (context, state) {
+                  return AppPrimaryButton(
+                    isLoading: state.status == LoginStatus.loading,
+                    text: "Continue to Split Ease",
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        context.read<LoginBloc>().add(LoginUser(
+                          email: _emailController.text,
+                          password: _passwordController.text,
+                        ));
+                      }
+                    },
+                  );
+                },
+              ),
+
+              const SizedBox(height: 32),
+
+              // 5. Social Options
+              if (FeatureFlags.isSocialAuthEnabled) ...[
+                Row(
+                  children: [
+                    const Expanded(child: Divider()),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        "QUICK ACCESS",
+                        style: GoogleFonts.outfit(
+                          fontSize: 11,
+                          letterSpacing: 1.0,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.iconGrey,
+                        ),
+                      ),
+                    ),
+                    const Expanded(child: Divider()),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SocialButton(
+                        text: "Google",
+                        onPressed: () {},
+                        icon: const Icon(Icons.g_mobiledata, color: Colors.blue, size: 28),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: SocialButton(
+                        text: "Apple",
+                        onPressed: () {},
+                        icon: const Icon(Icons.apple, color: Colors.black, size: 22),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+
+              const SizedBox(height: 48),
+
+              // 6. Footer
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "First time here? ",
+                    style: GoogleFonts.outfit(
+                      fontSize: 15,
+                      color: AppColors.textGrey,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      NavigationService.pushNamed(AppRoutes.register);
+                    },
+                    child: Text(
+                      "Join the group",
+                      style: GoogleFonts.outfit(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFallbackIllustration() {
+    return Container(
+      height: 200,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Simplified Graphic Composition
+          Positioned(
+            left: 80,
+            child: Icon(Icons.person_rounded, size: 100, color: AppColors.primary.withValues(alpha: 0.2)),
+          ),
+          Positioned(
+            right: 80,
+            child: Icon(Icons.person_rounded, size: 100, color: AppColors.brandYellow.withValues(alpha: 0.2)),
+          ),
+          const Center(
+            child: Icon(Icons.handshake_rounded, size: 80, color: AppColors.primary),
+          ),
+        ],
       ),
     );
   }

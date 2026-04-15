@@ -1,6 +1,7 @@
 
 // --- Light Theme Auth Field ---
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/app_colors.dart';
 
@@ -13,6 +14,7 @@ class AuthField extends StatefulWidget {
   final VoidCallback? onToggleVisibility;
   final TextEditingController? controller;
   final String? Function(String?)? validator;
+  final bool isReadyOnly;
 
   const AuthField({
     super.key,
@@ -24,6 +26,7 @@ class AuthField extends StatefulWidget {
     this.onToggleVisibility,
     this.controller,
     this.validator,
+    this.isReadyOnly = false,
   });
 
   @override
@@ -31,96 +34,86 @@ class AuthField extends StatefulWidget {
 }
 
 class _AuthFieldState extends State<AuthField> {
-  bool _isFocused = false;
-
   @override
   Widget build(BuildContext context) {
-    return FormField<String>(
-      initialValue: widget.controller?.text, // Sync initial value from controller
-      validator: widget.validator,
-      autovalidateMode: AutovalidateMode.onUserInteraction,
-      builder: (FormFieldState<String> state) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (widget.label != null) ...[
-              Text(
-                widget.label!,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              const SizedBox(height: 8),
-            ],
-            Focus(
-              onFocusChange: (hasFocus) {
-                setState(() => _isFocused = hasFocus);
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceWhite, // Very light grey
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    // Border becomes Yellow when focused, Red when error, grey otherwise
-                    color: state.hasError
-                        ? AppColors.errorRed
-                        : _isFocused
-                            ? AppColors.primary
-                            : AppColors.borderGrey,
-                    width: 1,
-                  ),
-                ),
-                child: TextField(
-                  controller: widget.controller,
-                  obscureText: widget.isObscured,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                  cursorColor: AppColors.primary,
-                  onChanged: (value) {
-                    state.didChange(value);
-                  },
-                  decoration: InputDecoration(
-                    hintText: widget.hint,
-                    hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textGrey,
-                        ),
-                    prefixIcon: widget.icon != null
-                        ? Icon(widget.icon,
-                            color: _isFocused ? AppColors.primary : Colors.grey,
-                            size: 20)
-                        : null,
-                    suffixIcon: widget.isPassword
-                        ? IconButton(
-                            icon: Icon(
-                              widget.isObscured
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
-                              color: Colors.grey,
-                              size: 20,
-                            ),
-                            onPressed: widget.onToggleVisibility,
-                          )
-                        : null,
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  ),
-                ),
-              ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (widget.label != null) ...[
+          Text(
+            widget.label!,
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textBlack.withValues(alpha: 0.8),
             ),
-            if (state.hasError)
-              Padding(
-                padding: const EdgeInsets.only(top: 6.0, left: 4.0),
-                child: Text(
-                  state.errorText ?? '',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.errorRed,
-                        fontSize: 12,
-                      ),
-                ),
-              ),
-          ],
-        );
-      },
+          ),
+          const SizedBox(height: 8),
+        ],
+        TextFormField(
+          controller: widget.controller,
+          obscureText: widget.isObscured,
+          readOnly: widget.isReadyOnly,
+          validator: widget.validator,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          style: GoogleFonts.outfit(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textBlack,
+          ),
+          cursorColor: AppColors.primary,
+          decoration: InputDecoration(
+            hintText: widget.hint,
+            hintStyle: GoogleFonts.outfit(
+              fontSize: 14,
+              color: AppColors.textGrey,
+              fontWeight: FontWeight.w400,
+            ),
+            filled: true,
+            fillColor: Colors.grey.withValues(alpha: 0.03),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.borderGreyLight),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.borderGreyLight),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.errorRed),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.errorRed, width: 1.5),
+            ),
+            prefixIcon: widget.icon != null
+                ? Icon(widget.icon, color: Colors.grey, size: 20)
+                : null,
+            prefixIconColor: MaterialStateColor.resolveWith((states) =>
+                states.contains(MaterialState.focused)
+                    ? AppColors.primary
+                    : Colors.grey),
+            suffixIcon: widget.isPassword
+                ? IconButton(
+                    icon: Icon(
+                      widget.isObscured
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: Colors.grey,
+                      size: 20,
+                    ),
+                    onPressed: widget.onToggleVisibility,
+                  )
+                : null,
+          ),
+        ),
+      ],
     );
   }
 }

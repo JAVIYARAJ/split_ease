@@ -4,6 +4,7 @@ import 'package:split_ease/features/groups/domain/entities/group_type.dart';
 import '../../../../../core/presentation/widgets/app_image_view.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../domain/entities/group_entity.dart';
+import 'package:intl/intl.dart';
 
 class GroupListItem extends StatelessWidget {
   final GroupEntity group;
@@ -13,17 +14,29 @@ class GroupListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Determine overall status colors and text
+    Color statusColor = AppColors.textGrey;
+    String statusText = "";
+    bool showBalance = true;
+
+    if (group.status == "you_are_owed") {
+      statusColor = AppColors.primaryTeal;
+      statusText = "you are owed";
+    } else if (group.status == "you_owe") {
+      statusColor = AppColors.warningOrange; // Assuming orange for owe
+      statusText = "you owe";
+    } else {
+      statusText = "settled up";
+      showBalance = false;
+    }
+
+    final formatter = NumberFormat('#,##0.00', 'en_IN');
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
       decoration: BoxDecoration(
-        color: AppColors.backgroundWhite,
+        color: AppColors.surfaceWhite,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 10,
-              offset: const Offset(0, 4))
-        ],
+        border: Border.all(color: AppColors.borderGreyLight),
       ),
       child: Material(
         color: Colors.transparent,
@@ -32,62 +45,207 @@ class GroupListItem extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Row(
+            child: Column( // Use a column to stack main row and nested rows
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Group Icon
-                Hero(
-                  tag: group.id!,
-                  child: Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: Colors.white,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Group Icon 
+                    Hero(
+                      tag: group.id ?? "group_${group.name}",
+                      child: Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          color: AppColors.backgroundLightGrey,
+                          border: Border.all(color: AppColors.borderGreyLight, width: 0.5),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(14),
+                          child: group.groupIcon != null
+                              ? AppImageView(
+                                  url: group.groupIcon,
+                                  height: 52,
+                                  width: 52,
+                                  fit: BoxFit.cover,
+                                )
+                              : Container(
+                                  color: AppColors.backgroundLightGrey,
+                                  child: Icon(
+                                    _getIconData(group.groupType),
+                                    color: AppColors.textGrey,
+                                    size: 26,
+                                  ),
+                                ),
+                        ),
+                      ),
                     ),
-                    child: group.groupIcon != null
-                        ? AppImageView(
-                            url: group.groupIcon,
-                            height: 50,
-                            width: 50,
-                            radius: 12,
-                            fit: BoxFit.cover,
-                          )
-                        : Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              gradient: const LinearGradient(
-                                colors: [
-                                  AppColors.primaryTeal,
-                                  AppColors.primaryTealDark
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
+                    const SizedBox(width: 16),
+
+                    // Name
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 4.0), // Align name slightly down
+                        child: Text(
+                          group.name ?? "Non-group",
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textBlack,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+
+                    // Overall Balance
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            statusText,
+                            style: GoogleFonts.outfit(
+                              fontSize: 13,
+                              color: statusColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          if (showBalance && group.overallBalance != null)
+                            Text(
+                              "₹${formatter.format(group.overallBalance!.abs())}",
+                              style: GoogleFonts.outfit(
+                                fontSize: 18,
+                                color: statusColor,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.5,
                               ),
                             ),
-                            child: Icon(_getIconData(group.groupType),
-                                color: Colors.white, size: 24),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                
+                // Nested Member Balances
+                if (group.balancePreview != null && group.balancePreview!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 26.0, top: 12.0), // Align under the center of the icon
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (int i = 0; i < group.balancePreview!.length; i++)
+                          _buildNestedBalanceRow(
+                            name: group.balancePreview![i].fullName ?? 'Unknown',
+                            balance: group.balancePreview![i].balance ?? 0.0,
+                            formatter: formatter,
+                            isLast: i == group.balancePreview!.length - 1 && (group.totalActiveBalances ?? 0) <= group.balancePreview!.length,
                           ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-
-                // Name
-                Expanded(
-                  child: Text(
-                    group.name ?? "Unnamed Group",
-                    style: GoogleFonts.openSans(fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.textBlack),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-
-                // Forward Icon
-                const SizedBox(width: 8),
-                Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textBlack.withAlpha(155)),
+                        if (group.totalActiveBalances != null && group.totalActiveBalances! > group.balancePreview!.length)
+                          _buildPlusMoreBalancesRow(
+                            count: group.totalActiveBalances! - group.balancePreview!.length,
+                          ),
+                      ],
+                    ),
+                  )
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildNestedBalanceRow({
+    required String name,
+    required double balance,
+    required NumberFormat formatter,
+    required bool isLast,
+  }) {
+    // Determine individual status
+    String textStatus = "owes you";
+    Color color = AppColors.primaryTeal;
+    if (balance < 0) {
+      textStatus = "you owe";
+      color = AppColors.warningOrange;
+    }
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // The tree branching line
+          CustomPaint(
+            size: const Size(20, double.infinity),
+            painter: _TreeBranchPainter(isLast: isLast),
+          ),
+          const SizedBox(width: 8),
+          
+          // Data
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: "$name $textStatus ",
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        color: AppColors.textGrey,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    TextSpan(
+                      text: "₹${formatter.format(balance.abs())}",
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        color: color,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlusMoreBalancesRow({required int count}) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          CustomPaint(
+            size: const Size(20, double.infinity),
+            painter: _TreeBranchPainter(isLast: true),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: Text(
+                "Plus $count more balances",
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  color: AppColors.textGrey,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -103,4 +261,38 @@ class GroupListItem extends StatelessWidget {
       return Icons.list_alt_rounded;
     }
   }
+}
+
+class _TreeBranchPainter extends CustomPainter {
+  final bool isLast;
+
+  _TreeBranchPainter({required this.isLast});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.grey.shade300
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+
+    // Line running down from top
+    final double verticalLineEnd = isLast ? size.height / 2 : size.height;
+    
+    // Draw vertical line from top
+    canvas.drawLine(
+      const Offset(0, 0),
+      Offset(0, verticalLineEnd),
+      paint,
+    );
+
+    // Draw horizontal branch exactly in the middle of this item's height
+    canvas.drawLine(
+      Offset(0, size.height / 2),
+      Offset(size.width, size.height / 2),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

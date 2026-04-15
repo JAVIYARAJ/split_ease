@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:split_ease/core/presentation/widgets/app_loader.dart';
 import '../../theme/app_colors.dart';
 
 class BaseScreen extends StatelessWidget {
@@ -134,7 +135,7 @@ class BaseScreen extends StatelessWidget {
       children: [
         bodyContent,
         if (isLoading)
-          const _LoadingOverlay(),
+          const AppLoader(isOverlay: true),
       ],
     );
   }
@@ -182,22 +183,6 @@ class _ErrorView extends StatelessWidget {
               )
             ]
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _LoadingOverlay extends StatelessWidget {
-  const _LoadingOverlay();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.black.withValues(alpha: 0.3), // Semi-transparent black
-      child: const Center(
-        child: CircularProgressIndicator.adaptive(
-          backgroundColor: Colors.white,
         ),
       ),
     );

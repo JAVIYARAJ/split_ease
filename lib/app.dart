@@ -5,6 +5,7 @@ import 'core/routing/route_generator.dart';
 import 'core/routing/navigation_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/common/cubit/app_user_cubit.dart';
+import 'core/services/data_refresh_service.dart';
 import 'injection_container.dart';
 
 class MyApp extends StatelessWidget {
@@ -12,19 +13,32 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => sl<AppUserCubit>(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => sl<AppUserCubit>()),
+        BlocProvider(create: (context) => sl<DataRefreshCubit>()),
+      ],
       child: MaterialApp(
         title: 'Expense Tracker',
         debugShowCheckedModeBanner: false,
-    
+
         // Routing
         initialRoute: AppRoutes.splash,
         onGenerateRoute: RouteGenerator.generateRoute,
         navigatorKey: NavigationService.navigatorKey,
-    
+
         // Theme (optional)
         theme: AppTheme.lightTheme,
+
+        builder: (context, child) {
+          return GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () {
+              FocusManager.instance.primaryFocus?.unfocus();
+            },
+            child: child,
+          );
+        },
       ),
     );
   }

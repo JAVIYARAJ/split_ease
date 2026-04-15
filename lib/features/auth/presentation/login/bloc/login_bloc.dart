@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:split_ease/features/auth/domain/usecases/resend_confirmation_email.dart';
 import 'package:split_ease/features/auth/domain/usecases/user_login.dart';
 import '../../../../../core/common/cubit/app_user_cubit.dart';
 
@@ -9,9 +10,16 @@ part 'login_state.dart';
 
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
   final UserLogin userLogin;
+  final ResendConfirmationEmail _resendConfirmationEmail;
   final AppUserCubit _appUserCubit;
 
-  LoginBloc(this.userLogin, this._appUserCubit) : super(const LoginState()) {
+  LoginBloc({
+    required this.userLogin,
+    required ResendConfirmationEmail resendConfirmationEmail,
+    required AppUserCubit appUserCubit,
+  })  : _resendConfirmationEmail = resendConfirmationEmail,
+        _appUserCubit = appUserCubit,
+        super(const LoginState()) {
     on<LoginUser>((event, emit) async {
       emit(state.copyWith(status: LoginStatus.loading));
       var response = await userLogin(UserLoginParam(email: event.email, password: event.password));
@@ -23,6 +31,15 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
           _appUserCubit.updateUser(r);
           emit(state.copyWith(status: LoginStatus.success, message: "Login successfully"));
         },
+      );
+    });
+
+    on<ResendEmail>((event, emit) async {
+      emit(state.copyWith(status: LoginStatus.resendLoading));
+      var response = await _resendConfirmationEmail(event.email);
+      response.fold(
+        (l) => emit(state.copyWith(status: LoginStatus.failure, message: l.message)),
+        (r) => emit(state.copyWith(status: LoginStatus.resendSuccess, message: "Verification email sent successfully")),
       );
     });
   }
