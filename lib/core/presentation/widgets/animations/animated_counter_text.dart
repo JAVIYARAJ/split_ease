@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 import 'package:split_ease/core/utils/app_formatter.dart';
 
 class AnimatedCounterText extends StatefulWidget {
@@ -20,51 +21,47 @@ class AnimatedCounterText extends StatefulWidget {
 }
 
 class _AnimatedCounterTextState extends State<AnimatedCounterText> {
-  double _displayValue = 0;
+  bool _isVisible = false;
   bool _hasBeenAnimated = false;
 
   @override
-  void initState() {
-    super.initState();
-    // Start with 0 if it hasn't been animated yet
-    if (!_hasBeenAnimated) {
-      _displayValue = 0;
-      _startAnimation();
-    } else {
-      _displayValue = widget.value;
-    }
-  }
-
-  void _startAnimation() {
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        setState(() {
-          _displayValue = widget.value;
-        });
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      key: ValueKey(_hasBeenAnimated),
-      tween: Tween<double>(begin: _hasBeenAnimated ? widget.value : 0, end: widget.value),
-      duration: _hasBeenAnimated ? Duration.zero : const Duration(milliseconds: 2500),
-      curve: Curves.easeOutExpo,
-      onEnd: () {
-        if (mounted && !_hasBeenAnimated) {
+    // Unique key for VisibilityDetector to avoid issues with scrollable lists
+    final detectorKey = Key('counter_${widget.value}_${widget.style.hashCode}');
+
+    return VisibilityDetector(
+      key: detectorKey,
+      onVisibilityChanged: (info) {
+        if (info.visibleFraction > 0.1 && !_isVisible && mounted) {
           setState(() {
-            _hasBeenAnimated = true;
+            _isVisible = true;
           });
         }
       },
-      builder: (context, value, child) {
-        return Text(
-          AppFormatter.formatCurrency(value),
-          style: widget.style,
-        );
-      },
+      child: TweenAnimationBuilder<double>(
+        key: ValueKey('${_hasBeenAnimated}_${_isVisible}'),
+        tween: Tween<double>(
+          begin: (_hasBeenAnimated || !_isVisible) ? widget.value : 0,
+          end: widget.value,
+        ),
+        duration: (_hasBeenAnimated || !_isVisible) 
+            ? Duration.zero 
+            : widget.duration,
+        curve: widget.curve,
+        onEnd: () {
+          if (mounted && !_hasBeenAnimated && _isVisible) {
+            setState(() {
+              _hasBeenAnimated = true;
+            });
+          }
+        },
+        builder: (context, value, child) {
+          return Text(
+            AppFormatter.formatCurrency(value),
+            style: widget.style,
+          );
+        },
+      ),
     );
   }
 }
