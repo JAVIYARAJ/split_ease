@@ -286,10 +286,24 @@ class _LoginPageState extends State<LoginPage> {
                 Row(
                   children: [
                     Expanded(
-                      child: SocialButton(
-                        text: "Google",
-                        onPressed: () {},
-                        icon: const Icon(Icons.g_mobiledata, color: Colors.blue, size: 28),
+                      child: BlocBuilder<LoginBloc, LoginState>(
+                        buildWhen: (p, c) => p.status != c.status,
+                        builder: (context, state) {
+                          final isLoading = state.status == LoginStatus.googleLoading;
+                          return SocialButton(
+                            text: "Google",
+                            onPressed: isLoading
+                                ? () {}
+                                : () => context.read<LoginBloc>().add(GoogleSignInRequested()),
+                            icon: isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : const Icon(Icons.g_mobiledata, color: Colors.blue, size: 28),
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(width: 16),

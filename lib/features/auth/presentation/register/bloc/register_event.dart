@@ -11,3 +11,5 @@ final class RegisterUser extends RegisterEvent{
   RegisterUser({required this.email, required this.name, required this.password});
 
 }
+
+final class GoogleSignInRequested extends RegisterEvent {}
