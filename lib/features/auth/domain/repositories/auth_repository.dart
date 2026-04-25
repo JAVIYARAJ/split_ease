@@ -7,4 +7,7 @@ abstract interface class AuthRepository {
   Future<Either<Failure, UserEntity>> loginWithEmailPassword({required String email, required String password});
   Future<Either<Failure, UserEntity>> getCurrentUser();
   Future<Either<Failure, void>> resendConfirmationEmail({required String email});
+
+  /// Right(null) means the user cancelled the Google sign-in sheet.
+  Future<Either<Failure, UserEntity?>> signInWithGoogle();
 }

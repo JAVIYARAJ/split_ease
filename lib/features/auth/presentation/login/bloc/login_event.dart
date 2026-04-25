@@ -15,3 +15,5 @@ final class ResendEmail extends LoginEvent {
 
   ResendEmail({required this.email});
 }
+
+final class GoogleSignInRequested extends LoginEvent {}

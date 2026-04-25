@@ -14,7 +14,7 @@ class CreateGroupState extends Equatable {
   final String? existingIconUrl;
 
   const CreateGroupState({
-    this.selectedType = GroupType.trip,
+    this.selectedType = GroupType.other,
     this.groupImage,
     this.status = CreateGroupStatus.initial,
     this.errorMessage,

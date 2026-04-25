@@ -8,6 +8,7 @@ enum ActivityType {
   deleted,
   restored,
   roleUpdated,
+  groupCreated,
   unknown,
 }
 
@@ -73,6 +74,8 @@ class ActivityEntity {
         return ActivityType.added;
       case 'role_updated':
         return ActivityType.roleUpdated;
+      case 'group_created':
+        return ActivityType.groupCreated;
     }
 
     switch (type) {

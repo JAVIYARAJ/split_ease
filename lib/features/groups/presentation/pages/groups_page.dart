@@ -60,7 +60,9 @@ class _GroupsPageState extends State<GroupsPage> {
           child: CustomRefreshIndicator(
             onRefresh: () async => context.read<GroupsBloc>().add(LoadGroups()),
             child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
               slivers: [
                 _buildHeader(context),
                 _buildCollectiveHero(context),
