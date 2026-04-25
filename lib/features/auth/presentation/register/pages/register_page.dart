@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/core/utils/app_validators.dart';
 import 'package:split_ease/features/auth/presentation/register/bloc/register_bloc.dart';
 import 'package:split_ease/features/auth/presentation/widgets/auth_background.dart';
+import 'package:split_ease/features/auth/presentation/widgets/google_icon.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/widgets/auth_field.dart';
@@ -47,6 +49,9 @@ class _RegisterPageState extends State<RegisterPage> {
             context,
             MaterialPageRoute(builder: (context) => const RegisterSuccessPage()),
           );
+        } else if (state is RegisterGoogleSuccess) {
+          AppAlerts.showSuccess(context, state.message);
+          NavigationService.pushReplacement(AppRoutes.home);
         } else if (state is RegisterFailure) {
           AppAlerts.showError(context, state.message);
         }
@@ -218,45 +223,40 @@ class _RegisterPageState extends State<RegisterPage> {
               if (FeatureFlags.isSocialAuthEnabled) ...[
                 Row(
                   children: [
-                    const Expanded(child: Divider(thickness: 1)),
+                    const Expanded(child: Divider()),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
-                        "OR SIGNUP WITH",
+                        "QUICK ACCESS",
                         style: GoogleFonts.outfit(
                           fontSize: 11,
+                          letterSpacing: 1.0,
                           fontWeight: FontWeight.w700,
-                          letterSpacing: 1.2,
                           color: AppColors.iconGrey,
                         ),
                       ),
                     ),
-                    const Expanded(child: Divider(thickness: 1)),
+                    const Expanded(child: Divider()),
                   ],
                 ),
                 const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: SocialButton(
-                        text: "Google",
-                        onPressed: () {},
-                        icon: Image.network(
-                          'https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo_2013_Google.png', // Temporary indicator
-                          height: 14,
-                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.g_mobiledata, color: Colors.blue),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: SocialButton(
-                        text: "Apple",
-                        onPressed: () {},
-                        icon: const Icon(Icons.apple, color: Colors.black, size: 20),
-                      ),
-                    ),
-                  ],
+                BlocBuilder<RegisterBloc, RegisterState>(
+                  builder: (context, state) {
+                    final isLoading = state is RegisterGoogleLoading;
+                    return SocialButton(
+                      text: "Google",
+                      onPressed: isLoading
+                          ? () {}
+                          : () => context.read<RegisterBloc>().add(GoogleSignInRequested()),
+                      icon: isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const GoogleIcon(size: 20),
+                    );
+                  },
                 ),
               ],
 

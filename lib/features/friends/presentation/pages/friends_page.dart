@@ -92,7 +92,9 @@ class _FriendsPageState extends State<FriendsPage> {
                 context.read<ActivityBloc>().add(LoadActivities());
               },
               child: CustomScrollView(
-                physics: const BouncingScrollPhysics(),
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
                 slivers: [
                   _buildHeader(context),
                   _buildBalanceHero(context),

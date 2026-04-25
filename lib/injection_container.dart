@@ -63,6 +63,7 @@ import 'core/services/image_picker_service.dart';
 import 'core/services/realtime_service.dart';
 import 'core/services/data_refresh_service.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
+import 'features/auth/domain/usecases/google_sign_in_usecase.dart';
 import 'features/auth/domain/usecases/user_login.dart';
 
 import 'features/expenses/presentation/bloc/expense_bloc.dart';
@@ -351,15 +352,17 @@ void _auth() {
   sl.registerFactory(() => UserLogin(authRepository: sl<AuthRepository>()));
   sl.registerFactory(() => UserSignUp(authRepository: sl<AuthRepository>()));
   sl.registerFactory(() => ResendConfirmationEmail(sl<AuthRepository>()));
+  sl.registerFactory(() => GoogleSignInUseCase(sl<AuthRepository>()));
 
   // 4. Blocs / State Management (Presentation Layer)
   // Receives user input, calls Use Cases, and emits States to the UI.
   sl.registerFactory(() => LoginBloc(
         userLogin: sl<UserLogin>(),
         resendConfirmationEmail: sl<ResendConfirmationEmail>(),
+        googleSignInUseCase: sl<GoogleSignInUseCase>(),
         appUserCubit: sl<AppUserCubit>(),
       ));
-  sl.registerFactory(() => RegisterBloc(sl<UserSignUp>(), sl<AppUserCubit>()));
+  sl.registerFactory(() => RegisterBloc(sl<UserSignUp>(), sl<GoogleSignInUseCase>(), sl<AppUserCubit>()));
 }
 
 void _inviteCode(){

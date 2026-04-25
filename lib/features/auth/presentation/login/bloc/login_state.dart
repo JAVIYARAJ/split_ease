@@ -1,6 +1,6 @@
 part of 'login_bloc.dart';
 
-enum LoginStatus { initial, loading, resendLoading, success, failure, registerNavigation, resendSuccess }
+enum LoginStatus { initial, loading, googleLoading, resendLoading, success, failure, registerNavigation, resendSuccess }
 
 class LoginState {
   final LoginStatus status;

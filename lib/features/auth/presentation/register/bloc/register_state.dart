@@ -18,3 +18,11 @@ final class RegisterFailure extends RegisterState{
 
   RegisterFailure(this.message);
 }
+
+final class RegisterGoogleLoading extends RegisterState {}
+
+final class RegisterGoogleSuccess extends RegisterState {
+  final String message;
+
+  RegisterGoogleSuccess(this.message);
+}
