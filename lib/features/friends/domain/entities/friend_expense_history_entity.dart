@@ -18,13 +18,13 @@ class FriendDetailUserEntity extends Equatable {
   List<Object?> get props => [id, avatar, email, fullName];
 }
 
-class FriendGroupBreakdownEntity extends Equatable {
+class FriendDetailGroupBreakdownEntity extends Equatable {
   final double balance;
   final String groupId;
   final String? groupIcon;
   final String groupName;
 
-  const FriendGroupBreakdownEntity({
+  const FriendDetailGroupBreakdownEntity({
     required this.balance,
     required this.groupId,
     this.groupIcon,
@@ -39,7 +39,7 @@ class FriendExpenseHistoryEntity extends Equatable {
   final FriendDetailUserEntity user;
   final String status;
   final List<FriendExpenseEntity>? expenses;
-  final List<FriendGroupBreakdownEntity> groupBreakdown;
+  final List<FriendDetailGroupBreakdownEntity> groupBreakdown;
   final double overallBalance;
 
   const FriendExpenseHistoryEntity({

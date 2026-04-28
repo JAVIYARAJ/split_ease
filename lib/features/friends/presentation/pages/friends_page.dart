@@ -13,13 +13,13 @@ import 'package:split_ease/features/activity/presentation/bloc/activity_bloc.dar
 
 import '../../../../../core/presentation/widgets/base_screen.dart';
 import '../../../../../core/theme/app_colors.dart';
-import '../../../../core/presentation/widgets/success_dialog.dart';
-import '../../../../core/routing/app_routes.dart';
-import '../../../../core/utils/app_formatter.dart';
-import '../bloc/friends_bloc.dart';
-import '../widgets/friend_list_item.dart';
 import '../../../../core/presentation/widgets/animations/animated_counter_text.dart';
 import '../../../../core/presentation/widgets/animations/smooth_animated_fab.dart';
+import '../../../../core/presentation/widgets/success_dialog.dart';
+import '../../../../core/routing/app_routes.dart';
+import '../../../../../core/presentation/widgets/app_empty_state.dart';
+import '../bloc/friends_bloc.dart';
+import '../widgets/friend_list_item.dart';
 
 class FriendsPage extends StatefulWidget {
   const FriendsPage({super.key});
@@ -111,6 +111,7 @@ class _FriendsPageState extends State<FriendsPage> {
 
   Widget _buildFAB(BuildContext context) {
     return BlocBuilder<FriendsBloc, FriendsState>(
+      buildWhen: (prev, curr) => prev.isFabExtended != curr.isFabExtended,
       builder: (context, state) {
         return SmoothAnimatedFAB(
           isExtended: state.isFabExtended,
@@ -151,6 +152,7 @@ class _FriendsPageState extends State<FriendsPage> {
       ),
       actions: [
         BlocBuilder<FriendsBloc, FriendsState>(
+          buildWhen: (prev, curr) => prev.unreadRequestCount != curr.unreadRequestCount,
           builder: (context, state) {
             return Badge(
               isLabelVisible: state.unreadRequestCount > 0,
@@ -181,19 +183,22 @@ class _FriendsPageState extends State<FriendsPage> {
   Widget _buildBalanceHero(BuildContext context) {
     return SliverToBoxAdapter(
       child: BlocBuilder<FriendsBloc, FriendsState>(
+        buildWhen: (prev, curr) => prev.status != curr.status || prev.friends != curr.friends,
         builder: (context, state) {
           double totalYouOwe = 0;
           double totalOwesYou = 0;
           if (state.status == FriendsStatus.success) {
             for (var friend in state.friends) {
-              if (friend.overallBalance < 0) totalYouOwe += friend.overallBalance.abs();
-              else if (friend.overallBalance > 0) totalOwesYou += friend.overallBalance;
+              if (friend.overallBalance < 0) {
+                totalYouOwe += friend.overallBalance.abs();
+              } else if (friend.overallBalance > 0){
+                totalOwesYou += friend.overallBalance;
+              }
             }
           }
 
           final double netBalance = totalOwesYou - totalYouOwe;
           final bool isOwe = netBalance < 0;
-          final color = netBalance == 0 ? AppColors.textBlack : (isOwe ? AppColors.warningOrange : AppColors.successGreen);
 
           return Padding(
             padding: const EdgeInsets.all(24.0),
@@ -256,27 +261,24 @@ class _FriendsPageState extends State<FriendsPage> {
 
   Widget _buildFriendsList(BuildContext context) {
     return BlocBuilder<FriendsBloc, FriendsState>(
+      buildWhen: (prev, curr) =>
+          prev.status != curr.status ||
+          prev.friends != curr.friends ||
+          prev.errorMessage != curr.errorMessage,
       builder: (context, state) {
         if (state.status == FriendsStatus.loading) return const _FriendsShimmerList();
         if (state.status == FriendsStatus.failure) return SliverToBoxAdapter(child: Center(child: Text(state.errorMessage)));
         
         if (state.friends.isEmpty) {
-          return SliverFillRemaining(
+          return const SliverFillRemaining(
             hasScrollBody: false,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.people_outline_rounded, size: 80, color: AppColors.iconGrey.withValues(alpha: 0.2)),
-                const SizedBox(height: 24),
-                Text(
-                  "Your circle is empty",
-                  style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textBlack),
-                ),
-                Text(
-                  "Search for friends or scan their QR code to start.",
-                  style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textGrey),
-                ),
-              ],
+            child: Padding(
+              padding: EdgeInsets.only(bottom: 160),
+              child: AppEmptyState(
+                icon: Icons.people_outline_rounded,
+                title: "Your circle is empty",
+                subtitle: "Scan a friend's QR code to start splitting expenses together.",
+              ),
             ),
           );
         }

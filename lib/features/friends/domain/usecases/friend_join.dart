@@ -4,13 +4,13 @@ import 'package:split_ease/core/usecases/use_case.dart';
 
 import '../repository/friends_repository.dart';
 
-class FriendJoin implements UseCase<dynamic ,FriendJoinParam> {
+class FriendJoin implements UseCase<void, FriendJoinParam> {
   final FriendsRepository friendsRepository;
 
   FriendJoin({required this.friendsRepository});
 
   @override
-  Future<Either<Failure, dynamic>> call(FriendJoinParam params) async {
+  Future<Either<Failure, void>> call(FriendJoinParam params) async {
     return await friendsRepository.joinFriend(params.friendId);
   }
 }
