@@ -7,7 +7,6 @@ import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/groups/presentation/bloc/join_group_bloc.dart';
-import 'package:split_ease/features/groups/presentation/pages/qr_scanner_page.dart';
 import 'package:split_ease/core/presentation/widgets/success_dialog.dart';
 
 class EnterInviteCodePage extends StatelessWidget {

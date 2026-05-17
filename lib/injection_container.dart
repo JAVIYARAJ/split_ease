@@ -294,7 +294,7 @@ void _home() {
   // Presentation Layer - BLoC (Contains Mock Data Logic)
   sl.registerFactory(() => HomeBloc());
 
-  sl.registerFactory<FriendsRemoteDataSource>(() => FriendRemoteDatSourceImpl(client: sl<SupabaseClient>()),);
+  sl.registerFactory<FriendsRemoteDataSource>(() => FriendsRemoteDataSourceImpl(client: sl<SupabaseClient>()),);
 
   sl.registerFactory<FriendsRepository>(() => FriendsRepositoryImpl(friendsRemoteDataSource: sl<FriendsRemoteDataSource>()),);
 

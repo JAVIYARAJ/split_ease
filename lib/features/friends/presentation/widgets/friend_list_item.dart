@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/theme/app_colors.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
@@ -35,14 +34,12 @@ class FriendListItem extends StatelessWidget {
 
     final formatter = NumberFormat('#,##0.00', 'en_IN');
     
-    // Calculate total nested rows
     int nestedItemsCount = friend.groupBreakdown.length;
     if (friend.nonGroupBalance != 0) {
       nestedItemsCount++;
     }
-    
-    // Only show nested breakdown if there's actually a balance and breakdown to show. Wait, actually we should only show breakdown if there's more than 1 context, or if the user wants to see where exactly the balance comes from. But to match the group view exactly, let's show all breakdowns.
-    bool showNested = showBalance && nestedItemsCount > 0;
+
+    final bool showNested = showBalance && nestedItemsCount > 0;
 
     return Container(
       decoration: BoxDecoration(

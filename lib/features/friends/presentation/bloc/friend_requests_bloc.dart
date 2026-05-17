@@ -12,15 +12,15 @@ part 'friend_requests_state.dart';
 class FriendRequestsBloc extends Bloc<FriendRequestsEvent, FriendRequestsState> {
   final GetFriendRequests _getFriendRequests;
   final RespondToFriendRequest _respondToFriendRequest;
-  final DataRefreshCubit _dataRefreshCubit; // Changed type and name
+  final DataRefreshCubit _dataRefreshCubit;
 
   FriendRequestsBloc({
     required GetFriendRequests getFriendRequests,
     required RespondToFriendRequest respondToFriendRequest,
-    required DataRefreshCubit dataRefreshCubit, // Changed type and name
+    required DataRefreshCubit dataRefreshCubit,
   })  : _getFriendRequests = getFriendRequests,
         _respondToFriendRequest = respondToFriendRequest,
-        _dataRefreshCubit = dataRefreshCubit, // Changed name
+        _dataRefreshCubit = dataRefreshCubit,
         super(const FriendRequestsState()) {
     on<LoadFriendRequests>(_onLoadFriendRequests);
     on<RespondToRequest>(_onRespondToRequest);

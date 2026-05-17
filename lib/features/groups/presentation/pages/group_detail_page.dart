@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:split_ease/core/presentation/widgets/app_empty_state.dart';
 import 'package:split_ease/core/presentation/widgets/base_screen.dart';
 import 'package:split_ease/core/presentation/widgets/custom_refresh_indicator.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
@@ -15,7 +16,6 @@ import 'package:split_ease/core/utils/navigation_utils.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
 import 'package:split_ease/features/groups/domain/entities/group_expense_entity.dart';
-import 'package:split_ease/features/groups/domain/entities/group_member_balance_entity.dart';
 import 'package:split_ease/features/groups/presentation/bloc/group_detail_bloc.dart';
 
 class GroupDetailPage extends StatefulWidget {
@@ -133,7 +133,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
               // 1. Group info & Balance summary
               BlocBuilder<GroupDetailBloc, GroupDetailState>(
                 builder: (context, state) {
-                  final isLoading = state.status == GroupDetailStatus.loading;
+                  final isLoading = state.status == GroupDetailStatus.loading || state.status == GroupDetailStatus.initial;
                   final hasGroup = state.groupEntity != null;
                   
                   // Hide group info panel entirely in non-group context
@@ -555,7 +555,6 @@ class _BalanceSummary extends StatelessWidget {
       builder: (context, state) {
         final history = state.expenseHistory;
         final isHistoryLoading = state.expenseStatus == GroupDetailExpenseStatus.loading;
-        final groupId = state.groupEntity?.id;
 
         // ── Skeletonizer for the balance section ──
         if (isHistoryLoading) {
@@ -585,8 +584,6 @@ class _BalanceSummary extends StatelessWidget {
         final overallLabel = overall == 0
             ? "You are settled up"
             : (youAreOwed ? "You are owed" : "You owe");
-        final List<GroupMemberBalanceEntity> memberBalances = history.memberBalances ?? [];
-
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -785,46 +782,13 @@ class _TransactionList extends StatelessWidget {
     }
 
     if (expenses.isEmpty) {
-      return SliverToBoxAdapter(
+      return const SliverToBoxAdapter(
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 64, horizontal: 32),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(28),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryTeal.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.receipt_long_rounded,
-                    size: 72,
-                    color: AppColors.primaryTeal,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  "No expenses yet",
-                  style: GoogleFonts.outfit(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textBlack,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  "This group needs some action.\nAdd a new expense to start splitting!",
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(
-                    fontSize: 15,
-                    color: AppColors.textGrey,
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
+          padding: EdgeInsets.symmetric(vertical: 64),
+          child: AppEmptyState(
+            icon: Icons.receipt_long_rounded,
+            title: "No expenses yet",
+            subtitle: "Add the first expense to start splitting costs in this group.",
           ),
         ),
       );

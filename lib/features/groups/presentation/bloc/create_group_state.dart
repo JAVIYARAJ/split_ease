@@ -50,6 +50,5 @@ class CreateGroupState extends Equatable {
   }
 
   @override
-  @override
   List<Object?> get props => [selectedType, groupImage, status, errorMessage, createdGroupId, inviteCode, isGeneratingCode, isEditMode, existingIconUrl];
 }

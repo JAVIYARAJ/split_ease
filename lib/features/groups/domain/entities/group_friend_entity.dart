@@ -1,4 +1,6 @@
-class GroupFriendEntity {
+import 'package:equatable/equatable.dart';
+
+class GroupFriendEntity extends Equatable {
   final String userId;
   final String fullName;
   final String? avatarUrl;
@@ -14,4 +16,7 @@ class GroupFriendEntity {
     required this.friendshipId,
     required this.isInGroup,
   });
+
+  @override
+  List<Object?> get props => [userId, fullName, avatarUrl, email, friendshipId, isInGroup];
 }

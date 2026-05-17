@@ -1,5 +1,6 @@
 part of 'add_members_bloc.dart';
 
+@immutable
 abstract class AddMembersEvent {}
 
 class LoadFriendsForGroup extends AddMembersEvent {

@@ -1,6 +1,6 @@
 part of 'group_detail_bloc.dart';
 
-enum GroupDetailStatus { loading, success, failure }
+enum GroupDetailStatus { initial, loading, success, failure }
 enum GroupDetailExpenseStatus { initial, loading, success, failure }
 
 class GroupDetailState extends Equatable {
@@ -13,7 +13,7 @@ class GroupDetailState extends Equatable {
   final String? expenseErrorMessage;
 
   const GroupDetailState({
-    this.status = GroupDetailStatus.loading,
+    this.status = GroupDetailStatus.initial,
     this.errorMessage,
     this.groupEntity,
     this.hasChanges = false,

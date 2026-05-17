@@ -15,10 +15,10 @@ class FriendsRepositoryImpl implements FriendsRepository {
   FriendsRepositoryImpl({required this.friendsRemoteDataSource});
 
   @override
-  Future<Either<Failure, String?>> joinFriend(String friendId) async{
+  Future<Either<Failure, void>> joinFriend(String friendId) async {
     try {
-      var response = await friendsRemoteDataSource.joinFriends(friendId);
-      return right(response);
+      await friendsRemoteDataSource.joinFriends(friendId);
+      return right(null);
     } on ServerException catch (error) {
       return left(Failure(message: error.message));
     }

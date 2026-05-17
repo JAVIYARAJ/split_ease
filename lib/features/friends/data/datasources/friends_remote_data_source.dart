@@ -7,7 +7,7 @@ import '../models/friend_request_model.dart';
 import '../models/friend_expense_history_model.dart';
 
 abstract interface class FriendsRemoteDataSource {
-  Future<dynamic> joinFriends(String friendId);
+  Future<void> joinFriends(String friendId);
   Future<List<FriendModel>> getMyFriends();
   Future<List<FriendRequestModel>> getFriendRequests();
   Future<void> respondToFriendRequest(String friendshipId, String action);
@@ -15,13 +15,13 @@ abstract interface class FriendsRemoteDataSource {
   Future<FriendExpenseHistoryModel> getFriendExpenseHistory(String friendId);
 }
 
-class FriendRemoteDatSourceImpl implements FriendsRemoteDataSource {
+class FriendsRemoteDataSourceImpl implements FriendsRemoteDataSource {
   final SupabaseClient client;
 
-  FriendRemoteDatSourceImpl({required this.client});
+  FriendsRemoteDataSourceImpl({required this.client});
 
   @override
-  Future<dynamic> joinFriends(String friendId) async {
+  Future<void> joinFriends(String friendId) async {
     try {
       await client.rpc(
         'send_friend_request_rpc',

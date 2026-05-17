@@ -74,7 +74,7 @@ class CreateGroupBloc extends Bloc<CreateGroupEvent, CreateGroupState> {
           (r) {
             _dataRefreshCubit.markMultipleForRefresh([RefreshType.groups, RefreshType.activity]);
             if (r is List && r.isNotEmpty) {
-              emit(state.copyWith(status: CreateGroupStatus.success, createdGroupId: (r as List).firstOrNull?["id"]));
+              emit(state.copyWith(status: CreateGroupStatus.success, createdGroupId: r.firstOrNull?["id"]));
             } else {
               emit(state.copyWith(status: CreateGroupStatus.failure, errorMessage: "Something went wrong"));
             }

@@ -1,3 +1,5 @@
+import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:split_ease/features/groups/domain/entities/group_friend_entity.dart';
 import 'package:split_ease/features/groups/domain/usecases/add_friends_to_group.dart';
