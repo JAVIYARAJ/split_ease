@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,7 +25,6 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   final TextEditingController _groupNameController = TextEditingController();
   String _initialName = '';
   GroupType _initialType = GroupType.other;
-  String? _initialIconUrl;
   String _initialCode = '';
 
   @override
@@ -49,7 +47,6 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
           _initialType = GroupType.other;
         }
 
-        _initialIconUrl = group.groupIcon;
         _groupNameController.text = _initialName;
         context.read<CreateGroupBloc>().add(InitializeCreateGroup(group: group));
       } else {

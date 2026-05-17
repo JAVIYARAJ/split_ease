@@ -53,10 +53,13 @@ class ActivityPage extends StatelessWidget {
                   if (!isLoading && activities.isEmpty)
                     SliverFillRemaining(
                       hasScrollBody: false,
-                      child: const AppEmptyState(
-                        icon: Icons.history_rounded,
-                        title: "No Activity Found",
-                        subtitle: "Your split history is empty. Time to start sharing expenses!",
+                      child: const Padding(
+                        padding: EdgeInsets.only(bottom: 100),
+                        child: AppEmptyState(
+                          icon: Icons.history_rounded,
+                          title: "No Activity Found",
+                          subtitle: "Your split history is empty. Time to start sharing expenses!",
+                        ),
                       ),
                     )
                   else

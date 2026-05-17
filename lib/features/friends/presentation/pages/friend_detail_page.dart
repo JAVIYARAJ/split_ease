@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:split_ease/core/presentation/widgets/app_empty_state.dart';
 import 'package:split_ease/core/presentation/widgets/base_screen.dart';
 import 'package:split_ease/core/presentation/widgets/custom_refresh_indicator.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
@@ -17,7 +18,6 @@ import 'package:split_ease/features/friends/presentation/bloc/friend_detail_stat
 import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
 import 'package:split_ease/core/utils/navigation_utils.dart';
-import 'package:split_ease/injection_container.dart';
 import 'package:intl/intl.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 
@@ -78,7 +78,6 @@ class _FriendDetailPageState extends State<FriendDetailPage> {
           if (currentFriend != null) {
             context.read<FriendDetailBloc>().add(LoadFriendDetails(friend: currentFriend, hasChanges: true));
           }
-          context.read<FriendDetailBloc>().add(const LoadFriendExpenseHistory());
         },
       );
     }
@@ -96,7 +95,6 @@ class _FriendDetailPageState extends State<FriendDetailPage> {
           if (currentFriend != null) {
             context.read<FriendDetailBloc>().add(LoadFriendDetails(friend: currentFriend, hasChanges: true));
           }
-          context.read<FriendDetailBloc>().add(const LoadFriendExpenseHistory());
         }
       },
       child: ValueListenableBuilder<bool>(
@@ -137,12 +135,6 @@ class _FriendDetailPageState extends State<FriendDetailPage> {
                   onPressed: _onBack,
                   backgroundColor: AppColors.surfaceWhite,
                 ),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.more_horiz_rounded, color: AppColors.textBlack),
-                    onPressed: () {},
-                  ),
-                ],
               ),
               SliverToBoxAdapter(
                 child: BlocBuilder<FriendDetailBloc, FriendDetailState>(
@@ -355,10 +347,6 @@ class _FriendDetailProfile extends StatelessWidget {
                   }
                 },
               ),
-              const SizedBox(width: 24),
-              _buildCircularAction(Icons.notifications_active_rounded, "Remind", AppColors.primary, () {}),
-              const SizedBox(width: 24),
-              _buildCircularAction(Icons.pie_chart_rounded, "Charts", const Color(0xFF6C63FF), () {}),
             ],
           ),
 
@@ -408,31 +396,13 @@ class _TransactionList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (expenses.isEmpty) {
-      return SliverToBoxAdapter(
+      return const SliverToBoxAdapter(
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 32),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                  child: const Icon(Icons.receipt_long_rounded, size: 48, color: AppColors.iconGrey),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  "No Expenses Yet",
-                  style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textBlack),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "Add a new expense with this friend to start splitting!",
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textGrey, height: 1.5),
-                ),
-              ],
-            ),
+          padding: EdgeInsets.symmetric(vertical: 48),
+          child: AppEmptyState(
+            icon: Icons.receipt_long_rounded,
+            title: "No expenses yet",
+            subtitle: "Add an expense with this friend to start splitting costs.",
           ),
         ),
       );
@@ -540,7 +510,6 @@ class _TransactionItem extends StatelessWidget {
             if (currentFriend != null) {
               context.read<FriendDetailBloc>().add(LoadFriendDetails(friend: currentFriend, hasChanges: true));
             }
-            context.read<FriendDetailBloc>().add(const LoadFriendExpenseHistory());
           },
         );
       },

@@ -45,24 +45,18 @@ class FriendsBloc extends Bloc<FriendsEvent, FriendsState> {
 
   Future<void> _onQrJoinFriend(FriendQrJoinEvent event, Emitter<FriendsState> emit) async {
     emit(state.copyWith(joinStatus: FriendJoinStatus.loading));
-    try {
-      var response = await _friendJoin(FriendJoinParam(friendId: event.friendId));
-      response.fold(
-        (error) {
-          emit(state.copyWith(joinStatus: FriendJoinStatus.failure, joinErrorMessage: error.message));
-        },
-        (successId) {
-          emit(state.copyWith(joinStatus: FriendJoinStatus.success));
-          
-          _dataRefreshCubit.markMultipleForRefresh([RefreshType.friends, RefreshType.activity]);
-          
-          // Reset join status after success so dialog doesn't show again if state rebuilds
-          emit(state.copyWith(joinStatus: FriendJoinStatus.initial));
-        },
-      );
-    } catch (e) {
-      emit(state.copyWith(joinStatus: FriendJoinStatus.failure, joinErrorMessage: "Failed to join friend"));
-    }
+    final response = await _friendJoin(FriendJoinParam(friendId: event.friendId));
+    response.fold(
+      (error) {
+        emit(state.copyWith(joinStatus: FriendJoinStatus.failure, joinErrorMessage: error.message));
+      },
+      (_) {
+        emit(state.copyWith(joinStatus: FriendJoinStatus.success));
+        _dataRefreshCubit.markMultipleForRefresh([RefreshType.friends, RefreshType.activity]);
+        // Reset join status after success so dialog doesn't show again if state rebuilds
+        emit(state.copyWith(joinStatus: FriendJoinStatus.initial));
+      },
+    );
   }
 
   Future<void> _onLoadUnreadCount(LoadUnreadFriendRequestCount event, Emitter<FriendsState> emit) async {

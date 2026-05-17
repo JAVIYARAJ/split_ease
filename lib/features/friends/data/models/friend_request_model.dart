@@ -20,15 +20,4 @@ class FriendRequestModel extends FriendRequestEntity {
       requestedAt: DateTime.parse(json['requested_at'] as String),
     );
   }
-
-  FriendRequestEntity toEntity() {
-    return FriendRequestEntity(
-      friendshipId: friendshipId,
-      userId: userId,
-      fullName: fullName,
-      email: email,
-      avatarUrl: avatarUrl,
-      requestedAt: requestedAt,
-    );
-  }
 }

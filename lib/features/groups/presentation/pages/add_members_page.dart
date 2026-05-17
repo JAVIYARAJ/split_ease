@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/groups/domain/entities/group_friend_entity.dart';

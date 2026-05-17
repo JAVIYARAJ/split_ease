@@ -19,16 +19,16 @@ class FriendDetailUserModel extends FriendDetailUserEntity {
   }
 }
 
-class FriendGroupBreakdownModel extends FriendGroupBreakdownEntity {
-  const FriendGroupBreakdownModel({
+class FriendDetailGroupBreakdownModel extends FriendDetailGroupBreakdownEntity {
+  const FriendDetailGroupBreakdownModel({
     required super.balance,
     required super.groupId,
     super.groupIcon,
     required super.groupName,
   });
 
-  factory FriendGroupBreakdownModel.fromJson(Map<String, dynamic> json) {
-    return FriendGroupBreakdownModel(
+  factory FriendDetailGroupBreakdownModel.fromJson(Map<String, dynamic> json) {
+    return FriendDetailGroupBreakdownModel(
       balance: (json['balance'] as num).toDouble(),
       groupId: json['group_id'] as String,
       groupIcon: json['group_icon'] as String?,
@@ -55,9 +55,9 @@ class FriendExpenseHistoryModel extends FriendExpenseHistoryEntity {
 
     final breakdownList = json['group_breakdown'] != null
         ? (json['group_breakdown'] as List<dynamic>)
-            .map((e) => FriendGroupBreakdownModel.fromJson(e as Map<String, dynamic>))
+            .map((e) => FriendDetailGroupBreakdownModel.fromJson(e as Map<String, dynamic>))
             .toList()
-        : <FriendGroupBreakdownModel>[];
+        : <FriendDetailGroupBreakdownModel>[];
 
     return FriendExpenseHistoryModel(
       user: FriendDetailUserModel.fromJson(json['user'] as Map<String, dynamic>),
