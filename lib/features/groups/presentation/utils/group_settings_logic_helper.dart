@@ -6,6 +6,8 @@ import '../../domain/services/group_permission_service.dart';
 /// A utility class that encapsulates the complex permission and financial
 /// logic for the Group Settings screen and Member actions.
 class GroupSettingsLogicHelper {
+  static const double _balanceThreshold = 0.01;
+
   final GroupEntity group;
   final String? currentUserId;
   final List<GroupMemberBalanceEntity>? memberBalances;
@@ -31,7 +33,7 @@ class GroupSettingsLogicHelper {
   late final bool isCreator = group.createdBy?.id == currentUserId;
 
   /// Whether any member in the group has a non-zero balance.
-  late final bool hasGroupDebts = (memberBalances ?? []).any((b) => b.balance.abs() > 0.01);
+  late final bool hasGroupDebts = (memberBalances ?? []).any((b) => b.balance.abs() > _balanceThreshold);
 
   /// The current user's personal balance in the group.
   /// Primarily uses the [overallBalance] from the BLoC state, falling back
@@ -44,7 +46,7 @@ class GroupSettingsLogicHelper {
       0.0;
 
   /// Whether the current user has any outstanding debts or credits in the group.
-  late final bool isCurrentUserUnsettled = currentUserBalance.abs() > 0.01;
+  late final bool isCurrentUserUnsettled = currentUserBalance.abs() > _balanceThreshold;
 
   // --- LEAVE GROUP LOGIC ---
 
@@ -99,7 +101,7 @@ class GroupSettingsLogicHelper {
     if (isTargetCreator) return false;
 
     // 2. You can never remove someone with an unsettled balance.
-    if (targetBalance.abs() > 0.01) return false;
+    if (targetBalance.abs() > _balanceThreshold) return false;
 
     // 3. The Group Creator can remove anyone else (as long as balance is 0).
     if (isCurrentUserCreator) return true;
@@ -128,7 +130,7 @@ class GroupSettingsLogicHelper {
     required String? targetRole,
   }) {
     if (isTargetCreator) return "The group creator cannot be removed.";
-    if (targetBalance.abs() > 0.01) return "Members with unsettled balances cannot be removed.";
+    if (targetBalance.abs() > _balanceThreshold) return "Members with unsettled balances cannot be removed.";
     
     // Check hierarchy for removal warnings
     if (!isCurrentUserCreator) {

@@ -44,18 +44,4 @@ class FriendModel extends FriendEntity {
           .toList() ?? [],
     );
   }
-
-  FriendEntity toEntity() {
-    return FriendEntity(
-      id: id,
-      name: name,
-      imageUrl: imageUrl,
-      overallBalance: overallBalance,
-      nonGroupBalance: nonGroupBalance,
-      totalBalanceGroups: totalBalanceGroups,
-      status: status,
-      groupBreakdown: groupBreakdown,
-      email: email,
-    );
-  }
 }

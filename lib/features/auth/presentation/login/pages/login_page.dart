@@ -7,6 +7,7 @@ import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/core/utils/app_validators.dart';
 import 'package:split_ease/features/auth/presentation/login/bloc/login_bloc.dart';
 import 'package:split_ease/features/auth/presentation/widgets/auth_background.dart';
+import 'package:split_ease/features/auth/presentation/widgets/google_icon.dart';
 
 import 'package:split_ease/core/utils/auth_utils.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -283,24 +284,24 @@ class _LoginPageState extends State<LoginPage> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: SocialButton(
-                        text: "Google",
-                        onPressed: () {},
-                        icon: const Icon(Icons.g_mobiledata, color: Colors.blue, size: 28),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: SocialButton(
-                        text: "Apple",
-                        onPressed: () {},
-                        icon: const Icon(Icons.apple, color: Colors.black, size: 22),
-                      ),
-                    ),
-                  ],
+                BlocBuilder<LoginBloc, LoginState>(
+                  buildWhen: (p, c) => p.status != c.status,
+                  builder: (context, state) {
+                    final isLoading = state.status == LoginStatus.googleLoading;
+                    return SocialButton(
+                      text: "Google",
+                      onPressed: isLoading
+                          ? () {}
+                          : () => context.read<LoginBloc>().add(GoogleSignInRequested()),
+                      icon: isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const GoogleIcon(size: 20),
+                    );
+                  },
                 ),
               ],
 

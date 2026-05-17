@@ -45,7 +45,7 @@ class CreateGroupBloc extends Bloc<CreateGroupEvent, CreateGroupState> {
   }
 
   Future<void> _onCreateGroupSubmitted(CreateGroupSubmitted event, Emitter<CreateGroupState> emit) async {
-    emit(state.copyWith(status: CreateGroupStatus.loading));
+    emit(state.copyWith(status: CreateGroupStatus.loading, errorMessage: null));
     try {
       if (event.name.isEmpty) {
         emit(state.copyWith(errorMessage: "please enter group name", status: CreateGroupStatus.failure));
@@ -74,7 +74,7 @@ class CreateGroupBloc extends Bloc<CreateGroupEvent, CreateGroupState> {
           (r) {
             _dataRefreshCubit.markMultipleForRefresh([RefreshType.groups, RefreshType.activity]);
             if (r is List && r.isNotEmpty) {
-              emit(state.copyWith(status: CreateGroupStatus.success, createdGroupId: (r as List).firstOrNull?["id"]));
+              emit(state.copyWith(status: CreateGroupStatus.success, createdGroupId: r.firstOrNull?["id"]));
             } else {
               emit(state.copyWith(status: CreateGroupStatus.failure, errorMessage: "Something went wrong"));
             }
@@ -137,7 +137,7 @@ class CreateGroupBloc extends Bloc<CreateGroupEvent, CreateGroupState> {
   }
 
   Future<void> _onUpdateGroupSubmitted(UpdateGroupSubmitted event, Emitter<CreateGroupState> emit) async {
-    emit(state.copyWith(status: CreateGroupStatus.loading));
+    emit(state.copyWith(status: CreateGroupStatus.loading, errorMessage: null));
 
     try {
       if (event.name.isEmpty) {

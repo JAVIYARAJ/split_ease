@@ -100,7 +100,7 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
     return ListView.separated(
       itemCount: state.requests.length,
       padding: const EdgeInsets.symmetric(vertical: 8),
-      separatorBuilder: (_, __) => const SizedBox(height: 4),
+      separatorBuilder: (_, _) => const SizedBox(height: 4),
       itemBuilder: (context, index) {
         return FriendRequestTile(request: state.requests[index]);
       },

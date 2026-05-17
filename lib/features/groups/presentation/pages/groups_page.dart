@@ -11,11 +11,11 @@ import 'package:split_ease/features/activity/presentation/bloc/activity_bloc.dar
 import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 import 'package:split_ease/features/groups/presentation/bloc/groups_bloc.dart';
 
+import '../../../../../core/presentation/widgets/app_empty_state.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
 import '../../../../../core/presentation/widgets/custom_refresh_indicator.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/utils/navigation_utils.dart';
-import '../../../../core/utils/app_formatter.dart';
 import '../widgets/group_list_item.dart';
 import '../../../../core/presentation/widgets/animations/animated_counter_text.dart';
 import '../../../../core/presentation/widgets/animations/smooth_animated_fab.dart';
@@ -60,7 +60,9 @@ class _GroupsPageState extends State<GroupsPage> {
           child: CustomRefreshIndicator(
             onRefresh: () async => context.read<GroupsBloc>().add(LoadGroups()),
             child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
               slivers: [
                 _buildHeader(context),
                 _buildCollectiveHero(context),
@@ -85,7 +87,7 @@ class _GroupsPageState extends State<GroupsPage> {
 
             if (group.memberCount == 1) {
               NavigationService.pushNamed(AppRoutes.addMembers, args: {'groupId': group.id}).then((value) {
-                if (value == true && mounted) context.read<GroupsBloc>().add(LoadGroups());
+                if (value == true && context.mounted) context.read<GroupsBloc>().add(LoadGroups());
               });
             } else if (mounted) {
               NavigationUtils.handleResult(
@@ -236,19 +238,15 @@ class _GroupsPageState extends State<GroupsPage> {
         if (state.status == GroupsStatus.loading) return const _GroupsShimmerList();
 
         if (state.groups.isEmpty) {
-          return SliverFillRemaining(
+          return const SliverFillRemaining(
             hasScrollBody: false,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.layers_outlined, size: 80, color: AppColors.iconGrey.withValues(alpha: 0.2)),
-                const SizedBox(height: 24),
-                Text(
-                  "Teams & Tribes",
-                  style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textBlack),
-                ),
-                Text("Create your first group to manage shared costs.", style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textGrey)),
-              ],
+            child: Padding(
+              padding: EdgeInsets.only(bottom: 100),
+              child: AppEmptyState(
+                icon: Icons.layers_outlined,
+                title: "No groups yet",
+                subtitle: "Create your first group to start managing shared costs.",
+              ),
             ),
           );
         }

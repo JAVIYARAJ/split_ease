@@ -14,7 +14,7 @@ class CreateGroupState extends Equatable {
   final String? existingIconUrl;
 
   const CreateGroupState({
-    this.selectedType = GroupType.trip,
+    this.selectedType = GroupType.other,
     this.groupImage,
     this.status = CreateGroupStatus.initial,
     this.errorMessage,
@@ -49,7 +49,6 @@ class CreateGroupState extends Equatable {
     );
   }
 
-  @override
   @override
   List<Object?> get props => [selectedType, groupImage, status, errorMessage, createdGroupId, inviteCode, isGeneratingCode, isEditMode, existingIconUrl];
 }

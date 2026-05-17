@@ -4,7 +4,6 @@ import '../../domain/entities/activity_entity.dart';
 
 extension ActivityUIPresentation on ActivityEntity {
   String getDisplayTitle(String? currentUserId, {String? currentUserName}) {
-    final groupSuffix = groupName != null ? ' in "$groupName"' : 'in Non group expense';
     final action = activityAction;
     
     bool isMe = false;
@@ -15,6 +14,9 @@ extension ActivityUIPresentation on ActivityEntity {
     }
     
     final String subject = isMe ? "You" : actorName;
+    final String groupInfo = groupName != null ? ' in "$groupName"' : '';
+    final String toGroup = groupName != null ? ' to "$groupName"' : '';
+    final String fromGroup = groupName != null ? ' from "$groupName"' : '';
 
     switch (action) {
       case ActivityType.added:
@@ -23,25 +25,25 @@ extension ActivityUIPresentation on ActivityEntity {
                           (referenceUserName == actorName && isMe);
 
         if (targetIsMe) {
-          return isMe ? 'You joined the group$groupSuffix' : '$actorName joined the group$groupSuffix';
+          return isMe ? 'You joined "$groupName"' : '$actorName joined "$groupName"';
         }
         
         final target = (referenceUserName == actorName) 
             ? (isMe ? "yourself" : "themselves") 
             : (referenceUserName ?? "someone");
         
-        return '$subject added $target to "$groupName"';
+        return '$subject added $target$toGroup';
 
       case ActivityType.removed:
         bool targetIsMe = (referenceUserId != null && currentUserId != null && referenceUserId == currentUserId) ||
                           (referenceUserName != null && currentUserName != null && referenceUserName!.toLowerCase() == currentUserName.toLowerCase());
 
         if (targetIsMe) {
-          return isMe ? 'You left the group$groupSuffix' : 'You were removed from the group$groupSuffix';
+          return isMe ? 'You left "$groupName"' : 'You were removed$fromGroup';
         }
         
         final target = referenceUserName ?? "someone";
-        return '$subject removed $target from "$groupName"';
+        return '$subject removed $target$fromGroup';
 
       case ActivityType.roleUpdated:
         final newRole = metadata?['new_role'] ?? 'member';
@@ -52,46 +54,48 @@ extension ActivityUIPresentation on ActivityEntity {
                                 (target == actorName && isMe);
                                 
         final String possessiveTarget = targetIsMe ? "your" : (target == actorName ? "their" : "$target's");
-        return '$subject updated $possessiveTarget role to $newRole$groupSuffix';
+        return '$subject updated $possessiveTarget role to $newRole$groupInfo';
 
       case ActivityType.expense:
         final desc = description ?? metadata?['description'] ?? 'an expense';
-        return '$subject added "$desc"$groupSuffix';
+        return '$subject added "$desc"$toGroup';
 
       case ActivityType.settlement:
-        final desc = description ?? metadata?['description'] ?? 'a settlement';
-        return '$subject recorded a settlement$groupSuffix';
+        return '$subject recorded a settlement$groupInfo';
 
       case ActivityType.payment:
-        return '$subject recorded a payment$groupSuffix';
+        return '$subject recorded a payment$groupInfo';
 
       case ActivityType.modification:
-        final entityName = type == 'expense' ? 'expense' : (type == 'settlement' ? 'settlement' : 'activity');
         final desc = description ?? metadata?['description'];
         if (desc != null) {
-          return '$subject updated "$desc"$groupSuffix';
+          return '$subject updated "$desc"$groupInfo';
         }
-        return '$subject updated an $entityName$groupSuffix';
+        final entityName = type == 'expense' ? 'expense' : (type == 'settlement' ? 'settlement' : 'activity');
+        return '$subject updated an $entityName$groupInfo';
 
       case ActivityType.deleted:
-        final entityName = type == 'expense' ? 'expense' : (type == 'settlement' ? 'settlement' : 'activity');
         final desc = description ?? metadata?['description'];
         if (desc != null) {
-          return '$subject deleted "$desc"$groupSuffix';
+          return '$subject deleted "$desc"$fromGroup';
         }
-        return '$subject deleted an $entityName$groupSuffix';
+        final entityName = type == 'expense' ? 'expense' : (type == 'settlement' ? 'settlement' : 'activity');
+        return '$subject deleted an $entityName$fromGroup';
 
       case ActivityType.restored:
-        final entityName = type == 'expense' ? 'expense' : (type == 'settlement' ? 'settlement' : 'activity');
         final desc = description ?? metadata?['description'];
         if (desc != null) {
-          return '$subject restored "$desc"$groupSuffix';
+          return '$subject restored "$desc"$toGroup';
         }
-        return '$subject restored an $entityName$groupSuffix';
+        final entityName = type == 'expense' ? 'expense' : (type == 'settlement' ? 'settlement' : 'activity');
+        return '$subject restored an $entityName$toGroup';
+
+      case ActivityType.groupCreated:
+        return '$subject created the group "$groupName"';
 
       case ActivityType.unknown:
       default:
-        return '$subject performed an action$groupSuffix';
+        return '$subject performed an action$groupInfo';
     }
   }
 
@@ -135,6 +139,8 @@ extension ActivityUIPresentation on ActivityEntity {
         return Icons.admin_panel_settings_rounded;
       case ActivityType.modification:
         return Icons.edit_note_rounded;
+      case ActivityType.groupCreated:
+        return Icons.group_add_rounded;
       default:
         return Icons.notifications_active_rounded;
     }
@@ -159,6 +165,8 @@ extension ActivityUIPresentation on ActivityEntity {
         return Colors.indigo.shade600;
       case ActivityType.modification:
         return Colors.amber.shade700;
+      case ActivityType.groupCreated:
+        return AppColors.primary;
       default:
         return AppColors.textGrey;
     }

@@ -1,5 +1,6 @@
 part of 'group_settings_bloc.dart';
 
+@immutable
 abstract class GroupSettingsEvent {}
 
 class LoadGroupSettings extends GroupSettingsEvent {

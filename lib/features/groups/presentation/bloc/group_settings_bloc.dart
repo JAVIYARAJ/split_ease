@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/group_entity.dart';
 import '../../domain/usecases/get_group_detail.dart';
@@ -44,23 +45,29 @@ class GroupSettingsBloc extends Bloc<GroupSettingsEvent, GroupSettingsState> {
 
   void _onLoadGroupSettings(LoadGroupSettings event, Emitter<GroupSettingsState> emit) async {
     emit(GroupSettingsLoading());
-    final result = await getGroupDetail(GroupDetailParam(event.groupId));
-    final userResult = await authRepository.getCurrentUser();
+
+    final groupFuture = getGroupDetail(GroupDetailParam(event.groupId));
+    final userFuture = authRepository.getCurrentUser();
+    final historyFuture = getGroupExpenseHistory(GroupExpenseHistoryParam(event.groupId));
+
+    final result = await groupFuture;
+    final userResult = await userFuture;
+    final historyResult = await historyFuture;
+
     String? currentUserId;
     userResult.fold((l) => null, (user) => currentUserId = user.id);
 
-    final historyResult = await getGroupExpenseHistory(GroupExpenseHistoryParam(event.groupId));
     List<GroupMemberBalanceEntity>? memberBalances;
     double? overallBalance;
     bool? youAreOwed;
-    
+
     historyResult.fold(
-      (l) => null, 
+      (l) => null,
       (history) {
         memberBalances = history.memberBalances;
         overallBalance = history.overallBalance;
         youAreOwed = history.youAreOwed;
-      }
+      },
     );
 
     result.fold(

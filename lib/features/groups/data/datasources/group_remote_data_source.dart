@@ -177,7 +177,7 @@ class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
   @override
   Future<bool> updateGroup(String id, String name, String type, String? icon,String inviteCode) async {
     try {
-      var payload = {"name": name, "group_type": type, if(icon != null) "group_icon": icon,"invite_code":inviteCode};
+      var payload = {"name": name, "group_type": type, if (icon case final v?) "group_icon": v, "invite_code": inviteCode};
       await client.from("group").update(payload).eq("id", id);
       return true;
     } catch (error) {

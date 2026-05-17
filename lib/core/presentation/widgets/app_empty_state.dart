@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:split_ease/core/theme/app_colors.dart';
 
 class AppEmptyState extends StatelessWidget {
   final IconData icon;
@@ -25,22 +27,22 @@ class AppEmptyState extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.08),
+                color: AppColors.primary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
                 size: 64,
-                color: Theme.of(context).primaryColor,
+                color: AppColors.primary,
               ),
             ),
             const SizedBox(height: 24),
             Text(
               title,
-              style: TextStyle(
+              style: GoogleFonts.outfit(
                 fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: Colors.blueGrey.shade900,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textBlack,
                 letterSpacing: -0.5,
               ),
             ),
@@ -48,17 +50,16 @@ class AppEmptyState extends StatelessWidget {
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 15,
+              style: GoogleFonts.outfit(
+                fontSize: 14,
                 height: 1.5,
-                color: Colors.blueGrey.shade500,
+                color: AppColors.textGrey,
               ),
             ),
             if (actionButton != null) ...[
               const SizedBox(height: 32),
               actionButton!,
             ],
-            const SizedBox(height: 48), // Bottom padding for visual balance
           ],
         ),
       ),

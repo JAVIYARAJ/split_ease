@@ -4,7 +4,7 @@ enum AddMembersStatus { initial, loading, loaded, failure }
 
 enum AddMembersSubmitStatus { initial, submitting, success, failure }
 
-class AddMembersState {
+class AddMembersState extends Equatable {
   final AddMembersStatus status;
   final List<GroupFriendEntity> friends;
   final Map<String, String> selectedRoles; // userId -> role ('user' or 'owner')
@@ -55,4 +55,7 @@ class AddMembersState {
       searchQuery: searchQuery ?? this.searchQuery,
     );
   }
+
+  @override
+  List<Object?> get props => [status, friends, selectedRoles, submitStatus, errorMessage, searchQuery];
 }
