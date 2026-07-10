@@ -161,18 +161,18 @@ class _AddExpensePageState extends State<AddExpensePage> {
             return SingleChildScrollView(
               child: Column(
                 children: [
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                   // Context Badge moved or simplified
                   if (group != null)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(20)),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(16)),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            width: 24,
-                            height: 24,
+                            width: 20,
+                            height: 20,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               image: group.groupIcon != null
@@ -180,13 +180,13 @@ class _AddExpensePageState extends State<AddExpensePage> {
                                   : null,
                               color: group.groupIcon == null ? AppColors.primaryTeal : null,
                             ),
-                            child: group.groupIcon == null ? const Icon(Icons.group, color: Colors.white, size: 14) : null,
+                            child: group.groupIcon == null ? const Icon(Icons.group, color: Colors.white, size: 12) : null,
                           ),
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                              "In: ${group.name ?? "Non-group"}",
-                              style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                              "In: ${group.name ?? "Non-group expense"}",
+                              style: GoogleFonts.openSans(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textBlack),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -195,14 +195,14 @@ class _AddExpensePageState extends State<AddExpensePage> {
                     )
                   else if (friend != null)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(20)),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(16)),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           AppAvatar(
                             url: friend.imageUrl,
-                            radius: 12,
+                            radius: 10,
                             backgroundColor: AppColors.backgroundLightGrey,
                             iconColor: AppColors.textGrey,
                           ),
@@ -210,29 +210,29 @@ class _AddExpensePageState extends State<AddExpensePage> {
                           Flexible(
                             child: Text(
                               "With: ${friend.name}",
-                              style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                              style: GoogleFonts.openSans(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textBlack),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
                       ),
                     ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
 
                   // Description Input
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
                             border: Border.all(color: AppColors.borderGrey),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.receipt_long_outlined, color: AppColors.textGrey, size: 28),
+                          child: const Icon(Icons.receipt_long_outlined, color: AppColors.textGrey, size: 20),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
                             controller: _descriptionController,
@@ -241,7 +241,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                               hintStyle: GoogleFonts.openSans(color: AppColors.textGrey),
                               border: InputBorder.none,
                             ),
-                            style: GoogleFonts.openSans(fontSize: 18, fontWeight: FontWeight.w500),
+                            style: GoogleFonts.openSans(fontSize: 15, fontWeight: FontWeight.w500),
                             onChanged: (value) => context.read<ExpenseBloc>().add(DescriptionChanged(value)),
                           ),
                         ),
@@ -250,22 +250,22 @@ class _AddExpensePageState extends State<AddExpensePage> {
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
 
                   // Amount Input
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
                             color: Colors.transparent,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.currency_rupee, color: AppColors.textBlack, size: 28),
+                          child: const Icon(Icons.currency_rupee, color: AppColors.textBlack, size: 20),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
                             controller: _amountController,
@@ -275,7 +275,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                               hintStyle: GoogleFonts.openSans(color: AppColors.textGrey),
                               border: InputBorder.none,
                             ),
-                            style: GoogleFonts.openSans(fontSize: 32, fontWeight: FontWeight.bold),
+                            style: GoogleFonts.openSans(fontSize: 24, fontWeight: FontWeight.bold),
                             onChanged: (value) => context.read<ExpenseBloc>().add(AmountChanged(value)),
                           ),
                         ),
@@ -284,16 +284,16 @@ class _AddExpensePageState extends State<AddExpensePage> {
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
 
                   // Paid by / Split section
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.5), width: 1.5),
+                        border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.5), width: 1.0),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.02),
@@ -333,23 +333,23 @@ class _AddExpensePageState extends State<AddExpensePage> {
                                     },
                                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                                   child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
+                                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
                                     child: Row(
                                       children: [
                                         Container(
-                                          padding: const EdgeInsets.all(8),
+                                          padding: const EdgeInsets.all(6),
                                           decoration: BoxDecoration(
                                             color: AppColors.primaryTeal.withValues(alpha: 0.1),
                                             shape: BoxShape.circle,
                                           ),
-                                          child: const Icon(Icons.person_outline, color: AppColors.primaryTeal, size: 20),
+                                          child: const Icon(Icons.person_outline, color: AppColors.primaryTeal, size: 18),
                                         ),
                                         const SizedBox(width: 12),
-                                        Text("Paid by", style: GoogleFonts.openSans(fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.textBlack)),
+                                        Text("Paid by", style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textBlack)),
                                         const Spacer(),
                                         Text(
                                           payerName ?? "you", 
-                                          style: GoogleFonts.openSans(fontWeight: FontWeight.w700, fontSize: 15, color: AppColors.primaryTeal)
+                                          style: GoogleFonts.openSans(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.primaryTeal)
                                         ),
                                         const SizedBox(width: 4),
                                         const Icon(Icons.chevron_right, size: 18, color: AppColors.textGrey),
@@ -387,23 +387,23 @@ class _AddExpensePageState extends State<AddExpensePage> {
                                       ? const BorderRadius.vertical(bottom: Radius.circular(16))
                                       : BorderRadius.zero,
                                   child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
+                                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
                                     child: Row(
                                       children: [
                                         Container(
-                                          padding: const EdgeInsets.all(8),
+                                          padding: const EdgeInsets.all(6),
                                           decoration: BoxDecoration(
                                             color: AppColors.primaryTeal.withOpacity(0.1),
                                             shape: BoxShape.circle,
                                           ),
-                                          child: const Icon(Icons.call_split_outlined, color: AppColors.primaryTeal, size: 20),
+                                          child: const Icon(Icons.call_split_outlined, color: AppColors.primaryTeal, size: 18),
                                         ),
                                         const SizedBox(width: 12),
-                                        Text("Split", style: GoogleFonts.openSans(fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.textBlack)),
+                                        Text("Split", style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textBlack)),
                                         const Spacer(),
                                         Text(
                                           state.splitDescription,
-                                          style: GoogleFonts.openSans(fontWeight: FontWeight.w700, fontSize: 15, color: AppColors.primaryTeal),
+                                          style: GoogleFonts.openSans(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.primaryTeal),
                                         ),
                                         const SizedBox(width: 4),
                                         const Icon(Icons.chevron_right, size: 18, color: AppColors.textGrey),
@@ -432,23 +432,23 @@ class _AddExpensePageState extends State<AddExpensePage> {
                               },
                               borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
                               child: Padding(
-                                padding: const EdgeInsets.all(16.0),
+                                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
                                 child: Row(
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.all(8),
+                                      padding: const EdgeInsets.all(6),
                                       decoration: BoxDecoration(
                                         color: AppColors.primaryTeal.withValues(alpha: 0.1),
                                         shape: BoxShape.circle,
                                       ),
-                                      child: const Icon(Icons.group_outlined, color: AppColors.primaryTeal, size: 20),
+                                      child: const Icon(Icons.group_outlined, color: AppColors.primaryTeal, size: 18),
                                     ),
                                     const SizedBox(width: 12),
-                                    Text("Group", style: GoogleFonts.openSans(fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.textBlack)),
+                                    Text("Group", style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textBlack)),
                                     const Spacer(),
                                     Text(
-                                      state.group?.name ?? "Non-group",
-                                      style: GoogleFonts.openSans(fontWeight: FontWeight.w700, fontSize: 15, color: AppColors.primaryTeal),
+                                      state.group?.name ?? "Non-group expense",
+                                      style: GoogleFonts.openSans(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.primaryTeal),
                                     ),
                                     const SizedBox(width: 4),
                                     const Icon(Icons.chevron_right, size: 18, color: AppColors.textGrey),
@@ -461,7 +461,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
 
                   // Date Section
                   Padding(
@@ -490,7 +490,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                                 s.date != null
                                     ? DateFormat('MMMM d, yyyy').format(s.date!)
                                     : "Today",
-                                style: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                                style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textBlack),
                               );
                             },
                           ),
@@ -500,11 +500,11 @@ class _AddExpensePageState extends State<AddExpensePage> {
                   ),
 
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
 
                   // Notes Section - Refined UI
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: BlocBuilder<ExpenseBloc, ExpenseState>(
                       builder: (context, state) {
                         return InkWell(
@@ -524,7 +524,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                           },
                           borderRadius: BorderRadius.circular(16),
                           child: Container(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                             decoration: BoxDecoration(
                               color: AppColors.backgroundLightGrey.withValues(alpha: 0.5),
                               borderRadius: BorderRadius.circular(16),
@@ -533,10 +533,10 @@ class _AddExpensePageState extends State<AddExpensePage> {
                             child: Row(
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.all(10),
+                                  padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(10),
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors.black.withValues(alpha: 0.02),
@@ -547,11 +547,11 @@ class _AddExpensePageState extends State<AddExpensePage> {
                                   ),
                                   child: Icon(
                                     state.notes.isNotEmpty ? Icons.description_rounded : Icons.note_add_outlined,
-                                    size: 20,
+                                    size: 18,
                                     color: state.notes.isNotEmpty ? AppColors.primaryTeal : AppColors.textGrey,
                                   ),
                                 ),
-                                const SizedBox(width: 14),
+                                const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -559,16 +559,16 @@ class _AddExpensePageState extends State<AddExpensePage> {
                                       Text(
                                         state.notes.isNotEmpty ? "Notes" : "Add detailed notes",
                                         style: GoogleFonts.outfit(
-                                          fontSize: 15,
+                                          fontSize: 14,
                                           fontWeight: FontWeight.w700,
                                           color: AppColors.textBlack,
                                         ),
                                       ),
-                                      const SizedBox(height: 4),
+                                      const SizedBox(height: 2),
                                       Text(
                                         state.notes.isNotEmpty ? state.notes : "Keep track of receipt details or reminders",
                                         style: GoogleFonts.outfit(
-                                          fontSize: 13,
+                                          fontSize: 12,
                                           fontWeight: FontWeight.w500,
                                           color: state.notes.isNotEmpty ? AppColors.textBlack.withValues(alpha: 0.6) : AppColors.textGrey,
                                         ),
@@ -578,7 +578,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                                     ],
                                   ),
                                 ),
-                                Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.textGrey.withValues(alpha: 0.5)),
+                                Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textGrey.withValues(alpha: 0.5)),
                               ],
                             ),
                           ),

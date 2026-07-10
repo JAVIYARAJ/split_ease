@@ -20,16 +20,14 @@ class AppBackButton extends StatelessWidget {
         onPressed: onPressed ?? () => Navigator.maybePop(context),
         icon: Icon(
           Icons.arrow_back_ios_new_rounded,
-          color: color ?? AppColors.textBlack,
+          color: color ?? Colors.white,
           size: 18,
         ),
         style: IconButton.styleFrom(
-          backgroundColor: backgroundColor ?? AppColors.backgroundLightGrey,
-          fixedSize: const Size(44, 44),
+          backgroundColor: backgroundColor ?? Colors.black.withValues(alpha: 0.3),
+          fixedSize: const Size(40, 40),
           padding: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
+          shape: const CircleBorder(),
         ),
       ),
     );

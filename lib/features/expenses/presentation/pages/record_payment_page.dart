@@ -129,7 +129,7 @@ class _RecordPaymentPageState extends State<RecordPaymentPage> with SingleTicker
             final double? enteredAmt = double.tryParse(state.amount);
 
             // Find selected group name
-            String groupName = "Non-group";
+            String groupName = "Non-group expense";
             if (state.groupId != null) {
               final selectedGroup = state.commonGroups.any((g) => g.id == state.groupId)
                   ? state.commonGroups.firstWhere((g) => g.id == state.groupId)

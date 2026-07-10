@@ -143,7 +143,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 16),
                       _buildStaggeredWrapper(
                         delay: 0.1,
                         child: Center(
@@ -154,7 +154,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 48),
+                      const SizedBox(height: 32),
                       _buildStaggeredWrapper(
                         delay: 0.2,
                         child: _buildInputField(
@@ -163,7 +163,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           icon: Icons.person_rounded,
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
                       _buildStaggeredWrapper(
                         delay: 0.3,
                         child: _buildInputField(
@@ -174,7 +174,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           helperText: "Your email cannot be modified",
                         ),
                       ),
-                      const SizedBox(height: 100),
+                      const SizedBox(height: 80),
                     ]),
                   ),
                 ),
@@ -193,8 +193,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       backgroundColor: Colors.white,
       elevation: 0,
       scrolledUnderElevation: 0,
-      toolbarHeight: 80,
-      leadingWidth: 80,
+      toolbarHeight: 64,
+      leadingWidth: 64,
       leading: AppBackButton(onPressed: () => Navigator.pop(context)),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,7 +240,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             fillColor: readOnly ? AppColors.backgroundLightGrey.withValues(alpha: 0.5) : AppColors.backgroundLightGrey,
             prefixIcon: Icon(icon, color: AppColors.textGrey, size: 20),
             suffixIcon: readOnly ? const Icon(Icons.lock_rounded, color: AppColors.textGrey, size: 16) : null,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Colors.black, width: 1.5)),
             hintText: "Enter $label",

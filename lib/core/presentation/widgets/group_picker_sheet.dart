@@ -135,7 +135,7 @@ class _GroupTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    group.name ?? "Non-group",
+                    group.name ?? "Non-group expense",
                     style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -190,7 +190,7 @@ class _NonGroupTile extends StatelessWidget {
             const SizedBox(width: 14),
             Expanded(
               child: Text(
-                "Non-group",
+                "Non-group expense",
                 style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
               ),
             ),

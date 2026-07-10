@@ -200,47 +200,53 @@ class _HomePageState extends State<HomePage> {
     required bool isActive,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      borderRadius: BorderRadius.circular(20),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              transitionBuilder: (child, animation) {
-                return ScaleTransition(scale: animation, child: child);
-              },
-              child: Icon(
-                isActive ? activeIcon : inactiveIcon,
-                key: ValueKey(isActive),
-                color: isActive ? AppColors.primary : AppColors.iconGrey,
-                size: 24,
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          decoration: BoxDecoration(
+            color: isActive ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder: (child, animation) {
+                  return ScaleTransition(scale: animation, child: child);
+                },
+                child: Icon(
+                  isActive ? activeIcon : inactiveIcon,
+                  key: ValueKey(isActive),
+                  color: isActive ? AppColors.primary : AppColors.iconGrey,
+                  size: 24,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
-              style: GoogleFonts.openSans(
-                fontSize: 12,
-                color: isActive ? AppColors.primary : AppColors.iconGrey,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+              const SizedBox(height: 4),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                style: GoogleFonts.openSans(
+                  fontSize: 11,
+                  color: isActive ? AppColors.primary : AppColors.iconGrey,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                ),
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              child: Text(label),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -259,7 +265,7 @@ class _HomeComingSoon extends StatelessWidget {
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.only(top: 80, left: 24, right: 24, bottom: 120),
+      padding: const EdgeInsets.only(top: 64, left: 20, right: 20, bottom: 100),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -303,15 +309,14 @@ class _HomeComingSoon extends StatelessWidget {
               ),
             ],
           ),
-
-          const SizedBox(height: 48),
+          const SizedBox(height: 32),
 
           // 2. Feature Roadmap Section
           Text(
             "EXPLORING THE FUTURE",
             style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1.5, color: AppColors.iconGrey),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           _buildRoadmapCard(
             title: "Smart Settlement",
             desc: "AI-driven algorithms to minimize your total group transactions.",
@@ -335,12 +340,11 @@ class _HomeComingSoon extends StatelessWidget {
             color: const Color(0xFFFF9800),
             status: "Coming Soon",
           ),
-
-          const SizedBox(height: 48),
+          const SizedBox(height: 32),
 
           // 3. Immersive Placeholder Content
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(32),
@@ -391,7 +395,7 @@ class _HomeComingSoon extends StatelessWidget {
     required String status,
   }) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),

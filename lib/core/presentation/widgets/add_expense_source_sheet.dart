@@ -68,10 +68,10 @@ class _AddExpenseSourceSheetState extends State<_AddExpenseSourceSheet> {
                 height: 4,
                 decoration: BoxDecoration(color: AppColors.borderGreyLight, borderRadius: BorderRadius.circular(2)),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
               // Title
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
                     if (view != 'none')
@@ -93,7 +93,7 @@ class _AddExpenseSourceSheetState extends State<_AddExpenseSourceSheet> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Flexible(
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 200),
@@ -125,7 +125,7 @@ class _ModeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -136,7 +136,7 @@ class _ModeSelector extends StatelessWidget {
             subtitle: "Add expense inside one of your groups",
             onTap: onGroupTap,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           _OptionTile(
             icon: Icons.person_rounded,
             iconColor: AppColors.primary,
@@ -165,7 +165,7 @@ class _OptionTile extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: AppColors.backgroundLightGrey,
           borderRadius: BorderRadius.circular(16),
@@ -174,10 +174,10 @@ class _OptionTile extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(color: iconColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(14)),
-              child: Icon(icon, color: iconColor, size: 24),
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(color: iconColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+              child: Icon(icon, color: iconColor, size: 20),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -186,12 +186,12 @@ class _OptionTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                    style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textBlack),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                    style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w500),
                   ),
                 ],
               ),
@@ -239,7 +239,7 @@ class _GroupList extends StatelessWidget {
 
         return ListView.separated(
           shrinkWrap: true,
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
           itemCount: state.groups.length,
           separatorBuilder: (_, __) => const SizedBox(height: 8),
           itemBuilder: (ctx, i) {
@@ -305,7 +305,7 @@ class _FriendList extends StatelessWidget {
 
         return ListView.separated(
           shrinkWrap: true,
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
           itemCount: state.friends.length,
           separatorBuilder: (_, __) => const SizedBox(height: 8),
           itemBuilder: (ctx, i) {
@@ -354,7 +354,7 @@ class _RowTile extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: AppColors.backgroundLightGrey,
           borderRadius: BorderRadius.circular(14),
@@ -363,13 +363,13 @@ class _RowTile extends StatelessWidget {
         child: Row(
           children: [
             if (isFriend)
-              AppAvatar(url: avatarUrl, radius: 20)
+              AppAvatar(url: avatarUrl, radius: 18)
             else
               Container(
-                width: 40,
-                height: 40,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(color: AppColors.surfaceWhite, borderRadius: BorderRadius.circular(12)),
-                child: Icon(icon ?? Icons.help_outline_rounded, color: AppColors.primaryTeal, size: 20),
+                child: Icon(icon ?? Icons.help_outline_rounded, color: AppColors.primaryTeal, size: 18),
               ),
             const SizedBox(width: 12),
             Expanded(

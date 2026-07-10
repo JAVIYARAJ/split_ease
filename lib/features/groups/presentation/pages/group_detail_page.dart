@@ -363,9 +363,9 @@ class _GroupDetailInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: Container(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
             color: AppColors.surfaceWhite,
             borderRadius: BorderRadius.circular(20),
@@ -382,7 +382,7 @@ class _GroupDetailInfo extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const _BalanceSummary(),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               const _ActionButtons(),
             ],
           ),
@@ -401,20 +401,25 @@ class _GroupDetailAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliverAppBar(
-      expandedHeight: 200.0,
+      expandedHeight: 180.0,
       pinned: true,
       backgroundColor: Colors.transparent,
       leadingWidth: 80,
       leading: AppBackButton(
         onPressed: onBack,
         color: Colors.white,
-        backgroundColor: Colors.white24,
+        backgroundColor: Colors.black.withValues(alpha: 0.3),
       ),
       actions: [
-        // Hide settings for non-group context
         if (!isNonGroup)
-          IconButton(
-            icon: const Icon(Icons.settings_outlined, color: Colors.white),
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.3),
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.settings_outlined, color: Colors.white),
             onPressed: () async {
             final state = context.read<GroupDetailBloc>().state;
             if (state.groupEntity?.id != null) {
@@ -442,6 +447,7 @@ class _GroupDetailAppBar extends StatelessWidget {
             }
           },
         ),
+          ),
       ],
       flexibleSpace: BlocBuilder<GroupDetailBloc, GroupDetailState>(
         builder: (context, state) {
@@ -449,7 +455,7 @@ class _GroupDetailAppBar extends StatelessWidget {
 
           return LayoutBuilder(
             builder: (context, constraints) {
-              const double expandedHeight = 200.0;
+              const double expandedHeight = 180.0;
               final double collapsedHeight = kToolbarHeight + MediaQuery.of(context).padding.top;
               final double currentHeight = constraints.maxHeight;
               
@@ -459,7 +465,7 @@ class _GroupDetailAppBar extends StatelessWidget {
               // Animations
               final double titleSizes = Tween<double>(begin: 20.0, end: 28.0).transform(t);
               final double titleLeft = Tween<double>(begin: 50.0, end: 20.0).transform(t);
-              final double titleBottom = Tween<double>(begin: 14.0, end: 55.0).transform(t);
+              final double titleBottom = Tween<double>(begin: 14.0, end: 58.0).transform(t);
               final double memberOpacity = Tween<double>(begin: 0.0, end: 1.0).transform((t - 0.5).clamp(0.0, 0.5) * 2);
 
               return Stack(
@@ -483,12 +489,16 @@ class _GroupDetailAppBar extends StatelessWidget {
                   
                   // 2. Gradient (Persistent)
                   Container(
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [Colors.transparent, Colors.black54],
-                        stops: [0.6, 1.0],
+                        colors: [
+                          Colors.black.withValues(alpha: 0.5),
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.7),
+                        ],
+                        stops: const [0.0, 0.4, 1.0],
                       ),
                     ),
                   ),
@@ -873,7 +883,7 @@ class _TransactionItem extends StatelessWidget {
         );
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
         child: Container(
           decoration: BoxDecoration(
             color: AppColors.surfaceWhite,
@@ -881,7 +891,7 @@ class _TransactionItem extends StatelessWidget {
             border: Border.all(color: AppColors.borderGreyLight),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             child: Row(
               children: [
                 // Date column
@@ -900,7 +910,7 @@ class _TransactionItem extends StatelessWidget {
                 const SizedBox(width: 16),
                 // Icon
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(12)),
                   child: const Icon(Icons.receipt_long_rounded, color: AppColors.textGrey),
                 ),

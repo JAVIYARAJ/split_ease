@@ -286,30 +286,30 @@ class _GroupSettingsContent extends StatelessWidget {
       builder: (ctx) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: AppColors.errorRed.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.delete_forever_rounded, color: AppColors.errorRed, size: 32),
+                child: const Icon(Icons.delete_forever_rounded, color: AppColors.errorRed, size: 28),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               Text(
                 "Delete Group?",
-                style: GoogleFonts.openSans(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textBlack),
+                style: GoogleFonts.openSans(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textBlack),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Text(
                 "Are you sure you want to delete \"${group.name}\"? This will permanently remove all expenses, settlements, and member history. This action cannot be undone.",
-                style: GoogleFonts.openSans(fontSize: 14, color: AppColors.textGrey, height: 1.5),
+                style: GoogleFonts.openSans(fontSize: 13, color: AppColors.textGrey, height: 1.4),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               Row(
                 children: [
                   Expanded(

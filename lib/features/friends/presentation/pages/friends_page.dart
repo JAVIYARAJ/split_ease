@@ -99,7 +99,7 @@ class _FriendsPageState extends State<FriendsPage> {
                   _buildHeader(context),
                   _buildBalanceHero(context),
                   _buildFriendsList(context),
-                  const SliverToBoxAdapter(child: SizedBox(height: 140)),
+                  const SliverToBoxAdapter(child: SizedBox(height: 100)),
                 ],
               ),
             ),
@@ -131,7 +131,7 @@ class _FriendsPageState extends State<FriendsPage> {
       backgroundColor: Colors.white,
       elevation: 0,
       scrolledUnderElevation: 0,
-      toolbarHeight: 80,
+      toolbarHeight: 64,
       automaticallyImplyLeading: false,
       title: Padding(
         padding: const EdgeInsets.only(left: 8.0),
@@ -141,11 +141,12 @@ class _FriendsPageState extends State<FriendsPage> {
           children: [
             Text(
               "Your Circle",
-              style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -1.0),
+              style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -1.0),
             ),
             Text(
               "Manage sharing with your network",
-              style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textGrey),
+              style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textGrey),
+              maxLines: 1,
             ),
           ],
         ),
@@ -201,42 +202,42 @@ class _FriendsPageState extends State<FriendsPage> {
           final bool isOwe = netBalance < 0;
 
           return Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
             child: Container(
-              height: 180,
+              width: double.infinity,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(32),
+                borderRadius: BorderRadius.circular(28),
                 boxShadow: [
-                  BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 10)),
+                  BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8)),
                 ],
               ),
               child: Stack(
                 children: [
                   Positioned(
-                    right: -20,
+                    right: -10,
                     top: -20,
-                    child: Icon(Icons.account_balance_wallet_rounded, size: 150, color: Colors.white.withValues(alpha: 0.1)),
+                    child: Icon(Icons.account_balance_wallet_rounded, size: 120, color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   Padding(
-                    padding: const EdgeInsets.all(28.0),
+                    padding: const EdgeInsets.all(20.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           "NET NETWORK VALUE",
-                          style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.white.withValues(alpha: 0.6), letterSpacing: 1.5),
+                          style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white.withValues(alpha: 0.6), letterSpacing: 1.2),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 4),
                         AnimatedCounterText(
                           value: netBalance.abs(),
-                          style: GoogleFonts.outfit(fontSize: 48, fontWeight: FontWeight.w900, color: Colors.white),
+                          style: GoogleFonts.outfit(fontSize: 40, fontWeight: FontWeight.w900, color: Colors.white),
                         ),
-                        const Spacer(),
+                        const SizedBox(height: 16),
                         Row(
                           children: [
                             Icon(isOwe ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded, color: Colors.white, size: 16),
@@ -284,7 +285,7 @@ class _FriendsPageState extends State<FriendsPage> {
         }
 
         return SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
               final friend = state.friends[index];

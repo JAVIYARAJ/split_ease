@@ -135,7 +135,7 @@ class FriendListItem extends StatelessWidget {
                           ),
                         if (friend.nonGroupBalance != 0)
                           _buildNestedBalanceRow(
-                            contextName: "Non-group",
+                            contextName: "Non-group expense",
                             balance: friend.nonGroupBalance,
                             formatter: formatter,
                             isLast: true,

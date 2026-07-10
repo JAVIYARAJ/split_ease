@@ -23,7 +23,8 @@ class ActivityPage extends StatelessWidget {
     return BlocListener<DataRefreshCubit, DataRefreshState>(
       listenWhen: (prev, curr) => curr.lastSignal?.type == RefreshType.activity,
       listener: (context, state) {
-        if (context.read<DataRefreshCubit>().shouldRefresh(RefreshType.activity)) {
+        if (context.read<DataRefreshCubit>().shouldRefresh(
+            RefreshType.activity)) {
           context.read<DataRefreshCubit>().clearRefresh(RefreshType.activity);
           context.read<ActivityBloc>().add(LoadActivities());
         }
@@ -38,7 +39,9 @@ class ActivityPage extends StatelessWidget {
               return Center(child: Text(state.message));
             }
 
-            final List<ActivityEntity> activities = (state is ActivityLoaded) ? state.activities : [];
+            final List<ActivityEntity> activities = (state is ActivityLoaded)
+                ? state.activities
+                : [];
 
             final groupedActivities = _groupActivities(activities);
 
@@ -68,14 +71,16 @@ class ActivityPage extends StatelessWidget {
                       child: SliverPadding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         sliver: SliverList(
-                          delegate: SliverChildBuilderDelegate((context, index) {
+                          delegate: SliverChildBuilderDelegate((context,
+                              index) {
                             final item = groupedActivities[index];
 
                             // Calculate stagger delay
                             final double delay = (index * 0.05).clamp(0.0, 0.5);
 
                             if (item is String) {
-                              return _buildStaggeredWrapper(delay: delay, child: _buildSectionHeader(item));
+                              return _buildStaggeredWrapper(delay: delay,
+                                  child: _buildSectionHeader(item));
                             }
 
                             final activity = item as ActivityEntity;
@@ -86,30 +91,39 @@ class ActivityPage extends StatelessWidget {
                                 onTap: isLoading
                                     ? null
                                     : () async {
-                                        final targetId = activity.expenseId ?? activity.entityId ?? activity.activityId;
-                                        if ((activity.activityAction == ActivityType.expense ||
-                                                activity.activityAction == ActivityType.settlement ||
-                                                activity.activityAction == ActivityType.modification ||
-                                                activity.activityAction == ActivityType.deleted ||
-                                                activity.activityAction == ActivityType.restored) &&
-                                            targetId.isNotEmpty) {
-                                          NavigationUtils.handleResult(
-                                            context: context,
-                                            navigation: NavigationService.pushNamed(AppRoutes.expanseDetail, args: {"expanse_id": targetId}),
-                                            refreshType: RefreshType.activity,
-                                            onRefresh: () {
-                                              context.read<ActivityBloc>().add(LoadActivities());
-                                            },
-                                          );
-                                        }
+                                  final targetId = activity.expenseId ??
+                                      activity.entityId ?? activity.activityId;
+                                  if ((activity.activityAction ==
+                                      ActivityType.expense ||
+                                      activity.activityAction ==
+                                          ActivityType.settlement ||
+                                      activity.activityAction ==
+                                          ActivityType.modification ||
+                                      activity.activityAction ==
+                                          ActivityType.deleted ||
+                                      activity.activityAction ==
+                                          ActivityType.restored) &&
+                                      targetId.isNotEmpty) {
+                                    NavigationUtils.handleResult(
+                                      context: context,
+                                      navigation: NavigationService.pushNamed(
+                                          AppRoutes.expanseDetail,
+                                          args: {"expanse_id": targetId}),
+                                      refreshType: RefreshType.activity,
+                                      onRefresh: () {
+                                        context.read<ActivityBloc>().add(
+                                            LoadActivities());
                                       },
+                                    );
+                                  }
+                                },
                               ),
                             );
                           }, childCount: groupedActivities.length),
                         ),
                       ),
                     ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 120)),
+                  const SliverToBoxAdapter(child: SizedBox(height: 100)),
                 ],
               ),
             );
@@ -125,7 +139,7 @@ class ActivityPage extends StatelessWidget {
       backgroundColor: Colors.white,
       elevation: 0,
       scrolledUnderElevation: 0,
-      toolbarHeight: 80,
+      toolbarHeight: 64,
       automaticallyImplyLeading: false,
       title: Padding(
         padding: const EdgeInsets.only(left: 4.0),
@@ -135,11 +149,17 @@ class ActivityPage extends StatelessWidget {
           children: [
             Text(
               "Recent Activity",
-              style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -1.0),
+              style: GoogleFonts.outfit(fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textBlack,
+                  letterSpacing: -1.0),
             ),
             Text(
               "Track transactions & updates",
-              style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textGrey),
+              style: GoogleFonts.outfit(fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textGrey),
+              maxLines: 1,
             ),
           ],
         ),
@@ -148,14 +168,17 @@ class ActivityPage extends StatelessWidget {
         IconButton(
           onPressed: () {},
           icon: const Icon(Icons.search_rounded, color: AppColors.textBlack),
-          style: IconButton.styleFrom(backgroundColor: AppColors.backgroundLightGrey, padding: const EdgeInsets.all(12)),
+          style: IconButton.styleFrom(
+              backgroundColor: AppColors.backgroundLightGrey,
+              padding: const EdgeInsets.all(12)),
         ),
         const SizedBox(width: 16),
       ],
     );
   }
 
-  Widget _buildStaggeredWrapper({required Widget child, required double delay}) {
+  Widget _buildStaggeredWrapper(
+      {required Widget child, required double delay}) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
       duration: Duration(milliseconds: (400 + (delay * 1000)).toInt()),
@@ -163,7 +186,8 @@ class ActivityPage extends StatelessWidget {
       builder: (context, value, child) {
         return Opacity(
           opacity: value,
-          child: Transform.translate(offset: Offset(0, 20 * (1 - value)), child: child),
+          child: Transform.translate(
+              offset: Offset(0, 20 * (1 - value)), child: child),
         );
       },
       child: child,
@@ -172,10 +196,13 @@ class ActivityPage extends StatelessWidget {
 
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 32, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
       child: Text(
         title,
-        style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: 2.0),
+        style: GoogleFonts.outfit(fontSize: 12,
+            fontWeight: FontWeight.w900,
+            color: AppColors.textBlack,
+            letterSpacing: 2.0),
       ),
     );
   }
@@ -191,14 +218,17 @@ class ActivityPage extends StatelessWidget {
     final yesterday = today.subtract(const Duration(days: 1));
 
     for (var activity in activities) {
-      final date = DateTime(activity.createdAt.year, activity.createdAt.month, activity.createdAt.day);
+      final date = DateTime(activity.createdAt.year, activity.createdAt.month,
+          activity.createdAt.day);
       String header;
 
       if (date == today) {
         header = "Today";
       } else if (date == yesterday) {
         header = "Yesterday";
-      } else if (now.difference(date).inDays < 7) {
+      } else if (now
+          .difference(date)
+          .inDays < 7) {
         header = "This Week";
       } else {
         header = DateFormat('MMMM yyyy').format(date);

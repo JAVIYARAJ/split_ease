@@ -8,14 +8,14 @@ import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/account/presentation/bloc/account_bloc.dart';
 import '../../../../../core/common/cubit/app_user_cubit.dart';
-import 'package:split_ease/core/presentation/widgets/app_image_view.dart';
+
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import 'package:split_ease/core/presentation/widgets/profile_picture_dialog.dart';
 import 'package:split_ease/core/presentation/widgets/feedback_sheet.dart';
 import 'package:split_ease/core/presentation/widgets/animations/staggered_entry_column.dart';
 import 'package:flutter/services.dart';
 import 'package:split_ease/features/home/presentation/bloc/home_bloc.dart';
-import 'package:split_ease/features/home/presentation/bloc/home_state.dart';
+
 import 'package:split_ease/features/friends/presentation/bloc/friends_bloc.dart';
 import 'package:split_ease/features/groups/presentation/bloc/groups_bloc.dart';
 
@@ -74,7 +74,7 @@ class AccountPage extends StatelessWidget {
                         _buildSettingsList(context),
                         const SizedBox(height: 48),
                         _buildLogoutSection(context),
-                        const SizedBox(height: 120),
+                        const SizedBox(height: 100),
                       ],
                     ),
                   ),
@@ -93,7 +93,7 @@ class AccountPage extends StatelessWidget {
       backgroundColor: Colors.white,
       elevation: 0,
       scrolledUnderElevation: 0,
-      toolbarHeight: 80,
+      toolbarHeight: 64,
       centerTitle: false,
       automaticallyImplyLeading: false,
       title: Padding(
@@ -104,11 +104,11 @@ class AccountPage extends StatelessWidget {
           children: [
             Text(
               "Profile",
-              style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -1.0),
+              style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -1.0),
             ),
             Text(
               "Account & Application Settings",
-              style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textGrey),
+              style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textGrey),
             ),
           ],
         ),
@@ -119,7 +119,7 @@ class AccountPage extends StatelessWidget {
   Widget _buildProfileHero(BuildContext context, String name, String email, String? avatar, AppUserState userState) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(28),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       decoration: BoxDecoration(
         color: AppColors.backgroundLightGrey,
         borderRadius: BorderRadius.circular(40),
@@ -153,8 +153,8 @@ class AccountPage extends StatelessWidget {
                   children: [
                     AppAvatar(
                       url: avatar,
-                      radius: 55,
-                      iconSize: 55,
+                      radius: 45,
+                      iconSize: 40,
                       backgroundColor: Colors.white,
                       iconColor: AppColors.primary.withValues(alpha: 0.5),
                     ),
@@ -172,10 +172,10 @@ class AccountPage extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
           Text(
             name,
-            style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -0.5),
+            style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -0.5),
           ),
           const SizedBox(height: 4),
           Container(
@@ -318,7 +318,7 @@ class AccountPage extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(24),
@@ -327,9 +327,9 @@ class AccountPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 12),
-            Text(title, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack)),
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 8),
+            Text(title, style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textBlack)),
           ],
         ),
       ),
@@ -357,7 +357,7 @@ class AccountPage extends StatelessWidget {
         alignment: Alignment.centerLeft,
         child: Text(
           title,
-          style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w900, color: AppColors.textGrey, letterSpacing: 1.5),
+          style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w900, color: AppColors.textGrey, letterSpacing: 1.5),
         ),
       ),
     );
@@ -370,7 +370,7 @@ class AccountPage extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             border: Border.all(color: AppColors.borderGrey.withValues(alpha:0.5)),
             borderRadius: BorderRadius.circular(20),

@@ -67,7 +67,7 @@ class _GroupsPageState extends State<GroupsPage> {
                 _buildHeader(context),
                 _buildCollectiveHero(context),
                 _buildGroupsList(context),
-                const SliverToBoxAdapter(child: SizedBox(height: 140)),
+                const SliverToBoxAdapter(child: SizedBox(height: 100)),
               ],
             ),
           ),
@@ -115,7 +115,7 @@ class _GroupsPageState extends State<GroupsPage> {
       backgroundColor: Colors.white,
       elevation: 0,
       scrolledUnderElevation: 0,
-      toolbarHeight: 80,
+      toolbarHeight: 64,
       automaticallyImplyLeading: false,
       title: Padding(
         padding: const EdgeInsets.only(left: 8.0),
@@ -125,11 +125,12 @@ class _GroupsPageState extends State<GroupsPage> {
           children: [
             Text(
               "Collaborations",
-              style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -1.0),
+              style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -1.0),
             ),
             Text(
               "Track shared expenses across teams",
-              style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textGrey),
+              style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textGrey),
+              maxLines: 2,
             ),
           ],
         ),
@@ -179,37 +180,37 @@ class _GroupsPageState extends State<GroupsPage> {
           final bool isOwed = totalBalance >= 0;
 
           return Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
             child: Container(
-              height: 180,
+              width: double.infinity,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(colors: [Color(0xFF673AB7), Color(0xFF512DA8)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                borderRadius: BorderRadius.circular(32),
-                boxShadow: [BoxShadow(color: const Color(0xFF673AB7).withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 10))],
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [BoxShadow(color: const Color(0xFF673AB7).withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8))],
               ),
               child: Stack(
                 children: [
-                  Positioned(right: -20, top: -20, child: Icon(Icons.groups_rounded, size: 150, color: Colors.white.withValues(alpha: 0.1))),
+                  Positioned(right: -10, top: -20, child: Icon(Icons.groups_rounded, size: 120, color: Colors.white.withValues(alpha: 0.1))),
                   Padding(
-                    padding: const EdgeInsets.all(28.0),
+                    padding: const EdgeInsets.all(20.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           "COLLECTIVE STANDING",
                           style: GoogleFonts.outfit(
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: FontWeight.w900,
                             color: Colors.white.withValues(alpha: 0.6),
-                            letterSpacing: 1.5,
+                            letterSpacing: 1.2,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 4),
                         AnimatedCounterText(
                           value: totalBalance.abs(),
-                          style: GoogleFonts.outfit(fontSize: 48, fontWeight: FontWeight.w900, color: Colors.white),
+                          style: GoogleFonts.outfit(fontSize: 40, fontWeight: FontWeight.w900, color: Colors.white),
                         ),
-                        const Spacer(),
+                        const SizedBox(height: 16),
                         Row(
                           children: [
                             Icon(isOwed ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded, color: Colors.white, size: 16),
@@ -252,7 +253,7 @@ class _GroupsPageState extends State<GroupsPage> {
         }
 
         return SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
               final group = state.groups[index];

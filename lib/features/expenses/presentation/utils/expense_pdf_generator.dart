@@ -60,7 +60,7 @@ class ExpensePdfGenerator {
                         children: [
                           pw.Text(entity.description, style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
                           pw.SizedBox(height: 4),
-                          pw.Text('Group: ${entity.group?.name ?? "Non-group"}', style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
+                          pw.Text('Group: ${entity.group?.name ?? "Non-group expense"}', style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
                         ],
                       ),
                     ),

@@ -101,7 +101,6 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 leadingWidth: 80,
                 leading: AppBackButton(
                   onPressed: _onBack,
-                  backgroundColor: AppColors.surfaceWhite,
                 ),
                 title: Text(
                   "Expense Details",
@@ -124,27 +123,42 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                       return Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined, color: AppColors.textBlack),
-                            onPressed: () {
-                              NavigationUtils.handleResult(
-                                context: context,
-                                navigation: NavigationService.pushNamed(AppRoutes.addExpense, args: {'expense': state.expenseDetail}),
-                                refreshType: RefreshType.expenseDetail,
-                                id: state.expenseDetail.id,
-                                onRefresh: () {
-                                  context.read<ExpenseDetailBloc>().add(MarkExpenseAsChanged());
-                                  context.read<ExpenseDetailBloc>().add(FetchExpenseDetailEvent(state.expenseDetail.id));
-                                },
-                              );
-                            },
+                          Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.edit_outlined, color: Colors.white, size: 20),
+                              onPressed: () {
+                                NavigationUtils.handleResult(
+                                  context: context,
+                                  navigation: NavigationService.pushNamed(AppRoutes.addExpense, args: {'expense': state.expenseDetail}),
+                                  refreshType: RefreshType.expenseDetail,
+                                  id: state.expenseDetail.id,
+                                  onRefresh: () {
+                                    context.read<ExpenseDetailBloc>().add(MarkExpenseAsChanged());
+                                    context.read<ExpenseDetailBloc>().add(FetchExpenseDetailEvent(state.expenseDetail.id));
+                                  },
+                                );
+                              },
+                            ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline_rounded, color: AppColors.errorRed),
-                            onPressed: () {
-                              _showDeleteConfirmationDialog(context, state.expenseDetail.id);
-                            },
+                          Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.delete_outline_rounded, color: Colors.white, size: 20),
+                              onPressed: () {
+                                _showDeleteConfirmationDialog(context, state.expenseDetail.id);
+                              },
+                            ),
                           ),
+                          const SizedBox(width: 8),
                         ],
                       );
                     },
@@ -420,8 +434,8 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     return Column(
       children: [
         Container(
-          width: 64,
-          height: 64,
+          width: 56,
+          height: 56,
           decoration: BoxDecoration(
             color: AppColors.surfaceWhite,
             shape: BoxShape.circle,
@@ -431,14 +445,14 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 : null,
             boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
           ),
-          child: entity.group?.groupIcon == null ? const Icon(Icons.receipt_long_rounded, color: AppColors.primary, size: 32) : null,
+          child: entity.group?.groupIcon == null ? const Icon(Icons.receipt_long_rounded, color: AppColors.primary, size: 28) : null,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         Text(
           entity.description,
           textAlign: TextAlign.center,
           style: GoogleFonts.outfit(
-            fontSize: 22, 
+            fontSize: 20, 
             fontWeight: FontWeight.w700, 
             color: isDeleted ? AppColors.textGrey : AppColors.textBlack,
             decoration: isDeleted ? TextDecoration.lineThrough : null,
@@ -446,11 +460,11 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         Text(
           "₹${formatter.format(entity.totalAmount)}",
           style: GoogleFonts.outfit(
-            fontSize: 36, 
+            fontSize: 28, 
             fontWeight: FontWeight.w700, 
             letterSpacing: -1, 
             color: isDeleted ? AppColors.textGrey : AppColors.textBlack,
@@ -470,7 +484,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     } catch (_) {}
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.surfaceWhite,
         borderRadius: BorderRadius.circular(16),
@@ -553,7 +567,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 15),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: AppColors.surfaceWhite,
           borderRadius: BorderRadius.circular(12),
@@ -581,10 +595,10 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.borderGreyLight),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          AppAvatar(url: entity.paidBy.avatar, radius: 22, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+          AppAvatar(url: entity.paidBy.avatar, radius: 18, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -614,7 +628,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFFFF176).withValues(alpha: 0.5)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Text(
         notes,
         textAlign: TextAlign.start,
@@ -662,10 +676,10 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     return InkWell(
       onTap: () {},
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Row(
           children: [
-            AppAvatar(url: avatarUrl, radius: 19, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+            AppAvatar(url: avatarUrl, radius: 18, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -767,7 +781,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
             child: Container(
               constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: isMe ? AppColors.primary.withValues(alpha: 0.05) : AppColors.surfaceWhite,
                 borderRadius: BorderRadius.only(
@@ -783,7 +797,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (!isMe) ...[
-                    AppAvatar(url: comment.user.avatar, radius: 16, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+                    AppAvatar(url: comment.user.avatar, radius: 14, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
                     const SizedBox(width: 12),
                   ],
                   Flexible(

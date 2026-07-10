@@ -27,7 +27,7 @@ class ExpenseDetailLoaded extends ExpenseDetailState {
   String get creatorFirstName => expenseDetail.createdBy.fullName.split(' ').first;
 
   /// Logic Moved from UI: Gets display name for the group.
-  String get groupDisplayName => (expenseDetail.group?.name ?? "").isNotEmpty ? expenseDetail.group!.name! : "Non-group";
+  String get groupDisplayName => (expenseDetail.group?.name ?? "").isNotEmpty ? expenseDetail.group!.name! : "Non-group expense";
 
   /// Logic Moved from UI: Gets first name of the editor if updated.
   String? get updatedByFirstName => expenseDetail.updatedBy?.fullName.split(' ').first;

@@ -5,6 +5,7 @@ import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
+import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
 import 'package:split_ease/features/groups/domain/entities/group_member_balance_entity.dart';
 
 class SettleUpSelectionPage extends StatelessWidget {
@@ -19,18 +20,20 @@ class SettleUpSelectionPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.backgroundLightGrey,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.backgroundLightGrey,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close_rounded, color: AppColors.textBlack),
+        leadingWidth: 80,
+        leading: AppBackButton(
           onPressed: () => Navigator.pop(context),
+          color: AppColors.textBlack,
+          backgroundColor: Colors.white,
         ),
         title: Text(
           "Settle up",
           style: GoogleFonts.outfit(
             color: AppColors.textBlack,
             fontWeight: FontWeight.w700,
-            fontSize: 18,
+            fontSize: 16,
           ),
         ),
         centerTitle: true,
@@ -39,100 +42,46 @@ class SettleUpSelectionPage extends StatelessWidget {
         slivers: [
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 12.0, bottom: 8.0),
               child: Text(
-                "Who would you like to settle with?",
+                "Select a member to settle with",
                 style: GoogleFonts.outfit(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textBlack,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textGrey,
                 ),
               ),
             ),
           ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final balance = balances[index];
-                final bool isOwed = balance.balance > 0;
-                final Color color = isOwed ? AppColors.successGreen : AppColors.errorRed;
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  child: Card(
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: AppColors.borderGreyLight, width: 0.5),
-                    ),
-                    child: InkWell(
-                      onTap: () {
-                        // Navigate to record payment
-                        NavigationService.pushNamed(
-                          AppRoutes.recordPayment,
-                          args: {
-                            'targetUserId': balance.userId,
-                            'targetUserName': balance.fullName,
-                            'targetUserAvatar': balance.avatar,
-                            'balance': balance.balance,
-                            'groupId': groupId,
-                          },
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(16),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          children: [
-                            AppAvatar(
-                              url: balance.avatar,
-                              radius: 24,
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    balance.fullName,
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.textBlack,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    isOwed ? "owes you" : "you owe",
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 13,
-                                      color: AppColors.textGrey,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Text(
-                              "₹${NumberFormat('#,##0.##', 'en_IN').format(balance.balance.abs())}",
-                              style: GoogleFonts.outfit(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: color,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.iconGrey),
-                          ],
-                        ),
+          if (balances.isNotEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.borderGreyLight, width: 0.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.02),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
-                    ),
+                    ],
                   ),
-                );
-              },
-              childCount: balances.length,
+                  child: Column(
+                    children: [
+                      for (int i = 0; i < balances.length; i++) ...[
+                        _buildBalanceItem(context, balances[i], groupId),
+                        if (i < balances.length - 1)
+                          const Divider(height: 1, thickness: 0.5, color: AppColors.borderGreyLight, indent: 64),
+                      ]
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ),
           if (balances.isEmpty)
              SliverToBoxAdapter(
               child: Padding(
@@ -156,6 +105,73 @@ class SettleUpSelectionPage extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBalanceItem(BuildContext context, GroupMemberBalanceEntity balance, String? groupId) {
+    final bool isOwed = balance.balance > 0;
+    final Color color = isOwed ? AppColors.successGreen : AppColors.errorRed;
+
+    return InkWell(
+      onTap: () {
+        NavigationService.pushNamed(
+          AppRoutes.recordPayment,
+          args: {
+            'targetUserId': balance.userId,
+            'targetUserName': balance.fullName,
+            'targetUserAvatar': balance.avatar,
+            'balance': balance.balance,
+            'groupId': groupId,
+          },
+        );
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        child: Row(
+          children: [
+            AppAvatar(
+              url: balance.avatar,
+              radius: 18,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    balance.fullName,
+                    style: GoogleFonts.outfit(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textBlack,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    isOwed ? "owes you" : "you owe",
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      color: AppColors.textGrey,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              "₹${NumberFormat('#,##0.##', 'en_IN').format(balance.balance.abs())}",
+              style: GoogleFonts.outfit(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.iconGrey),
+          ],
+        ),
       ),
     );
   }
