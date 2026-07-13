@@ -84,6 +84,7 @@ import 'package:split_ease/features/expenses/presentation/bloc/settle_up/settle_
 import 'package:split_ease/features/expenses/domain/usecases/get_expense_detail_usecase.dart';
 import 'package:split_ease/features/expenses/domain/usecases/restore_expense_usecase.dart';
 import 'package:split_ease/features/expenses/domain/usecases/get_expense_participants_usecase.dart';
+import 'package:split_ease/features/expenses/domain/usecases/get_expense_categories.dart';
 import 'features/groups/domain/usecases/group_insert_icon.dart';
 import 'features/groups/presentation/bloc/groups_bloc.dart';
 import 'features/groups/presentation/bloc/create_group_bloc.dart';
@@ -178,6 +179,7 @@ void _expense() {
   sl.registerLazySingleton<ExpenseRemoteDataSource>(() => ExpenseRemoteDataSourceImpl(client: sl<SupabaseClient>())); // Note: explicit cast to SupabaseClient if needed, or just sl() since we registered sc.client as SupabaseClient
 
   sl.registerLazySingleton(() => GetCommonGroupsUseCase(sl()));
+  sl.registerLazySingleton(() => GetExpenseCategories(sl()));
 
   sl.registerFactory(() => ExpenseBloc(
         addExpenseUseCase: sl(),
@@ -185,6 +187,7 @@ void _expense() {
         getGroupMembers: sl(),
         getCommonGroupsUseCase: sl(),
         getExpenseParticipantsUsecase: sl(),
+        getExpenseCategories: sl(),
         dataRefreshCubit: sl(),
       ));
 

@@ -23,4 +23,6 @@ class AppRoutes {
   static const String expenseNote = '/expenseNote';
   static const String settleUpSelection = '/settleUpSelection';
   static const String recordPayment = '/recordPayment';
+  static const String groupQr = '/groupQr';
+  static const String categorySelection = '/categorySelection';
 }

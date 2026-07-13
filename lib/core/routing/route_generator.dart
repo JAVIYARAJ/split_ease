@@ -41,6 +41,8 @@ import '../../features/auth/domain/entities/user_entity.dart';
 import '../../features/expenses/presentation/pages/settle_up_selection_page.dart';
 import '../../features/expenses/presentation/pages/record_payment_page.dart';
 import '../../features/expenses/presentation/bloc/settle_up/settle_up_cubit.dart';
+import '../../features/groups/presentation/pages/group_qr_page.dart';
+import '../../features/expenses/presentation/pages/category_selection_page.dart';
 
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -170,6 +172,15 @@ class RouteGenerator {
           ),
           settings: RouteSettings(arguments: settings.arguments, name: settings.name),
         );
+      case AppRoutes.groupQr:
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => GroupQrPage(
+            inviteCode: args['inviteCode'],
+            groupName: args['groupName'],
+          ),
+          settings: RouteSettings(arguments: settings.arguments, name: settings.name),
+        );
       case AppRoutes.expensePdfPreview:
         final args = settings.arguments as Map<String, dynamic>;
         return MaterialPageRoute(
@@ -198,6 +209,15 @@ class RouteGenerator {
           builder: (_) => BlocProvider(
             create: (context) => sl<SettleUpCubit>(),
             child: const RecordPaymentPage(),
+          ),
+          settings: RouteSettings(arguments: settings.arguments, name: settings.name),
+        );
+      case AppRoutes.categorySelection:
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => CategorySelectionPage(
+            categories: args['categories'],
+            selectedCategory: args['selectedCategory'],
           ),
           settings: RouteSettings(arguments: settings.arguments, name: settings.name),
         );

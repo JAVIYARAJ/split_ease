@@ -152,9 +152,10 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                   // Hide if no group or history is entirely empty (and we want to hide it)
                   if (!hasGroup) return const SliverToBoxAdapter(child: SizedBox());
 
-                  // Show info iff we have members and (either loading history or has history)
+                  // Show info iff we have members or if we have historical expenses
                   final hasMembers = (state.groupEntity?.members?.length ?? 0) > 1;
-                  if (!hasMembers) return const SliverToBoxAdapter(child: SizedBox());
+                  final hasExpenses = (state.expenseHistory?.expenses?.isNotEmpty ?? false);
+                  if (!hasMembers && !hasExpenses) return const SliverToBoxAdapter(child: SizedBox());
 
                   return _GroupDetailInfo(state.groupEntity!);
                 },
@@ -717,7 +718,7 @@ class _TransactionList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // In non-group context we skip the member-count gate entirely
-    if (!isNonGroup && !hasMembers) {
+    if (!isNonGroup && !hasMembers && expenses.isEmpty) {
       return SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 64, horizontal: 32),
@@ -857,14 +858,21 @@ class _TransactionItem extends StatelessWidget {
     String day = '';
     try {
       date = DateTime.parse(expense.createdAt);
-      month = DateFormat('MMM').format(date);
+      month = DateFormat('MMM').format(date).toUpperCase();
       day = DateFormat('d').format(date);
     } catch (_) {}
 
-    final bool youLent = expense.type == 'you_lent';
+    final bool isSettlement = expense.type == 'settlement';
+    final bool youLent = expense.yourBalanceEffect > 0;
+    final bool involved = expense.yourBalanceEffect != 0;
+
     final Color balanceColor = youLent ? AppColors.successGreen : AppColors.errorRed;
     final String balanceLabel = youLent ? 'you lent' : 'you owe';
     final formatter = NumberFormat('#,##0.##', 'en_IN');
+
+    final IconData iconData = isSettlement ? Icons.handshake_rounded : Icons.receipt_long_rounded;
+    final Color iconColor = isSettlement ? AppColors.successGreen : AppColors.primaryTeal;
+    final Color iconBgColor = isSettlement ? AppColors.successGreen.withValues(alpha: 0.1) : AppColors.primaryTeal.withValues(alpha: 0.1);
 
     return GestureDetector(
       onTap: () {
@@ -883,38 +891,45 @@ class _TransactionItem extends StatelessWidget {
         );
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.surfaceWhite,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.borderGreyLight),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 14.0),
             child: Row(
               children: [
                 // Date column
                 SizedBox(
                   width: 38,
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(month, style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w500)),
+                      Text(month, style: GoogleFonts.outfit(fontSize: 10, color: AppColors.textGrey, fontWeight: FontWeight.w600, letterSpacing: 1)),
                       Text(
                         day,
-                        style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textGrey, letterSpacing: -0.5),
+                        style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textBlack, height: 1.1),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 8),
                 // Icon
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(12)),
-                  child: const Icon(Icons.receipt_long_rounded, color: AppColors.textGrey),
+                  decoration: BoxDecoration(color: iconBgColor, shape: BoxShape.circle),
+                  child: Icon(iconData, color: iconColor, size: 20),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 // Description + paid by
                 Expanded(
                   child: Column(
@@ -923,30 +938,36 @@ class _TransactionItem extends StatelessWidget {
                       Text(
                         expense.description,
                         style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        "${expense.paidByName} paid ₹${formatter.format(expense.totalAmount)}",
-                        style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                        isSettlement
+                            ? "₹${formatter.format(expense.totalAmount)} exchanged"
+                            : "${expense.paidByName} paid ₹${formatter.format(expense.totalAmount)}",
+                        style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 6),
                 // Balance effect
-                if (expense.yourBalanceEffect == 0)
+                if (!involved)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text("Not involved", style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontStyle: FontStyle.italic)),
+                      Text("not involved", style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w500)),
                     ],
                   )
                 else
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(balanceLabel, style: GoogleFonts.outfit(fontSize: 12, color: balanceColor, fontWeight: FontWeight.w500)),
+                      Text(balanceLabel, style: GoogleFonts.outfit(fontSize: 12, color: balanceColor, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 2),
                       Text(
                         "₹${formatter.format(expense.yourBalanceEffect.abs())}",
                         style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: balanceColor, letterSpacing: -0.5),

@@ -50,7 +50,7 @@ class ActivityPage extends StatelessWidget {
                 context.read<ActivityBloc>().add(LoadActivities());
               },
               child: CustomScrollView(
-                physics: const BouncingScrollPhysics(),
+                physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                 slivers: [
                   _buildAppBar(context),
                   if (!isLoading && activities.isEmpty)
@@ -93,16 +93,11 @@ class ActivityPage extends StatelessWidget {
                                     : () async {
                                   final targetId = activity.expenseId ??
                                       activity.entityId ?? activity.activityId;
-                                  if ((activity.activityAction ==
-                                      ActivityType.expense ||
-                                      activity.activityAction ==
-                                          ActivityType.settlement ||
-                                      activity.activityAction ==
-                                          ActivityType.modification ||
-                                      activity.activityAction ==
-                                          ActivityType.deleted ||
-                                      activity.activityAction ==
-                                          ActivityType.restored) &&
+                                  if ((activity.activityAction == ActivityType.expense ||
+                                      activity.activityAction == ActivityType.settlement ||
+                                      activity.activityAction == ActivityType.modification ||
+                                      activity.activityAction == ActivityType.deleted ||
+                                      activity.activityAction == ActivityType.restored) &&
                                       targetId.isNotEmpty) {
                                     NavigationUtils.handleResult(
                                       context: context,
@@ -111,10 +106,23 @@ class ActivityPage extends StatelessWidget {
                                           args: {"expanse_id": targetId}),
                                       refreshType: RefreshType.activity,
                                       onRefresh: () {
-                                        context.read<ActivityBloc>().add(
-                                            LoadActivities());
+                                        context.read<ActivityBloc>().add(LoadActivities());
                                       },
                                     );
+                                  } else if (activity.activityAction == ActivityType.groupCreated) {
+                                    final groupId = activity.groupId ?? targetId;
+                                    if (groupId.isNotEmpty) {
+                                      NavigationUtils.handleResult(
+                                        context: context,
+                                        navigation: NavigationService.pushNamed(
+                                            AppRoutes.groupDetail,
+                                            args: {"group_id": groupId}),
+                                        refreshType: RefreshType.activity,
+                                        onRefresh: () {
+                                          context.read<ActivityBloc>().add(LoadActivities());
+                                        },
+                                      );
+                                    }
                                   }
                                 },
                               ),
@@ -165,14 +173,14 @@ class ActivityPage extends StatelessWidget {
         ),
       ),
       actions: [
-        IconButton(
+        /*IconButton(
           onPressed: () {},
           icon: const Icon(Icons.search_rounded, color: AppColors.textBlack),
           style: IconButton.styleFrom(
               backgroundColor: AppColors.backgroundLightGrey,
               padding: const EdgeInsets.all(12)),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 16),*/
       ],
     );
   }

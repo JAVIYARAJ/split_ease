@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:split_ease/features/expenses/domain/usecases/create_expense_params.dart';
 import 'package:split_ease/features/expenses/domain/usecases/update_expense_params.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_detail_entity.dart';
+import 'package:split_ease/features/expenses/domain/entities/expense_category_entity.dart';
 import '../../../../core/error/failure.dart';
 
 abstract class ExpenseRepository {
@@ -18,5 +19,5 @@ abstract class ExpenseRepository {
     String? groupId,
     String? note,
   });
+  Future<Either<Failure, List<ExpenseCategoryEntity>>> getExpenseCategories();
 }
-

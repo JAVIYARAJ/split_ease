@@ -9,6 +9,7 @@ class UpdateExpenseParams extends Equatable {
   final DateTime expenseDate;
   final String splitType;
   final String? notes;
+  final String? categoryId;
   final List<Map<String, dynamic>> splits;
 
   const UpdateExpenseParams({
@@ -16,6 +17,7 @@ class UpdateExpenseParams extends Equatable {
     this.groupId,
     required this.description,
     this.notes,
+    this.categoryId,
     required this.totalAmount,
     required this.paidByUserId,
     required this.expenseDate,
@@ -29,6 +31,7 @@ class UpdateExpenseParams extends Equatable {
       'p_group_id': groupId,
       'p_description': description,
       'p_expense_note': notes,
+      'p_category_id': categoryId,
       'p_total_amount': totalAmount,
       'p_paid_by': paidByUserId,
       'p_expense_date': expenseDate.toIso8601String().split('T')[0], // YYYY-MM-DD

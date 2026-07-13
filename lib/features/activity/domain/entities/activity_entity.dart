@@ -69,6 +69,7 @@ class ActivityEntity {
       case 'restored':
         return ActivityType.restored;
       case 'removed':
+      case 'left':
         return ActivityType.removed;
       case 'added':
         return ActivityType.added;

@@ -437,30 +437,32 @@ class _DiscardDialog extends StatelessWidget {
               style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textGrey, height: 1.5),
             ),
             const SizedBox(height: 32),
-            Row(
+            Column(
               children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: Text("Continue Editing", style: GoogleFonts.outfit(fontWeight: FontWeight.w700, color: AppColors.textBlack)),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
+                SizedBox(
+                  width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () => Navigator.pop(context, true),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
-                    child: Text("Discard", style: GoogleFonts.outfit(fontWeight: FontWeight.w700)),
+                    child: Text("Discard Changes", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: Text("Continue Editing", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textGrey)),
                   ),
                 ),
               ],

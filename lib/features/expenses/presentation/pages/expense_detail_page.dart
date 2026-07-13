@@ -273,101 +273,63 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
 
   Widget _buildDeletedBanner(BuildContext context, String expenseId, bool canRestore) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.errorRed.withValues(alpha: 0.1),
-            AppColors.errorRed.withValues(alpha: 0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.errorRed.withValues(alpha: 0.2), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.errorRed.withValues(alpha: 0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        color: AppColors.surfaceWhite,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderGreyLight),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppColors.errorRed.withValues(alpha: 0.15),
+            decoration: const BoxDecoration(
+              color: AppColors.borderGrey,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.delete_outline_rounded, color: AppColors.errorRed, size: 22),
+            child: const Icon(Icons.delete_outline_rounded, color: AppColors.textGrey, size: 20),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Expense Deleted",
+                  "Deleted Expense",
                   style: GoogleFonts.outfit(
-                    color: AppColors.errorRed,
+                    color: AppColors.textBlack,
                     fontSize: 15,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 2),
                 Text(
-                  "This item is no longer active.",
+                  "Does not affect balances.",
                   style: GoogleFonts.outfit(
-                    color: AppColors.errorRed.withValues(alpha: 0.7),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                    color: AppColors.textGrey,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
               ],
             ),
           ),
           if (canRestore)
-            Material(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              elevation: 0,
-              child: InkWell(
-                onTap: () {
-                  context.read<ExpenseDetailBloc>().add(RestoreExpenseEvent(expenseId));
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white, width: 1),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.history_rounded, size: 16, color: AppColors.primary),
-                      const SizedBox(width: 8),
-                      Text(
-                        "UNDO",
-                        style: GoogleFonts.outfit(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
+            TextButton.icon(
+              onPressed: () {
+                context.read<ExpenseDetailBloc>().add(RestoreExpenseEvent(expenseId));
+              },
+              icon: const Icon(Icons.restore_rounded, size: 16),
+              label: Text(
+                "Restore",
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 13),
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
                 ),
               ),
             ),

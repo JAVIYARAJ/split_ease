@@ -20,33 +20,48 @@ extension ActivityUIPresentation on ActivityEntity {
 
     switch (action) {
       case ActivityType.added:
-        bool targetIsMe = (referenceUserId != null && currentUserId != null && referenceUserId == currentUserId) ||
-                          (referenceUserName != null && currentUserName != null && referenceUserName!.toLowerCase() == currentUserName.toLowerCase()) ||
-                          (referenceUserName == actorName && isMe);
+        bool isSelfJoin = (referenceUserId != null && actorId != null && referenceUserId == actorId) ||
+                          (referenceUserName == actorName);
 
-        if (targetIsMe) {
+        bool targetIsMe = (referenceUserId != null && currentUserId != null && referenceUserId == currentUserId) ||
+                          (referenceUserName != null && currentUserName != null && referenceUserName!.toLowerCase() == currentUserName.toLowerCase());
+
+        if (isSelfJoin) {
           return isMe ? 'You joined "$groupName"' : '$actorName joined "$groupName"';
         }
+
+        if (targetIsMe) {
+          return '$actorName added you$toGroup';
+        }
         
-        final target = (referenceUserName == actorName) 
-            ? (isMe ? "yourself" : "themselves") 
-            : (referenceUserName ?? "someone");
-        
+        final target = referenceUserName ?? "someone";
         return '$subject added $target$toGroup';
 
       case ActivityType.removed:
         bool targetIsMe = (referenceUserId != null && currentUserId != null && referenceUserId == currentUserId) ||
                           (referenceUserName != null && currentUserName != null && referenceUserName!.toLowerCase() == currentUserName.toLowerCase());
 
+        bool isSelfRemoval = (referenceUserId != null && actorId != null && referenceUserId == actorId) ||
+                             (referenceUserName == actorName);
+
         if (targetIsMe) {
-          return isMe ? 'You left "$groupName"' : 'You were removed$fromGroup';
+          return isMe ? 'You left "$groupName"' : 'You were removed$fromGroup by $actorName';
+        }
+        
+        if (isSelfRemoval) {
+          return '$subject left "$groupName"';
         }
         
         final target = referenceUserName ?? "someone";
         return '$subject removed $target$fromGroup';
 
       case ActivityType.roleUpdated:
-        final newRole = metadata?['new_role'] ?? 'member';
+        final newRoleRaw = metadata?['new_role']?.toString() ?? 'member';
+        final oldRoleRaw = metadata?['old_role']?.toString();
+        
+        final newRole = newRoleRaw.isNotEmpty ? '${newRoleRaw[0].toUpperCase()}${newRoleRaw.substring(1)}' : newRoleRaw;
+        final oldRole = oldRoleRaw != null && oldRoleRaw.isNotEmpty ? '${oldRoleRaw[0].toUpperCase()}${oldRoleRaw.substring(1)}' : null;
+        
         final target = referenceUserName ?? "someone";
         
         final bool targetIsMe = (referenceUserId != null && currentUserId != null && referenceUserId == currentUserId) ||
@@ -54,10 +69,21 @@ extension ActivityUIPresentation on ActivityEntity {
                                 (target == actorName && isMe);
                                 
         final String possessiveTarget = targetIsMe ? "your" : (target == actorName ? "their" : "$target's");
+        
+        if (oldRole != null) {
+          return '$subject changed $possessiveTarget role from $oldRole to $newRole$groupInfo';
+        }
         return '$subject updated $possessiveTarget role to $newRole$groupInfo';
 
       case ActivityType.expense:
         final desc = description ?? metadata?['description'] ?? 'an expense';
+        final amount = metadata?['amount'];
+        if (amount != null) {
+          final amountStr = amount is num 
+              ? (amount.truncateToDouble() == amount ? amount.toInt().toString() : amount.toStringAsFixed(2))
+              : amount.toString();
+          return '$subject added "$desc" for ₹$amountStr$toGroup';
+        }
         return '$subject added "$desc"$toGroup';
 
       case ActivityType.settlement:

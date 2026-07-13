@@ -101,3 +101,12 @@ class NotesChanged extends ExpenseEvent {
   final String notes;
   const NotesChanged(this.notes);
 }
+
+class FetchCategories extends ExpenseEvent {
+  const FetchCategories();
+}
+
+class CategoryChanged extends ExpenseEvent {
+  final ExpenseCategoryEntity category;
+  const CategoryChanged(this.category);
+}

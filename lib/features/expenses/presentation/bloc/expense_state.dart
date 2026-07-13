@@ -19,6 +19,8 @@ class ExpenseState {
   final List<ExpenseSplit> splits;
   final List<GroupMemberEntity> groupMembers;
   final List<GroupEntity> commonGroups;
+  final List<ExpenseCategoryEntity> categories;
+  final ExpenseCategoryEntity? selectedCategory;
   final ExpenseOrigin origin;
   final String notes;
   final String? errorMessage;
@@ -40,6 +42,8 @@ class ExpenseState {
     this.splits = const [],
     this.groupMembers = const [],
     this.commonGroups = const [],
+    this.categories = const [],
+    this.selectedCategory,
     this.origin = ExpenseOrigin.global,
     this.notes = '',
     this.errorMessage,
@@ -102,6 +106,8 @@ class ExpenseState {
     List<ExpenseSplit>? splits,
     List<GroupMemberEntity>? groupMembers,
     List<GroupEntity>? commonGroups,
+    List<ExpenseCategoryEntity>? categories,
+    ExpenseCategoryEntity? Function()? selectedCategory,
     ExpenseOrigin? origin,
     String? notes,
     String? Function()? errorMessage,
@@ -118,11 +124,12 @@ class ExpenseState {
       expenseId: expenseId != null ? expenseId() : this.expenseId,
       isEdit: isEdit ?? this.isEdit,
       date: date ?? this.date,
-
       splitType: splitType ?? this.splitType,
       splits: splits ?? this.splits,
       groupMembers: groupMembers ?? this.groupMembers,
       commonGroups: commonGroups ?? this.commonGroups,
+      categories: categories ?? this.categories,
+      selectedCategory: selectedCategory != null ? selectedCategory() : this.selectedCategory,
       origin: origin ?? this.origin,
       notes: notes ?? this.notes,
       errorMessage: errorMessage != null ? errorMessage() : this.errorMessage,

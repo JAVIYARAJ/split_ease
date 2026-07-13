@@ -13,6 +13,7 @@ import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_detail_entity.dart';
+import 'package:split_ease/features/expenses/domain/entities/expense_category_entity.dart';
 import 'package:split_ease/core/config/app_configs.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_bloc.dart';
 
@@ -96,15 +97,16 @@ class _AddExpensePageState extends State<AddExpensePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.backgroundLightGrey, // Using a light grey background to make cards pop
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.backgroundLightGrey,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(
             "Cancel",
-            style: GoogleFonts.openSans(color: AppColors.primaryTeal, fontWeight: FontWeight.w600, fontSize: 16),
+            style: GoogleFonts.outfit(color: AppColors.textGrey, fontWeight: FontWeight.w600, fontSize: 16),
           ),
         ),
         leadingWidth: 80,
@@ -113,26 +115,28 @@ class _AddExpensePageState extends State<AddExpensePage> {
           builder: (context, state) {
             return Text(
               state.isEdit ? "Edit expense" : "Add expense",
-              style: GoogleFonts.openSans(color: AppColors.textBlack, fontWeight: FontWeight.w600, fontSize: 18),
+              style: GoogleFonts.outfit(color: AppColors.textBlack, fontWeight: FontWeight.w800, fontSize: 18),
             );
           },
         ),
         centerTitle: true,
-
         actions: [
           BlocBuilder<ExpenseBloc, ExpenseState>(
             builder: (context, state) {
               if (state.status == ExpenseStatus.loading) {
                  return const Padding(
-                   padding: EdgeInsets.only(right: 16.0),
+                   padding: EdgeInsets.only(right: 24.0),
                    child: Center(child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryTeal))),
                  );
               }
-              return TextButton(
-                onPressed: () => _onSave(context, state),
-                child: Text(
-                  "Save",
-                  style: GoogleFonts.openSans(color: AppColors.primaryTeal, fontWeight: FontWeight.w600, fontSize: 16),
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: TextButton(
+                  onPressed: () => _onSave(context, state),
+                  child: Text(
+                    "Save",
+                    style: GoogleFonts.outfit(color: AppColors.primaryTeal, fontWeight: FontWeight.w700, fontSize: 16),
+                  ),
                 ),
               );
             },
@@ -148,448 +152,196 @@ class _AddExpensePageState extends State<AddExpensePage> {
             AppAlerts.showError(context, state.errorMessage ?? 'An error occurred');
           }
         },
-
         child: BlocBuilder<ExpenseBloc, ExpenseState>(
           builder: (context, state) {
-
             final group = state.group;
             final friend = state.friend;
-
             final members = state.groupMembers;
             final payerName = state.payerName;
 
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  const SizedBox(height: 8),
-                  // Context Badge moved or simplified
-                  if (group != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(16)),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              image: group.groupIcon != null
-                                  ? DecorationImage(image: CachedNetworkImageProvider(group.groupIcon!), fit: BoxFit.cover)
-                                  : null,
-                              color: group.groupIcon == null ? AppColors.primaryTeal : null,
-                            ),
-                            child: group.groupIcon == null ? const Icon(Icons.group, color: Colors.white, size: 12) : null,
+            return CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 24),
+                      // Context Badge
+                      if (group != null)
+                        _buildContextBadge(
+                          icon: group.groupIcon != null
+                              ? CachedNetworkImageProvider(group.groupIcon!) as ImageProvider
+                              : null,
+                          fallbackIcon: Icons.group_rounded,
+                          text: "In: ${group.name ?? "Non-group expense"}",
+                        )
+                      else if (friend != null)
+                        _buildContextBadge(
+                          icon: friend.imageUrl != null
+                              ? CachedNetworkImageProvider(friend.imageUrl!) as ImageProvider
+                              : null,
+                          fallbackIcon: Icons.person_rounded,
+                          text: "With: ${friend.name}",
+                        ),
+
+                      const SizedBox(height: 32),
+
+                      // Description
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: TextField(
+                          controller: _descriptionController,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+                          decoration: InputDecoration(
+                            hintText: "What was this for?",
+                            hintStyle: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textGrey.withValues(alpha: 0.4)),
+                            border: InputBorder.none,
+                            isDense: true,
                           ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              "In: ${group.name ?? "Non-group expense"}",
-                              style: GoogleFonts.openSans(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textBlack),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
+                          onChanged: (value) => context.read<ExpenseBloc>().add(DescriptionChanged(value)),
+                        ),
                       ),
-                    )
-                  else if (friend != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(16)),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AppAvatar(
-                            url: friend.imageUrl,
-                            radius: 10,
-                            backgroundColor: AppColors.backgroundLightGrey,
-                            iconColor: AppColors.textGrey,
+
+                      const SizedBox(height: 16),
+
+                      // Amount
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32),
+                        child: TextField(
+                          controller: _amountController,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(fontSize: 64, fontWeight: FontWeight.w900, color: AppColors.textBlack, height: 1.0),
+                          decoration: InputDecoration(
+                            hintText: "₹0",
+                            hintStyle: GoogleFonts.outfit(fontSize: 64, fontWeight: FontWeight.w900, color: AppColors.textGrey.withValues(alpha: 0.3), height: 1.0),
+                            border: InputBorder.none,
+                            isDense: true,
                           ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              "With: ${friend.name}",
-                              style: GoogleFonts.openSans(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textBlack),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
+                          onChanged: (value) => context.read<ExpenseBloc>().add(AmountChanged(value)),
+                        ),
                       ),
-                    ),
-                  const SizedBox(height: 12),
+                      
+                      const SizedBox(height: 48),
 
-                  // Description Input
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: AppColors.borderGrey),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(Icons.receipt_long_outlined, color: AppColors.textGrey, size: 20),
+                      // Settings Card
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.3)),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 20, offset: const Offset(0, 8)),
+                          ],
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextField(
-                            controller: _descriptionController,
-                            decoration: InputDecoration(
-                              hintText: "Enter a description",
-                              hintStyle: GoogleFonts.openSans(color: AppColors.textGrey),
-                              border: InputBorder.none,
-                            ),
-                            style: GoogleFonts.openSans(fontSize: 15, fontWeight: FontWeight.w500),
-                            onChanged: (value) => context.read<ExpenseBloc>().add(DescriptionChanged(value)),
-                          ),
-                        ),
-
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Amount Input
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(Icons.currency_rupee, color: AppColors.textBlack, size: 20),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextField(
-                            controller: _amountController,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            decoration: InputDecoration(
-                              hintText: "0.00",
-                              hintStyle: GoogleFonts.openSans(color: AppColors.textGrey),
-                              border: InputBorder.none,
-                            ),
-                            style: GoogleFonts.openSans(fontSize: 24, fontWeight: FontWeight.bold),
-                            onChanged: (value) => context.read<ExpenseBloc>().add(AmountChanged(value)),
-                          ),
-                        ),
-
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Paid by / Split section
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.5), width: 1.0),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          // 1. Payer & Split (Primary Logic)
-                          Skeletonizer(
-                            enabled: state.groupMembersStatus == ExpenseStatus.loading,
-                            child: Column(
-                              children: [
-                                // Paid By Row
-                                InkWell(
-                                  onTap: state.groupMembersStatus == ExpenseStatus.loading 
-                                    ? null 
-                                    : () {
-                                      context.read<ExpenseBloc>().add(ValidateNavigation(
-                                        onValid: () async {
-                                          final result = await NavigationService.pushNamed(
-                                            AppRoutes.payerSelection,
-                                            args: {
-                                              'members': members,
-                                              'currentPayerId': state.payerId,
-                                            },
-                                          );
-                                          if (result != null && result is String) {
-                                            if (context.mounted) {
-                                              context.read<ExpenseBloc>().add(PayerChanged(result));
-                                            }
-                                          }
-                                        },
-                                      ));
-                                    },
-                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(6),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.primaryTeal.withValues(alpha: 0.1),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(Icons.person_outline, color: AppColors.primaryTeal, size: 18),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Text("Paid by", style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textBlack)),
-                                        const Spacer(),
-                                        Text(
-                                          payerName ?? "you", 
-                                          style: GoogleFonts.openSans(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.primaryTeal)
-                                        ),
-                                        const SizedBox(width: 4),
-                                        const Icon(Icons.chevron_right, size: 18, color: AppColors.textGrey),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const Divider(height: 1, color: AppColors.borderGrey, indent: 16, endIndent: 16),
-                                // Split Row
-                                InkWell(
-                                  onTap: state.groupMembersStatus == ExpenseStatus.loading 
-                                    ? null 
-                                    : () {
-                                      context.read<ExpenseBloc>().add(ValidateNavigation(
-                                        onValid: () async {
-                                          final result = await NavigationService.pushNamed(
-                                            AppRoutes.splitOptions,
-                                            args: {
-                                              'members': members,
-                                              'splitType': state.splitType,
-                                              'splits': state.splits,
-                                              'totalAmount': double.tryParse(state.amount) ?? 0.0,
-                                            },
-                                          );
-                                          if (result != null && result is Map<String, dynamic>) {
-                                            if (context.mounted) {
-                                              context.read<ExpenseBloc>().add(SplitTypeChanged(result['splitType']));
-                                              context.read<ExpenseBloc>().add(SplitOptionChanged(result['splits']));
-                                            }
-                                          }
-                                        },
-                                      ));
-                                    },
-                                  borderRadius: state.origin == ExpenseOrigin.group
-                                      ? const BorderRadius.vertical(bottom: Radius.circular(16))
-                                      : BorderRadius.zero,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(6),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.primaryTeal.withOpacity(0.1),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(Icons.call_split_outlined, color: AppColors.primaryTeal, size: 18),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Text("Split", style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textBlack)),
-                                        const Spacer(),
-                                        Text(
-                                          state.splitDescription,
-                                          style: GoogleFonts.openSans(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.primaryTeal),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        const Icon(Icons.chevron_right, size: 18, color: AppColors.textGrey),
-                                      ],
-                                    ),
-                                  ),
+                        child: Skeletonizer(
+                          enabled: state.groupMembersStatus == ExpenseStatus.loading,
+                          child: Column(
+                            children: [
+                              _buildConfigRow(
+                                icon: state.selectedCategory != null ? _getIconFromString(state.selectedCategory!.icon) : Icons.category_rounded,
+                                label: "Category",
+                                value: state.selectedCategory?.name ?? "Select Category",
+                                isTop: true,
+                                onTap: () => _showCategoryPicker(context, state),
+                              ),
+                              _buildDivider(),
+                              _buildConfigRow(
+                                icon: Icons.person_outline_rounded,
+                                label: "Paid by",
+                                value: payerName ?? "you",
+                                onTap: () => _handlePaidBySelection(context, state, members),
+                              ),
+                              _buildDivider(),
+                              _buildConfigRow(
+                                icon: Icons.call_split_rounded,
+                                label: "Split",
+                                value: state.splitDescription,
+                                isBottom: state.origin == ExpenseOrigin.group,
+                                onTap: () => _handleSplitSelection(context, state, members),
+                              ),
+                              if (state.origin != ExpenseOrigin.group) ...[
+                                _buildDivider(),
+                                _buildConfigRow(
+                                  icon: Icons.groups_outlined,
+                                  label: "Group",
+                                  value: state.group?.name ?? "Non-group expense",
+                                  isBottom: true,
+                                  onTap: () async {
+                                    final selectedGroup = await showGroupPickerFromList(context, state.commonGroups);
+                                    if(context.mounted) {
+                                      context.read<ExpenseBloc>().add(GroupChanged(selectedGroup));
+                                    }
+                                  },
                                 ),
                               ],
-                            ),
+                            ],
                           ),
-                          if (state.origin != ExpenseOrigin.group) ...[
-                            const Divider(height: 1, color: AppColors.borderGrey, indent: 16, endIndent: 16),
-                          ],
+                        ),
+                      ),
 
-                          // 2. Group Selection (Optional/Contextual)
-                          if (state.origin != ExpenseOrigin.group)
-                            InkWell(
+                      const SizedBox(height: 24),
+
+                      // Secondary Settings Card (Date & Notes)
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.3)),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 20, offset: const Offset(0, 8)),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            _buildConfigRow(
+                              icon: Icons.calendar_today_rounded,
+                              label: "Date",
+                              value: state.date != null ? DateFormat('MMMM d, yyyy').format(state.date!) : "Today",
+                              valueColor: AppColors.textBlack,
+                              isTop: true,
                               onTap: () async {
-                                final selectedGroup = await showGroupPickerFromList(
-                                  context,
-                                  state.commonGroups
+                                final result = await NavigationService.pushNamed(
+                                  AppRoutes.dateSelection,
+                                  args: {'initialDate': state.date},
                                 );
-                                if(context.mounted) {
-                                  context.read<ExpenseBloc>().add(GroupChanged(selectedGroup));
+                                if (result != null && result is DateTime && context.mounted) {
+                                  context.read<ExpenseBloc>().add(DateChanged(result));
                                 }
                               },
-                              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.primaryTeal.withValues(alpha: 0.1),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(Icons.group_outlined, color: AppColors.primaryTeal, size: 18),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text("Group", style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textBlack)),
-                                    const Spacer(),
-                                    Text(
-                                      state.group?.name ?? "Non-group expense",
-                                      style: GoogleFonts.openSans(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.primaryTeal),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    const Icon(Icons.chevron_right, size: 18, color: AppColors.textGrey),
-                                  ],
-                                ),
-                              ),
                             ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Date Section
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: GestureDetector(
-                      onTap: () async {
-                        final result = await NavigationService.pushNamed(
-                          AppRoutes.dateSelection,
-                          args: {
-                            'initialDate': state.date
-                          },
-                        );
-                        if (result != null && result is DateTime) {
-                          if (context.mounted) {
-                             context.read<ExpenseBloc>().add(DateChanged(result));
-                          }
-                        }
-                      },
-                      child: Row(
-                        children: [
-                          const Icon(Icons.calendar_today, size: 20, color: AppColors.textGrey),
-                          const SizedBox(width: 8),
-                          BlocBuilder<ExpenseBloc, ExpenseState>(
-                            builder: (context, s) {
-                              return Text(
-                                s.date != null
-                                    ? DateFormat('MMMM d, yyyy').format(s.date!)
-                                    : "Today",
-                                style: GoogleFonts.openSans(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textBlack),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-
-                  const SizedBox(height: 12),
-
-                  // Notes Section - Refined UI
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: BlocBuilder<ExpenseBloc, ExpenseState>(
-                      builder: (context, state) {
-                        return InkWell(
-                          onTap: () async {
-                            final result = await NavigationService.pushNamed(
-                              AppRoutes.expenseNote,
-                              args: {
-                                'initialNote': state.notes,
-                                'maxCharacters': AppConfigs.maxExpenseNoteCharacters,
+                            _buildDivider(),
+                            _buildConfigRow(
+                              icon: Icons.notes_rounded,
+                              label: "Note",
+                              value: state.notes.isNotEmpty ? state.notes : "Add a note",
+                              valueColor: state.notes.isNotEmpty ? AppColors.textBlack : AppColors.textGrey,
+                              isBottom: true,
+                              onTap: () async {
+                                final result = await NavigationService.pushNamed(
+                                  AppRoutes.expenseNote,
+                                  args: {
+                                    'initialNote': state.notes,
+                                    'maxCharacters': AppConfigs.maxExpenseNoteCharacters,
+                                  },
+                                );
+                                if (result != null && result is String && context.mounted) {
+                                  context.read<ExpenseBloc>().add(NotesChanged(result));
+                                }
                               },
-                            );
-                            if (result != null && result is String) {
-                              if (context.mounted) {
-                                context.read<ExpenseBloc>().add(NotesChanged(result));
-                              }
-                            }
-                          },
-                          borderRadius: BorderRadius.circular(16),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: AppColors.backgroundLightGrey.withValues(alpha: 0.5),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.2)),
                             ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(10),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.02),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Icon(
-                                    state.notes.isNotEmpty ? Icons.description_rounded : Icons.note_add_outlined,
-                                    size: 18,
-                                    color: state.notes.isNotEmpty ? AppColors.primaryTeal : AppColors.textGrey,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        state.notes.isNotEmpty ? "Notes" : "Add detailed notes",
-                                        style: GoogleFonts.outfit(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.textBlack,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        state.notes.isNotEmpty ? state.notes : "Keep track of receipt details or reminders",
-                                        style: GoogleFonts.outfit(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                          color: state.notes.isNotEmpty ? AppColors.textBlack.withValues(alpha: 0.6) : AppColors.textGrey,
-                                        ),
-                                        maxLines: 3,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textGrey.withValues(alpha: 0.5)),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                          ],
+                        ),
+                      ),
 
-                  const SizedBox(height: 40),
-                ],
-              ),
+                      const SizedBox(height: 100),
+                    ],
+                  ),
+                ),
+              ],
             );
           },
         ),
@@ -597,10 +349,155 @@ class _AddExpensePageState extends State<AddExpensePage> {
     );
   }
 
+  Widget _buildContextBadge({ImageProvider? icon, required IconData fallbackIcon, required String text}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 2)),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: icon == null ? AppColors.primaryTeal : null,
+              image: icon != null ? DecorationImage(image: icon, fit: BoxFit.cover) : null,
+            ),
+            child: icon == null ? Icon(fallbackIcon, color: Colors.white, size: 12) : null,
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              text,
+              style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-  /// Triggers the final submission. Logic Moved form UI: Basic validation is now
-  /// handled inside the BLoC's AddExpenseSubmitted handler or via on-the-fly state checks.
+  Widget _buildConfigRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    Color? valueColor,
+    required VoidCallback onTap,
+    bool isTop = false,
+    bool isBottom = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.vertical(
+        top: isTop ? const Radius.circular(24) : Radius.zero,
+        bottom: isBottom ? const Radius.circular(24) : Radius.zero,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: AppColors.primaryTeal.withValues(alpha: 0.1), shape: BoxShape.circle),
+              child: Icon(icon, color: AppColors.primaryTeal, size: 20),
+            ),
+            const SizedBox(width: 16),
+            Text(label, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack)),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                value,
+                textAlign: TextAlign.right,
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 15, color: valueColor ?? AppColors.primaryTeal),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.textGrey),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Divider(height: 1, color: AppColors.borderGrey.withValues(alpha: 0.5), indent: 64, endIndent: 20);
+  }
+
+  void _handlePaidBySelection(BuildContext context, ExpenseState state, dynamic members) {
+    if (state.groupMembersStatus == ExpenseStatus.loading) return;
+    context.read<ExpenseBloc>().add(ValidateNavigation(
+      onValid: () async {
+        final result = await NavigationService.pushNamed(
+          AppRoutes.payerSelection,
+          args: {'members': members, 'currentPayerId': state.payerId},
+        );
+        if (result != null && result is String && context.mounted) {
+          context.read<ExpenseBloc>().add(PayerChanged(result));
+        }
+      },
+    ));
+  }
+
+  void _handleSplitSelection(BuildContext context, ExpenseState state, dynamic members) {
+    if (state.groupMembersStatus == ExpenseStatus.loading) return;
+    context.read<ExpenseBloc>().add(ValidateNavigation(
+      onValid: () async {
+        final result = await NavigationService.pushNamed(
+          AppRoutes.splitOptions,
+          args: {
+            'members': members,
+            'splitType': state.splitType,
+            'splits': state.splits,
+            'totalAmount': double.tryParse(state.amount) ?? 0.0,
+          },
+        );
+        if (result != null && result is Map<String, dynamic> && context.mounted) {
+          context.read<ExpenseBloc>().add(SplitTypeChanged(result['splitType']));
+          context.read<ExpenseBloc>().add(SplitOptionChanged(result['splits']));
+        }
+      },
+    ));
+  }
+
+  /// Triggers the final submission.
   void _onSave(BuildContext context, ExpenseState state) {
     context.read<ExpenseBloc>().add(AddExpenseSubmitted(groupId: state.group?.id));
+  }
+
+  Future<void> _showCategoryPicker(BuildContext context, ExpenseState state) async {
+    final result = await NavigationService.pushNamed(
+      AppRoutes.categorySelection,
+      args: {
+        'categories': state.categories,
+        'selectedCategory': state.selectedCategory,
+      },
+    );
+    if (result != null && result is ExpenseCategoryEntity && context.mounted) {
+      context.read<ExpenseBloc>().add(CategoryChanged(result));
+    }
+  }
+
+  IconData _getIconFromString(String iconName) {
+    switch (iconName) {
+      case "restaurant":
+        return Icons.restaurant_rounded;
+      case "flight":
+        return Icons.flight_rounded;
+      case "shopping_bag":
+        return Icons.shopping_bag_rounded;
+      default:
+        return Icons.category_rounded;
+    }
   }
 }

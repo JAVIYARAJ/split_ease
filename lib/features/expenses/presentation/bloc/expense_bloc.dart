@@ -12,6 +12,9 @@ import '../../domain/usecases/create_expense_params.dart';
 import '../../domain/usecases/update_expense_params.dart';
 import '../../domain/entities/expense_detail_entity.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
+import 'package:split_ease/features/expenses/domain/entities/expense_category_entity.dart';
+import 'package:split_ease/features/expenses/domain/usecases/get_expense_categories.dart';
+import 'package:split_ease/core/usecases/use_case.dart';
 
 
 part 'expense_event.dart';
@@ -30,6 +33,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   final GetGroupMembers getGroupMembers;
   final GetCommonGroupsUseCase getCommonGroupsUseCase;
   final GetExpenseParticipantsUsecase getExpenseParticipantsUsecase;
+  final GetExpenseCategories getExpenseCategories;
   final DataRefreshCubit dataRefreshCubit;
 
 
@@ -39,6 +43,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     required this.getGroupMembers,
     required this.getCommonGroupsUseCase,
     required this.getExpenseParticipantsUsecase,
+    required this.getExpenseCategories,
     required this.dataRefreshCubit,
   }) : super(const ExpenseState()) {
     on<ExpenseInitialized>(_onInitialized);
@@ -56,6 +61,30 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     on<FetchCommonGroups>(_onFetchCommonGroups);
     on<ValidateNavigation>(_onValidateNavigation);
     on<NotesChanged>(_onNotesChanged);
+    on<FetchCategories>(_onFetchCategories);
+    on<CategoryChanged>(_onCategoryChanged);
+  }
+
+  Future<void> _onFetchCategories(FetchCategories event, Emitter<ExpenseState> emit) async {
+    final result = await getExpenseCategories(NoParams());
+    result.fold(
+      (failure) => {}, // Handle error silently or show error
+      (categories) {
+        ExpenseCategoryEntity? defaultCategory;
+        try {
+          // Prioritize 'Other' category by name (allow variations like "Others"), fallback to isDefault
+          defaultCategory = categories.firstWhere((c) => c.name.toLowerCase().contains('other'), 
+            orElse: () => categories.firstWhere((c) => c.isDefault));
+        } catch (_) {
+          if (categories.isNotEmpty) defaultCategory = categories.first;
+        }
+        emit(state.copyWith(categories: categories, selectedCategory: () => state.selectedCategory ?? defaultCategory));
+      },
+    );
+  }
+
+  void _onCategoryChanged(CategoryChanged event, Emitter<ExpenseState> emit) {
+    emit(state.copyWith(selectedCategory: () => event.category));
   }
 
   /// Logic Moved from UI: Validates basic form requirements before allowing navigation
@@ -107,6 +136,8 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
          add(FetchCommonGroups([event.currentUserId!, event.friend!.id]));
       }
     }
+    
+    add(const FetchCategories());
   }
 
   /// Updates the state when the user selects a group from the picker.
@@ -295,6 +326,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
           groupId: state.group?.id,
           description: state.description.isEmpty ? "No description" : state.description,
           notes: state.notes,
+          categoryId: state.selectedCategory?.id,
           totalAmount: double.parse(state.amount),
           paidByUserId: finalPayerId,
           expenseDate: state.date ?? DateTime.now(),
@@ -328,6 +360,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
           groupId: state.group?.id,
           description: state.description.isEmpty ? "No description" : state.description,
           notes: state.notes,
+          categoryId: state.selectedCategory?.id,
           totalAmount: double.parse(state.amount),
           paidByUserId: finalPayerId,
           expenseDate: state.date ?? DateTime.now(),
@@ -468,8 +501,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
        }
     }
 
+    add(const FetchCategories());
   }
-
-
 
 }

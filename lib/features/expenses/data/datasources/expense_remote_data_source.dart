@@ -6,6 +6,7 @@ import 'package:split_ease/features/expenses/domain/usecases/update_expense_para
 import '../../../../core/error/exception.dart';
 
 import 'package:split_ease/features/expenses/data/models/expense_detail_model.dart';
+import 'package:split_ease/features/expenses/data/models/expense_category_model.dart';
 
 abstract class ExpenseRemoteDataSource {
   Future<void> createExpense(CreateExpenseParams params);
@@ -21,6 +22,7 @@ abstract class ExpenseRemoteDataSource {
     String? groupId,
     String? note,
   });
+  Future<List<ExpenseCategoryModel>> getExpenseCategories();
 }
 
 
@@ -151,6 +153,18 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
           'p_note': note,
         },
       );
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+
+  @override
+  Future<List<ExpenseCategoryModel>> getExpenseCategories() async {
+    try {
+      final response = await client.rpc('get_expense_categories_rpc');
+      return (response as List)
+          .map((e) => ExpenseCategoryModel.fromJson(e as Map<String, dynamic>))
+          .toList();
     } catch (e) {
       throw ServerException(message: e.toString());
     }

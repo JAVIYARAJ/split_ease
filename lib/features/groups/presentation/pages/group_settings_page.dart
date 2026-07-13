@@ -199,12 +199,12 @@ class _GroupSettingsContent extends StatelessWidget {
                       title: 'Invite by QR',
                       onTap: () {
                         if (group.inviteCode != null) {
-                          showDialog(
-                            context: context,
-                            builder: (context) => InviteQrDialog(
-                              inviteCode: group.inviteCode!,
-                              groupName: group.name ?? "Group",
-                            ),
+                          NavigationService.pushNamed(
+                            AppRoutes.groupQr,
+                            args: {
+                              'inviteCode': group.inviteCode!,
+                              'groupName': group.name ?? "Group",
+                            },
                           );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
