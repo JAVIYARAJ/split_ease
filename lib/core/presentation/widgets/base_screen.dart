@@ -68,17 +68,23 @@ class BaseScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Determine status bar brightness based on background color or theme
     final brightness = Theme.of(context).colorScheme.brightness;
-    
-    // Default system overlay style based on brightness
-    final defaultOverlayStyle = brightness == Brightness.dark
-        ? SystemUiOverlayStyle.light
-        : SystemUiOverlayStyle.dark;
+    final resolvedBgColor = backgroundColor ?? Theme.of(context).scaffoldBackgroundColor;
+
+    // Build overlay style: icon brightness from theme, statusBarColor matches the screen bg
+    // so the status bar blends seamlessly with the page background on every screen.
+    final defaultOverlayStyle = (brightness == Brightness.dark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark)
+        .copyWith(
+          statusBarColor: resolvedBgColor,
+          systemNavigationBarColor: resolvedBgColor,
+        );
 
     Widget content = AnnotatedRegion<SystemUiOverlayStyle>(
       value: systemOverlayStyle ?? defaultOverlayStyle,
       child: Scaffold(
         resizeToAvoidBottomInset: resizeToAvoidBottomInset,
-        backgroundColor: backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: resolvedBgColor,
         appBar: appBar,
         extendBodyBehindAppBar: extendBodyBehindAppBar,
         floatingActionButton: floatingActionButton,
