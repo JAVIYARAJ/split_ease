@@ -144,52 +144,52 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
     Emitter<ExpenseDetailState> emit,
   ) async {
     final currentState = state;
-    if (currentState is ExpenseDetailLoaded) {
-      if (!currentState.canManageExpense) {
-        emit(const ExpenseDeleteError("You do not have permission to delete this expense."));
-        return;
-      }
+    // M-4: Guard — if not loaded, we cannot verify permissions; bail out.
+    if (currentState is! ExpenseDetailLoaded) return;
+
+    if (!currentState.canManageExpense) {
+      emit(const ExpenseDeleteError("You do not have permission to delete this expense."));
+      return;
     }
 
     emit(ExpenseDeleteLoading());
     final result = await _deleteExpenseUseCase(event.expenseId);
-    
-      result.fold(
-        (failure) => emit(ExpenseDeleteError(failure.message)),
-        (_) {
-          _dataRefreshCubit.markMultipleForRefresh([
-            RefreshType.groups,
-            RefreshType.friends,
-            RefreshType.activity,
-          ]);
 
-          if (currentState is ExpenseDetailLoaded) {
-            if (currentState.expenseDetail.group?.id != null) {
-              _dataRefreshCubit.markForRefresh(RefreshType.groupDetail, id: currentState.expenseDetail.group!.id);
-            }
-             _dataRefreshCubit.markForRefresh(RefreshType.friendDetail); 
-          }
-          
-          emit(ExpenseDeleted());
-        },
-      );
-    }
+    result.fold(
+      (failure) => emit(ExpenseDeleteError(failure.message)),
+      (_) {
+        _dataRefreshCubit.markMultipleForRefresh([
+          RefreshType.groups,
+          RefreshType.friends,
+          RefreshType.activity,
+        ]);
+
+        if (currentState.expenseDetail.group?.id != null) {
+          _dataRefreshCubit.markForRefresh(RefreshType.groupDetail, id: currentState.expenseDetail.group!.id);
+        }
+        _dataRefreshCubit.markForRefresh(RefreshType.friendDetail);
+
+        emit(ExpenseDeleted());
+      },
+    );
+  }
 
   Future<void> _onRestoreExpense(
     RestoreExpenseEvent event,
     Emitter<ExpenseDetailState> emit,
   ) async {
     final currentState = state;
-    if (currentState is ExpenseDetailLoaded) {
-      if (!currentState.canManageExpense) {
-        emit(const ExpenseRestoreError("You do not have permission to restore this expense."));
-        return;
-      }
+    // M-4: Guard — if not loaded, we cannot verify permissions; bail out.
+    if (currentState is! ExpenseDetailLoaded) return;
+
+    if (!currentState.canManageExpense) {
+      emit(const ExpenseRestoreError("You do not have permission to restore this expense."));
+      return;
     }
 
     emit(ExpenseRestoreLoading());
     final result = await _restoreExpenseUseCase(event.expenseId);
-    
+
     result.fold(
       (failure) => emit(ExpenseRestoreError(failure.message)),
       (_) {
@@ -199,13 +199,11 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
           RefreshType.activity,
         ]);
 
-        if (currentState is ExpenseDetailLoaded) {
-          if (currentState.expenseDetail.group?.id != null) {
-            _dataRefreshCubit.markForRefresh(RefreshType.groupDetail, id: currentState.expenseDetail.group!.id);
-          }
-           _dataRefreshCubit.markForRefresh(RefreshType.friendDetail); 
+        if (currentState.expenseDetail.group?.id != null) {
+          _dataRefreshCubit.markForRefresh(RefreshType.groupDetail, id: currentState.expenseDetail.group!.id);
         }
-        
+        _dataRefreshCubit.markForRefresh(RefreshType.friendDetail);
+
         emit(ExpenseRestored(event.expenseId));
         // Refresh detail to show it's no longer deleted
         add(FetchExpenseDetailEvent(event.expenseId));
@@ -217,12 +215,18 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
     AddExpenseCommentEvent event,
     Emitter<ExpenseDetailState> emit,
   ) async {
+    final currentState = state;
     final result = await _addExpenseCommentUseCase(expenseId: event.expenseId, comment: event.comment);
     result.fold(
-      (failure) => null, 
+      (failure) {
+        if (currentState is ExpenseDetailLoaded) {
+          emit(CommentActionError(failure.message, currentState));
+          emit(currentState); // Restore loaded state after error so UI stays functional
+        }
+      },
       (_) {
         add(FetchExpenseCommentsEvent(event.expenseId));
-        add(MarkExpenseAsChanged()); 
+        add(MarkExpenseAsChanged());
       },
     );
   }
@@ -231,12 +235,18 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
     UpdateExpenseCommentEvent event,
     Emitter<ExpenseDetailState> emit,
   ) async {
+    final currentState = state;
     final result = await _updateExpenseCommentUseCase(commentId: event.commentId, comment: event.comment);
     result.fold(
-      (failure) => null,
+      (failure) {
+        if (currentState is ExpenseDetailLoaded) {
+          emit(CommentActionError(failure.message, currentState));
+          emit(currentState);
+        }
+      },
       (_) {
         add(FetchExpenseCommentsEvent(event.expenseId));
-        add(MarkExpenseAsChanged()); 
+        add(MarkExpenseAsChanged());
       },
     );
   }
@@ -245,9 +255,15 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
     DeleteExpenseCommentEvent event,
     Emitter<ExpenseDetailState> emit,
   ) async {
+    final currentState = state;
     final result = await _deleteExpenseCommentUseCase(commentId: event.commentId);
     result.fold(
-      (failure) => null,
+      (failure) {
+        if (currentState is ExpenseDetailLoaded) {
+          emit(CommentActionError(failure.message, currentState));
+          emit(currentState);
+        }
+      },
       (_) {
         add(FetchExpenseCommentsEvent(event.expenseId));
         add(MarkExpenseAsChanged());

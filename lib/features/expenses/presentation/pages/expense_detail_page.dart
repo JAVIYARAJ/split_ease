@@ -182,6 +182,8 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                     AppAlerts.showSuccess(context, 'Expense restored successfully');
                   } else if (state is ExpenseRestoreError) {
                     AppAlerts.showError(context, state.message);
+                  } else if (state is CommentActionError) {
+                    AppAlerts.showError(context, state.message);
                   } else if (state is ExpenseDetailLoaded) {
                     if (state.editingCommentId == null) {
                       _commentController.clear();
@@ -744,6 +746,14 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             child: TextField(
               controller: _commentController,
               focusNode: _commentFocusNode,
+              maxLength: 500,
+              maxLines: 4,
+              minLines: 1,
+              buildCounter: (context, {required currentLength, required isFocused, maxLength}) {
+                // Only show counter when actively typing (near limit)
+                if (!isFocused || currentLength < 400) return null;
+                return Text('$currentLength/$maxLength', style: GoogleFonts.outfit(fontSize: 10, color: currentLength >= 490 ? AppColors.errorRed : AppColors.textGrey));
+              },
               style: GoogleFonts.outfit(fontSize: 14),
               decoration: InputDecoration(
                 hintText: editingCommentId != null ? "Update your comment..." : "Add a comment...",

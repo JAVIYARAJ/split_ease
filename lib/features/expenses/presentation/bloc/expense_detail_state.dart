@@ -153,3 +153,15 @@ class ExpenseRestoreError extends ExpenseDetailState {
   @override
   List<Object?> get props => [message, hasChanges];
 }
+
+/// Emitted when a comment add/update/delete RPC call fails.
+/// The loaded state is preserved; the UI listens and shows a snackbar.
+class CommentActionError extends ExpenseDetailState {
+  final String message;
+  final ExpenseDetailLoaded previousState;
+
+  const CommentActionError(this.message, this.previousState);
+
+  @override
+  List<Object?> get props => [message, previousState];
+}

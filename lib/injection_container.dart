@@ -303,7 +303,7 @@ void _welcome() {
 }
 
 void _home() {
-  // Presentation Layer - BLoC (Contains Mock Data Logic)
+  // Presentation Layer — HomeBloc manages tab navigation state only.
   sl.registerFactory(() => HomeBloc());
 
   sl.registerFactory<FriendsRemoteDataSource>(() => FriendsRemoteDataSourceImpl(client: sl<SupabaseClient>()),);

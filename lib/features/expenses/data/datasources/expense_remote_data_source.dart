@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:split_ease/features/expenses/domain/usecases/create_expense_params.dart';
 import 'package:split_ease/features/expenses/domain/usecases/update_expense_params.dart';
-
+import 'package:split_ease/core/utils/error_message_utils.dart';
 
 import '../../../../core/error/exception.dart';
 
@@ -41,13 +41,11 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
         'create_expense_updated',
         params: params.toJson(),
       );
-
-      // RPC returns a JSON object, if it throws it will be caught by catch block
-      // Response might contain 'message' or 'expense_id' but we just need void on success
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(message: ErrorMessageUtils.generate(e));
     }
   }
+
   @override
   Future<void> updateExpense(UpdateExpenseParams params) async {
     try {
@@ -56,7 +54,7 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
         params: params.toJson(),
       );
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(message: ErrorMessageUtils.generate(e));
     }
   }
 
@@ -69,11 +67,9 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
           'p_expense_id': expenseId,
         },
       );
-
-      // The RPC returns a JSON object.
       return ExpenseDetailModel.fromJson(response as Map<String, dynamic>);
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(message: ErrorMessageUtils.generate(e));
     }
   }
 
@@ -90,7 +86,7 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
       final List<dynamic> data = response as List<dynamic>;
       return data.map((e) => ExpenseCommentModel.fromJson(e as Map<String, dynamic>)).toList();
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(message: ErrorMessageUtils.generate(e));
     }
   }
 
@@ -104,7 +100,7 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
         },
       );
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(message: ErrorMessageUtils.generate(e));
     }
   }
   
@@ -118,7 +114,7 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
         },
       );
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(message: ErrorMessageUtils.generate(e));
     }
   }
   
@@ -137,7 +133,7 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
           .map((e) => ExpenseUserModel.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(message: ErrorMessageUtils.generate(e));
     }
   }
 
@@ -152,7 +148,7 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
         },
       );
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(message: ErrorMessageUtils.generate(e));
     }
   }
 
@@ -167,7 +163,7 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
         },
       );
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(message: ErrorMessageUtils.generate(e));
     }
   }
 
@@ -181,7 +177,7 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
         },
       );
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(message: ErrorMessageUtils.generate(e));
     }
   }
 
@@ -203,7 +199,7 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
         },
       );
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(message: ErrorMessageUtils.generate(e));
     }
   }
 
@@ -215,7 +211,7 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
           .map((e) => ExpenseCategoryModel.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(message: ErrorMessageUtils.generate(e));
     }
   }
 }

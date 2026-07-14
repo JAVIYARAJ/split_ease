@@ -1,4 +1,4 @@
-package com.example.split_ease
+package com.splitease.app
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -46,3 +46,9 @@ app.*.map.json
 
  FVM Version Cache
 .fvm/.fvm/flutter_sdk
+
+# Secrets — never commit these
+.env
+android/key.properties
+*.jks
+*.keystore

@@ -97,27 +97,4 @@ class PayerSelectionPage extends StatelessWidget {
     );
   }
 
-  Widget _buildMultiplePeopleOption(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        // TODO: Implement multiple payers logic if needed
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-        child: Row(
-          children: [
-            Text(
-              "Multiple people",
-              style: GoogleFonts.openSans(
-                fontSize: 16,
-                color: AppColors.textBlack,
-              ),
-            ),
-            const Spacer(),
-            const Icon(Icons.chevron_right, color: AppColors.iconGrey),
-          ],
-        ),
-      ),
-    );
-  }
 }
