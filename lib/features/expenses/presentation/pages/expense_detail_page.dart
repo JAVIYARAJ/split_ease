@@ -15,6 +15,7 @@ import 'package:split_ease/features/expenses/domain/entities/expense_detail_enti
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_bloc.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_event.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_state.dart';
+import 'package:split_ease/core/utils/icon_utils.dart';
 import 'package:split_ease/features/expenses/presentation/utils/expense_pdf_generator.dart';
 
 import '../../../../core/routing/app_routes.dart';
@@ -30,11 +31,13 @@ class ExpenseDetailPage extends StatefulWidget {
 class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
   final ValueNotifier<bool> _canPop = ValueNotifier<bool>(false);
   final TextEditingController _commentController = TextEditingController();
+  final FocusNode _commentFocusNode = FocusNode();
 
   @override
   void dispose() {
     _canPop.dispose();
     _commentController.dispose();
+    _commentFocusNode.dispose();
     super.dispose();
   }
 
@@ -64,6 +67,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       }
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -178,6 +182,14 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                     AppAlerts.showSuccess(context, 'Expense restored successfully');
                   } else if (state is ExpenseRestoreError) {
                     AppAlerts.showError(context, state.message);
+                  } else if (state is ExpenseDetailLoaded) {
+                    if (state.editingCommentId == null) {
+                      _commentController.clear();
+                      _commentFocusNode.unfocus();
+                    } else if (_commentController.text != state.editingCommentText) {
+                      _commentController.text = state.editingCommentText ?? '';
+                      _commentFocusNode.requestFocus();
+                    }
                   }
                 },
                 child: BlocBuilder<ExpenseDetailBloc, ExpenseDetailState>(
@@ -227,13 +239,19 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                                       _buildNotesSection(entity.notes!),
                                       const SizedBox(height: 24),
                                     ],
-                                    _buildSectionTitle("Comments"),
-                                    const SizedBox(height: 8),
-                                    _buildCommentsList(entity, state is ExpenseDetailLoaded ? state.currentUserId : "", isDeleted),
-                                    const SizedBox(height: 24),
                                     _buildSectionTitle("Split Details"),
                                     const SizedBox(height: 8),
                                     _buildSplitsList(entity),
+                                    const SizedBox(height: 24),
+                                    _buildSectionTitle("Comments"),
+                                    const SizedBox(height: 8),
+                                    _buildCommentsList(
+                                      state is ExpenseDetailLoaded ? state.comments : _getMockComments(), 
+                                      state is ExpenseDetailLoaded ? state.currentUserId : "", 
+                                      isDeleted,
+                                      state is ExpenseDetailLoaded ? state.commentsLoading : false,
+                                      entity.id,
+                                    ),
                                     const SizedBox(height: 80), 
                                   ],
                                 ),
@@ -256,7 +274,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                                   .padding
                                   .bottom : 20,
                             ),
-                            child: _buildCommentsSection(entity),
+                            child: _buildCommentsSection(entity, state is ExpenseDetailLoaded ? state.editingCommentId : null),
                           ),
                         ],
                       ),
@@ -393,28 +411,54 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
   Widget _buildHeaderAmount(ExpenseDetailEntity entity, bool isDeleted) {
     final formatter = NumberFormat('#,##0.00', 'en_IN');
 
+    Color categoryColor = AppColors.primary;
+    IconData categoryIcon = Icons.receipt_long_rounded;
+    
+    if (entity.category != null) {
+      try {
+        categoryColor = Color(int.parse(entity.category!.color.replaceFirst('#', '0xFF')));
+      } catch (_) {}
+      categoryIcon = IconUtils.getIconFromString(entity.category!.icon);
+    }
+
     return Column(
       children: [
         Container(
-          width: 56,
-          height: 56,
+          width: 64,
+          height: 64,
           decoration: BoxDecoration(
-            color: AppColors.surfaceWhite,
+            color: categoryColor.withValues(alpha: 0.15),
             shape: BoxShape.circle,
-            border: Border.all(color: AppColors.borderGreyLight, width: 1),
-            image: entity.group?.groupIcon != null
-                ? DecorationImage(image: CachedNetworkImageProvider(entity.group!.groupIcon!), fit: BoxFit.cover)
-                : null,
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
+            border: Border.all(color: categoryColor.withValues(alpha: 0.3), width: 1.5),
+            boxShadow: [BoxShadow(color: categoryColor.withValues(alpha: 0.1), blurRadius: 15, offset: const Offset(0, 4))],
           ),
-          child: entity.group?.groupIcon == null ? const Icon(Icons.receipt_long_rounded, color: AppColors.primary, size: 28) : null,
+          child: Icon(categoryIcon, color: categoryColor, size: 32),
         ),
-        const SizedBox(height: 12),
+        if (entity.category != null) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: categoryColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: categoryColor.withValues(alpha: 0.2)),
+            ),
+            child: Text(
+              entity.category!.name,
+              style: GoogleFonts.outfit(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: categoryColor,
+              ),
+            ),
+          ),
+        ],
+        SizedBox(height: entity.category != null ? 8 : 16),
         Text(
           entity.description,
           textAlign: TextAlign.center,
           style: GoogleFonts.outfit(
-            fontSize: 20, 
+            fontSize: 22, 
             fontWeight: FontWeight.w700, 
             color: isDeleted ? AppColors.textGrey : AppColors.textBlack,
             decoration: isDeleted ? TextDecoration.lineThrough : null,
@@ -422,12 +466,12 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Text(
           "₹${formatter.format(entity.totalAmount)}",
           style: GoogleFonts.outfit(
-            fontSize: 28, 
-            fontWeight: FontWeight.w700, 
+            fontSize: 32, 
+            fontWeight: FontWeight.w800, 
             letterSpacing: -1, 
             color: isDeleted ? AppColors.textGrey : AppColors.textBlack,
             decoration: isDeleted ? TextDecoration.lineThrough : null,
@@ -666,7 +710,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     );
   }
 
-  Widget _buildCommentsSection(ExpenseDetailEntity entity) {
+  Widget _buildCommentsSection(ExpenseDetailEntity entity, String? editingCommentId) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surfaceWhite,
@@ -674,44 +718,78 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
         border: Border.all(color: AppColors.borderGreyLight),
       ),
       padding: const EdgeInsets.all(12.0),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
+          if (editingCommentId != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0, left: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Editing comment", style: GoogleFonts.outfit(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w500)),
+                  GestureDetector(
+                    onTap: () => context.read<ExpenseDetailBloc>().add(CancelEditingCommentEvent()),
+                    child: const Icon(Icons.close_rounded, size: 16, color: AppColors.textGrey),
+                  ),
+                ],
+              ),
+            ),
+          Row(
+            children: [
           const AppAvatar(radius: 18, backgroundColor: AppColors.primary, iconColor: Colors.white),
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
               controller: _commentController,
+              focusNode: _commentFocusNode,
               style: GoogleFonts.outfit(fontSize: 14),
               decoration: InputDecoration(
-                hintText: "Add a comment...",
+                hintText: editingCommentId != null ? "Update your comment..." : "Add a comment...",
                 hintStyle: GoogleFonts.outfit(color: AppColors.iconGrey, fontSize: 14),
                 border: InputBorder.none,
                 isDense: true,
               ),
               onSubmitted: (val) {
                 if (val.trim().isNotEmpty) {
-                  context.read<ExpenseDetailBloc>().add(AddExpenseCommentEvent(expenseId: entity.id, comment: val.trim()));
-                  _commentController.clear();
+                  if (editingCommentId != null) {
+                    context.read<ExpenseDetailBloc>().add(UpdateExpenseCommentEvent(expenseId: entity.id, commentId: editingCommentId, comment: val.trim()));
+                    context.read<ExpenseDetailBloc>().add(CancelEditingCommentEvent());
+                  } else {
+                    context.read<ExpenseDetailBloc>().add(AddExpenseCommentEvent(expenseId: entity.id, comment: val.trim()));
+                    _commentController.clear();
+                  }
                 }
               },
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.send_rounded, color: AppColors.primary, size: 20),
+            icon: Icon(editingCommentId != null ? Icons.check_circle_rounded : Icons.send_rounded, color: AppColors.primary, size: 20),
             onPressed: () {
               if (_commentController.text.trim().isNotEmpty) {
-                context.read<ExpenseDetailBloc>().add(AddExpenseCommentEvent(expenseId: entity.id, comment: _commentController.text.trim()));
-                _commentController.clear();
+                if (editingCommentId != null) {
+                  context.read<ExpenseDetailBloc>().add(UpdateExpenseCommentEvent(expenseId: entity.id, commentId: editingCommentId, comment: _commentController.text.trim()));
+                  context.read<ExpenseDetailBloc>().add(CancelEditingCommentEvent());
+                } else {
+                  context.read<ExpenseDetailBloc>().add(AddExpenseCommentEvent(expenseId: entity.id, comment: _commentController.text.trim()));
+                  _commentController.clear();
+                }
               }
             },
           ),
+          ],
+        ),
         ],
       ),
     );
   }
 
-  Widget _buildCommentsList(ExpenseDetailEntity entity, String currentUserId, bool isDeleted) {
-    if (entity.comments.isEmpty) {
+  Widget _buildCommentsList(List<ExpenseCommentEntity> comments, String currentUserId, bool isDeleted, bool isLoading, String expenseId) {
+    if (isLoading && comments.isEmpty) {
+      comments = _getMockComments();
+    }
+    if (comments.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -733,76 +811,144 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        itemCount: entity.comments.length,
+        itemCount: comments.length,
         separatorBuilder: (context, index) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
-          final comment = entity.comments[index];
+          final comment = comments[index];
           final bool isMe = comment.user.id == currentUserId;
     
-          return Align(
+          Widget commentWidget = Align(
             alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
             child: Container(
-              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: isMe ? AppColors.primary.withValues(alpha: 0.05) : AppColors.surfaceWhite,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(16),
-                  topRight: const Radius.circular(16),
-                  bottomLeft: Radius.circular(isMe ? 16 : 0),
-                  bottomRight: Radius.circular(isMe ? 0 : 16),
-                ),
-                border: Border.all(color: isMe ? AppColors.primary.withValues(alpha: 0.1) : AppColors.borderGreyLight),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (!isMe) ...[
-                    AppAvatar(url: comment.user.avatar, radius: 14, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
-                    const SizedBox(width: 12),
-                  ],
-                  Flexible(
-                    child: Column(
-                      crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (!isMe) ...[
-                              Text(
-                                comment.user.fullName,
-                                style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textBlack),
-                              ),
-                              const SizedBox(width: 8),
-                            ],
-                            Text(
-                              _formatCommentDate(comment.createdAt),
-                              style: GoogleFonts.outfit(fontSize: 10, color: AppColors.textGrey),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          comment.content,
-                          textAlign: isMe ? TextAlign.right : TextAlign.left,
-                          style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textBlack.withValues(alpha: 0.8)),
-                        ),
-                      ],
-                    ),
+                constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isMe ? AppColors.primary.withValues(alpha: 0.05) : AppColors.surfaceWhite,
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(16),
+                    topRight: const Radius.circular(16),
+                    bottomLeft: Radius.circular(isMe ? 16 : 0),
+                    bottomRight: Radius.circular(isMe ? 0 : 16),
                   ),
-                  if (isMe) ...[
-                    const SizedBox(width: 12),
-                    AppAvatar(url: comment.user.avatar, radius: 16, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+                  border: Border.all(color: isMe ? AppColors.primary.withValues(alpha: 0.1) : AppColors.borderGreyLight),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!isMe) ...[
+                      AppAvatar(url: comment.user.avatar, radius: 14, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+                      const SizedBox(width: 12),
+                    ],
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (!isMe) ...[
+                                Text(
+                                  comment.user.fullName,
+                                  style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                              Text(
+                                _formatCommentDate(comment.createdAt),
+                                style: GoogleFonts.outfit(fontSize: 10, color: AppColors.textGrey),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            comment.content,
+                            textAlign: TextAlign.left,
+                            style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textBlack.withValues(alpha: 0.8)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (isMe) ...[
+                      const SizedBox(width: 12),
+                      AppAvatar(url: comment.user.avatar, radius: 16, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
           );
+
+          if (isMe && !isDeleted) {
+            return Dismissible(
+              key: ValueKey("comment_${comment.id}"),
+              direction: DismissDirection.horizontal,
+              confirmDismiss: (direction) async {
+                if (direction == DismissDirection.startToEnd) {
+                  // Swipe Left to Right -> Edit
+                  context.read<ExpenseDetailBloc>().add(SetEditingCommentEvent(commentId: comment.id, commentText: comment.content));
+                  return false; // don't actually dismiss
+                } else if (direction == DismissDirection.endToStart) {
+                  // Swipe Right to Left -> Delete
+                  _confirmDeleteComment(context, expenseId, comment.id);
+                  return false; // wait for confirmation dialog to handle it
+                }
+                return false;
+              },
+              background: Container(
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.only(left: 24),
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                child: const Icon(Icons.edit_rounded, color: AppColors.primary, size: 24),
+              ),
+              secondaryBackground: Container(
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: 24),
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                child: const Icon(Icons.delete_rounded, color: AppColors.errorRed, size: 24),
+              ),
+              child: commentWidget,
+            );
+          }
+
+          return commentWidget;
         },
       ),
+    );
+  }
+
+  void _confirmDeleteComment(BuildContext context, String expenseId, String commentId) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text("Delete Comment", style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
+          content: Text("Are you sure you want to delete this comment?", style: GoogleFonts.outfit()),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text("Cancel", style: GoogleFonts.outfit(color: AppColors.textGrey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.errorRed,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () {
+                context.read<ExpenseDetailBloc>().add(
+                  DeleteExpenseCommentEvent(
+                    expenseId: expenseId,
+                    commentId: commentId,
+                  ),
+                );
+                Navigator.pop(dialogContext);
+              },
+              child: Text("Delete", style: GoogleFonts.outfit(color: AppColors.backgroundWhite)),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -835,11 +981,21 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       createdBy: ExpenseUserEntity(id: "", fullName: "User Name"),
       updatedAt: null,
       updatedBy: null,
-      comments: const [],
       splits: const [
         ExpenseSplitEntity(type: "you_owe", amount: 500, userId: "1", fullName: "Test User"),
         ExpenseSplitEntity(type: "participant", amount: 500, userId: "2", fullName: "Test User"),
       ],
     );
+  }
+
+  List<ExpenseCommentEntity> _getMockComments() {
+    return [
+      ExpenseCommentEntity(
+        id: "mock1", 
+        content: "Loading...", 
+        createdAt: DateTime.now().toIso8601String(), 
+        user: const ExpenseUserEntity(id: "", fullName: "User Name")
+      ),
+    ];
   }
 }

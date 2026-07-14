@@ -495,57 +495,25 @@ class _TransactionList extends StatelessWidget {
     }
 
     final List<Widget> children = [];
-    
-    children.add(
-      Padding(
-        padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 4),
-        child: Text(
-          "Recent Expenses",
-          style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack),
-        ),
-      ),
-    );
-
     for (final entry in grouped.entries) {
       children.add(
         Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16, top: 4, bottom: 4),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text(
-            entry.key.toUpperCase(),
-            style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.iconGrey, letterSpacing: 1.2),
+            entry.key,
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textBlack,
+              letterSpacing: 0.5,
+            ),
           ),
         ),
       );
       
-      final groupChildren = entry.value.map((expense) => _TransactionItem(expense: expense)).toList();
-      children.add(
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.borderGreyLight, width: 0.5),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
-              ],
-            ),
-            child: Column(
-              children: [
-                for (int i = 0; i < groupChildren.length; i++) ...[
-                  groupChildren[i],
-                  if (i < groupChildren.length - 1)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 72.0),
-                      child: Divider(height: 1, thickness: 0.5, color: AppColors.borderGreyLight),
-                    ),
-                ]
-              ],
-            ),
-          ),
-        ),
-      );
-      children.add(const SizedBox(height: 8));
+      for (final expense in entry.value) {
+        children.add(_TransactionItem(expense: expense));
+      }
     }
 
     return SliverList(delegate: SliverChildListDelegate(children));
@@ -564,16 +532,21 @@ class _TransactionItem extends StatelessWidget {
     String day = '';
     try {
       date = DateTime.parse(expense.createdAt);
-      month = DateFormat('MMM').format(date);
+      month = DateFormat('MMM').format(date).toUpperCase();
       day = DateFormat('d').format(date);
     } catch (_) {}
 
     final bool youAreOwed = expense.type == 'you_are_owed';
-    final Color balanceColor = youAreOwed ? AppColors.successGreen : AppColors.textGrey; 
+    final Color balanceColor = youAreOwed ? AppColors.successGreen : AppColors.errorRed; 
     final String balanceLabel = youAreOwed ? 'Gets back' : 'Owes';
     final formatter = NumberFormat('#,##0.##', 'en_IN');
 
-    return InkWell(
+    final bool isSettlement = expense.description.toLowerCase().contains('settled up') || expense.description.toLowerCase().contains('settlement');
+    final IconData iconData = isSettlement ? Icons.handshake_rounded : Icons.receipt_long_rounded;
+    final Color iconColor = isSettlement ? AppColors.successGreen : AppColors.primaryTeal;
+    final Color iconBgColor = isSettlement ? AppColors.successGreen.withValues(alpha: 0.1) : AppColors.primaryTeal.withValues(alpha: 0.1);
+
+    return GestureDetector(
       onTap: () {
         NavigationUtils.handleResult(
           context: context,
@@ -588,83 +561,92 @@ class _TransactionItem extends StatelessWidget {
           },
         );
       },
-      borderRadius: BorderRadius.circular(20),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 36,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    month.toUpperCase(),
-                    style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.iconGrey),
-                  ),
-                  Text(
-                    day,
-                    style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack),
-                  ),
-                ],
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-            ),
-            const SizedBox(width: 12),
-            // Icon
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.backgroundLightGrey,
-                borderRadius: BorderRadius.circular(12),
-                image: expense.groupIcon != null
-                    ? DecorationImage(image: CachedNetworkImageProvider(expense.groupIcon!), fit: BoxFit.cover)
-                    : null,
-              ),
-              child: expense.groupIcon == null ? const Icon(Icons.receipt_long_rounded, color: AppColors.iconGrey, size: 20) : null,
-            ),
-            const SizedBox(width: 16),
-            // Description + group info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    expense.description,
-                    style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textBlack),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    expense.groupName != null ? 'In ${expense.groupName}' : "Non-group expense",
-                    style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.textGrey),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            // Balance effect
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.center,
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 14.0),
+            child: Row(
               children: [
-                Text(
-                  balanceLabel,
-                  style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w600, color: balanceColor),
+                // Date column
+                SizedBox(
+                  width: 38,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(month, style: GoogleFonts.outfit(fontSize: 10, color: AppColors.textGrey, fontWeight: FontWeight.w600, letterSpacing: 1)),
+                      Text(
+                        day,
+                        style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textBlack, height: 1.1),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  "₹${formatter.format(expense.balanceEffect.abs())}",
-                  style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w700, color: balanceColor),
+                const SizedBox(width: 8),
+                // Icon
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: expense.groupIcon != null ? AppColors.backgroundLightGrey : iconBgColor, 
+                    shape: BoxShape.circle,
+                    image: expense.groupIcon != null
+                        ? DecorationImage(image: CachedNetworkImageProvider(expense.groupIcon!), fit: BoxFit.cover)
+                        : null,
+                  ),
+                  child: expense.groupIcon == null ? Icon(iconData, color: iconColor, size: 20) : null,
+                ),
+                const SizedBox(width: 12),
+                // Description + group info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        expense.description,
+                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        expense.groupName != null ? 'In ${expense.groupName}' : "Non-group expense",
+                        style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Balance effect
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      balanceLabel,
+                      style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w600, color: balanceColor),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      "₹${formatter.format(expense.balanceEffect.abs())}",
+                      style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w700, color: balanceColor),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );

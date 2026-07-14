@@ -218,6 +218,7 @@ class RouteGenerator {
           builder: (_) => CategorySelectionPage(
             categories: args['categories'],
             selectedCategory: args['selectedCategory'],
+            lastUsedCategoryId: args['lastUsedCategoryId'],
           ),
           settings: RouteSettings(arguments: settings.arguments, name: settings.name),
         );

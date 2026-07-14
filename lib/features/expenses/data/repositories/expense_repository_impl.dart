@@ -50,6 +50,19 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       return Left(Failure(message: e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, List<ExpenseCommentEntity>>> getExpenseComments(String expenseId) async {
+    try {
+      final result = await remoteDataSource.getExpenseComments(expenseId);
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(Failure(message: e.message));
+    } catch (e) {
+      return Left(Failure(message: e.toString()));
+    }
+  }
+
   @override
   Future<Either<Failure, void>> deleteExpense(String expenseId) async {
     try {
@@ -90,6 +103,30 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
   Future<Either<Failure, void>> addExpenseComment({required String expenseId, required String comment}) async {
     try {
       await remoteDataSource.addExpenseComment(expenseId: expenseId, comment: comment);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(Failure(message: e.message));
+    } catch (e) {
+      return Left(Failure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateExpenseComment({required String commentId, required String comment}) async {
+    try {
+      await remoteDataSource.updateExpenseComment(commentId: commentId, comment: comment);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(Failure(message: e.message));
+    } catch (e) {
+      return Left(Failure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteExpenseComment({required String commentId}) async {
+    try {
+      await remoteDataSource.deleteExpenseComment(commentId: commentId);
       return const Right(null);
     } on ServerException catch (e) {
       return Left(Failure(message: e.message));

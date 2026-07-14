@@ -15,8 +15,17 @@ class SplashRemoteDataSourceImpl implements SplashRemoteDataSource {
   @override
   Future<UserModel> isUserLogin() async {
     try {
-      if (client.auth.currentUser != null) {
-        return UserModel.fromSupabaseUser(client.auth.currentUser!);
+      final user = client.auth.currentUser;
+      if (user != null) {
+        try {
+          final profileData = await client.rpc('get_my_profile_rpc');
+          if (profileData != null) {
+            return UserModel.fromJson(profileData as Map<String, dynamic>);
+          }
+        } catch (_) {
+          // Fallback if RPC fails
+        }
+        return UserModel.fromSupabaseUser(user);
       } else {
         throw ServerException(message: "User not login");
       }

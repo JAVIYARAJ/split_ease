@@ -9,6 +9,10 @@ class UserModel extends UserEntity {
     required super.email,
     required super.name,
     super.avatarUrl,
+    super.role,
+    super.lastExpenseCategoryId,
+    super.createdAt,
+    super.updatedAt,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -16,7 +20,11 @@ class UserModel extends UserEntity {
       id: json['id'] ?? '',
       email: json['email'] ?? '',
       name: json['name'] ?? json['full_name'] ?? '',
-      avatarUrl: json['avatar_url'] ?? json['avtar'],
+      avatarUrl: json['avatar_url'] ?? json['avtar'] ?? json['avatar'],
+      role: json['role'],
+      lastExpenseCategoryId: json['last_expense_category_id'],
+      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at']) : null,
+      updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at']) : null,
     );
   }
   
@@ -36,6 +44,10 @@ class UserModel extends UserEntity {
       'email': email,
       'name': name,
       'avatar_url': avatarUrl,
+      'role': role,
+      'last_expense_category_id': lastExpenseCategoryId,
+      'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
     };
   }
 }

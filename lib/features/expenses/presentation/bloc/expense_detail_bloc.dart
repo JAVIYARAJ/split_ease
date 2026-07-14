@@ -6,9 +6,12 @@ import 'package:split_ease/features/expenses/domain/usecases/restore_expense_use
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_event.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_state.dart';
 import 'package:split_ease/features/expenses/domain/usecases/add_expense_comment_usecase.dart';
+import 'package:split_ease/features/expenses/domain/usecases/update_expense_comment_usecase.dart';
+import 'package:split_ease/features/expenses/domain/usecases/delete_expense_comment_usecase.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
 import 'package:split_ease/features/groups/domain/entities/group_member_entity.dart';
 import 'package:split_ease/features/groups/domain/usecases/get_group_members.dart';
+import 'package:split_ease/features/expenses/domain/usecases/get_expense_comments.dart';
 
 class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
   /// Logic Coordinator for the Expense Detail Page.
@@ -20,8 +23,11 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
   final RestoreExpenseUseCase _restoreExpenseUseCase;
   final GetGroupMembers _getGroupMembers;
   final AddExpenseCommentUseCase _addExpenseCommentUseCase;
+  final UpdateExpenseCommentUseCase _updateExpenseCommentUseCase;
+  final DeleteExpenseCommentUseCase _deleteExpenseCommentUseCase;
   final AppUserCubit _appUserCubit;
   final DataRefreshCubit _dataRefreshCubit;
+  final GetExpenseComments _getExpenseComments;
 
   ExpenseDetailBloc(
     this._getExpenseDetailUseCase, 
@@ -29,14 +35,43 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
     this._restoreExpenseUseCase,
     this._getGroupMembers, 
     this._addExpenseCommentUseCase, 
+    this._updateExpenseCommentUseCase,
+    this._deleteExpenseCommentUseCase,
     this._appUserCubit, 
-    this._dataRefreshCubit
+    this._dataRefreshCubit,
+    this._getExpenseComments,
   ) : super(ExpenseDetailInitial()) {
     on<FetchExpenseDetailEvent>(_onFetchExpenseDetail);
+    on<FetchExpenseCommentsEvent>(_onFetchExpenseComments);
     on<DeleteExpenseEvent>(_onDeleteExpense);
     on<RestoreExpenseEvent>(_onRestoreExpense);
     on<MarkExpenseAsChanged>(_onMarkExpenseAsChanged);
     on<AddExpenseCommentEvent>(_onAddExpenseComment);
+    on<UpdateExpenseCommentEvent>(_onUpdateExpenseComment);
+    on<DeleteExpenseCommentEvent>(_onDeleteExpenseComment);
+    on<SetEditingCommentEvent>(_onSetEditingComment);
+    on<CancelEditingCommentEvent>(_onCancelEditingComment);
+  }
+
+  void _onSetEditingComment(
+    SetEditingCommentEvent event,
+    Emitter<ExpenseDetailState> emit,
+  ) {
+    if (state is ExpenseDetailLoaded) {
+      emit((state as ExpenseDetailLoaded).copyWith(
+        editingCommentId: event.commentId,
+        editingCommentText: event.commentText,
+      ));
+    }
+  }
+
+  void _onCancelEditingComment(
+    CancelEditingCommentEvent event,
+    Emitter<ExpenseDetailState> emit,
+  ) {
+    if (state is ExpenseDetailLoaded) {
+      emit((state as ExpenseDetailLoaded).copyWith(clearEditing: true));
+    }
   }
 
   void _onMarkExpenseAsChanged(
@@ -86,6 +121,22 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
       );
     }
     emit(ExpenseDetailLoaded(expenseDetail, currentUserId, currentUserRole: role, hasChanges: currentHasChanges));
+    add(FetchExpenseCommentsEvent(event.expenseId));
+  }
+
+  Future<void> _onFetchExpenseComments(
+    FetchExpenseCommentsEvent event,
+    Emitter<ExpenseDetailState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is ExpenseDetailLoaded) {
+      emit(currentState.copyWith(commentsLoading: true));
+      final result = await _getExpenseComments(event.expenseId);
+      result.fold(
+        (failure) => emit(currentState.copyWith(commentsLoading: false)),
+        (comments) => emit(currentState.copyWith(comments: comments, commentsLoading: false)),
+      );
+    }
   }
 
   Future<void> _onDeleteExpense(
@@ -170,8 +221,36 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
     result.fold(
       (failure) => null, 
       (_) {
-        add(FetchExpenseDetailEvent(event.expenseId));
+        add(FetchExpenseCommentsEvent(event.expenseId));
         add(MarkExpenseAsChanged()); 
+      },
+    );
+  }
+
+  Future<void> _onUpdateExpenseComment(
+    UpdateExpenseCommentEvent event,
+    Emitter<ExpenseDetailState> emit,
+  ) async {
+    final result = await _updateExpenseCommentUseCase(commentId: event.commentId, comment: event.comment);
+    result.fold(
+      (failure) => null,
+      (_) {
+        add(FetchExpenseCommentsEvent(event.expenseId));
+        add(MarkExpenseAsChanged()); 
+      },
+    );
+  }
+
+  Future<void> _onDeleteExpenseComment(
+    DeleteExpenseCommentEvent event,
+    Emitter<ExpenseDetailState> emit,
+  ) async {
+    final result = await _deleteExpenseCommentUseCase(commentId: event.commentId);
+    result.fold(
+      (failure) => null,
+      (_) {
+        add(FetchExpenseCommentsEvent(event.expenseId));
+        add(MarkExpenseAsChanged());
       },
     );
   }

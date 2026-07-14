@@ -22,6 +22,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   AuthRemoteDataSourceImpl({required this.client});
 
+  Future<UserModel> _fetchProfile(User user) async {
+    try {
+      final profileData = await client.rpc('get_my_profile_rpc');
+      if (profileData != null) {
+        return UserModel.fromJson(profileData as Map<String, dynamic>);
+      }
+    } catch (_) {
+      // Fallback if RPC fails
+    }
+    return UserModel.fromSupabaseUser(user);
+  }
+
   @override
   Future<UserModel> loginWithEmailPassword({required String email, required String password}) async {
     try {
@@ -29,7 +41,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (response.user == null) {
         throw ServerException(message: "user is null");
       } else {
-        return UserModel.fromSupabaseUser(response.user!);
+        return await _fetchProfile(response.user!);
       }
     } catch (e) {
       throw ServerException(message: ErrorMessageUtils.generate(e));
@@ -43,7 +55,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (response.user == null) {
         throw ServerException(message: "user is null");
       } else {
-        return UserModel.fromSupabaseUser(response.user!);
+        return await _fetchProfile(response.user!);
       }
     } catch (e) {
       throw ServerException(message: ErrorMessageUtils.generate(e));
@@ -55,7 +67,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       final user = client.auth.currentUser;
       if (user != null) {
-        return UserModel.fromSupabaseUser(user);
+        return await _fetchProfile(user);
       }
       return null;
     } catch (e) {
@@ -109,7 +121,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw ServerException(message: 'Supabase did not return a user.');
       }
 
-      return UserModel.fromSupabaseUser(response.user!);
+      return await _fetchProfile(response.user!);
     } on ServerException {
       rethrow;
     } catch (e) {

@@ -14,6 +14,7 @@ import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_detail_entity.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_category_entity.dart';
+import 'package:split_ease/core/utils/icon_utils.dart';
 import 'package:split_ease/core/config/app_configs.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_bloc.dart';
 
@@ -83,11 +84,17 @@ class _AddExpensePageState extends State<AddExpensePage> {
           origin = ExpenseOrigin.friend;
         }
         
+        String? lastUsedCategoryId;
+        if (appUserState is AppUserLoggedIn) {
+          lastUsedCategoryId = appUserState.user.lastExpenseCategoryId;
+        }
+        
         context.read<ExpenseBloc>().add(ExpenseInitialized(
           group: group,
           friend: friend,
           currentUserId: currentUserId,
           origin: origin,
+          lastUsedCategoryId: lastUsedCategoryId,
         ));
       }
     });
@@ -146,6 +153,16 @@ class _AddExpensePageState extends State<AddExpensePage> {
       body: BlocListener<ExpenseBloc, ExpenseState>(
         listener: (context, state) {
           if (state.status == ExpenseStatus.success) {
+            if (state.selectedCategory != null) {
+              final appUserCubit = context.read<AppUserCubit>();
+              final appUserState = appUserCubit.state;
+              if (appUserState is AppUserLoggedIn) {
+                appUserCubit.updateUser(
+                  appUserState.user.copyWith(lastExpenseCategoryId: state.selectedCategory!.id)
+                );
+              }
+            }
+            
             AppAlerts.showSuccess(context, state.isEdit ? 'Expense updated successfully!' : 'Expense added successfully!');
             Navigator.pop(context, true);
           } else if (state.status == ExpenseStatus.failure || state.status == ExpenseStatus.validationError) {
@@ -241,7 +258,10 @@ class _AddExpensePageState extends State<AddExpensePage> {
                           child: Column(
                             children: [
                               _buildConfigRow(
-                                icon: state.selectedCategory != null ? _getIconFromString(state.selectedCategory!.icon) : Icons.category_rounded,
+                                icon: state.selectedCategory != null ? IconUtils.getIconFromString(state.selectedCategory!.icon) : Icons.category_rounded,
+                                iconColor: state.selectedCategory != null 
+                                    ? Color(int.parse(state.selectedCategory!.color.replaceFirst('#', '0xFF'))) 
+                                    : null,
                                 label: "Category",
                                 value: state.selectedCategory?.name ?? "Select Category",
                                 isTop: true,
@@ -391,10 +411,12 @@ class _AddExpensePageState extends State<AddExpensePage> {
     required String label,
     required String value,
     Color? valueColor,
+    Color? iconColor,
     required VoidCallback onTap,
     bool isTop = false,
     bool isBottom = false,
   }) {
+    final effectiveIconColor = iconColor ?? AppColors.primaryTeal;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.vertical(
@@ -407,8 +429,8 @@ class _AddExpensePageState extends State<AddExpensePage> {
           children: [
             Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: AppColors.primaryTeal.withValues(alpha: 0.1), shape: BoxShape.circle),
-              child: Icon(icon, color: AppColors.primaryTeal, size: 20),
+              decoration: BoxDecoration(color: effectiveIconColor.withValues(alpha: 0.1), shape: BoxShape.circle),
+              child: Icon(icon, color: effectiveIconColor, size: 20),
             ),
             const SizedBox(width: 16),
             Text(label, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack)),
@@ -476,28 +498,22 @@ class _AddExpensePageState extends State<AddExpensePage> {
   }
 
   Future<void> _showCategoryPicker(BuildContext context, ExpenseState state) async {
+    final appUserState = context.read<AppUserCubit>().state;
+    String? lastUsedCategoryId;
+    if (!state.isEdit && appUserState is AppUserLoggedIn) {
+      lastUsedCategoryId = appUserState.user.lastExpenseCategoryId;
+    }
+
     final result = await NavigationService.pushNamed(
       AppRoutes.categorySelection,
       args: {
         'categories': state.categories,
         'selectedCategory': state.selectedCategory,
+        'lastUsedCategoryId': lastUsedCategoryId,
       },
     );
     if (result != null && result is ExpenseCategoryEntity && context.mounted) {
       context.read<ExpenseBloc>().add(CategoryChanged(result));
-    }
-  }
-
-  IconData _getIconFromString(String iconName) {
-    switch (iconName) {
-      case "restaurant":
-        return Icons.restaurant_rounded;
-      case "flight":
-        return Icons.flight_rounded;
-      case "shopping_bag":
-        return Icons.shopping_bag_rounded;
-      default:
-        return Icons.category_rounded;
     }
   }
 }

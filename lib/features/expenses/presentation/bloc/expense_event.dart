@@ -9,11 +9,13 @@ class ExpenseInitialized extends ExpenseEvent {
   final FriendEntity? friend;
   final String? currentUserId;
   final ExpenseOrigin origin;
+  final String? lastUsedCategoryId;
   const ExpenseInitialized({
     this.group,
     this.friend,
     this.currentUserId,
     this.origin = ExpenseOrigin.global,
+    this.lastUsedCategoryId,
   });
 }
 
@@ -103,7 +105,8 @@ class NotesChanged extends ExpenseEvent {
 }
 
 class FetchCategories extends ExpenseEvent {
-  const FetchCategories();
+  final String? lastUsedCategoryId;
+  const FetchCategories({this.lastUsedCategoryId});
 }
 
 class CategoryChanged extends ExpenseEvent {

@@ -2,7 +2,6 @@ import 'package:equatable/equatable.dart';
 
 class UpdateExpenseParams extends Equatable {
   final String expenseId;
-  final String? groupId;
   final String description;
   final double totalAmount;
   final String paidByUserId;
@@ -14,7 +13,6 @@ class UpdateExpenseParams extends Equatable {
 
   const UpdateExpenseParams({
     required this.expenseId,
-    this.groupId,
     required this.description,
     this.notes,
     this.categoryId,
@@ -28,7 +26,6 @@ class UpdateExpenseParams extends Equatable {
   Map<String, dynamic> toJson() {
     return {
       'p_expense_id': expenseId,
-      'p_group_id': groupId,
       'p_description': description,
       'p_expense_note': notes,
       'p_category_id': categoryId,
@@ -43,7 +40,6 @@ class UpdateExpenseParams extends Equatable {
   @override
   List<Object?> get props => [
         expenseId,
-        groupId,
         description,
         notes,
         totalAmount,

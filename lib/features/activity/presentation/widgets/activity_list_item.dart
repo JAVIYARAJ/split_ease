@@ -30,7 +30,7 @@ class ActivityListItem extends StatelessWidget {
     }
 
     final title = activity.getDisplayTitle(currentUserId, currentUserName: currentUserName);
-    final subtitle = activity.displaySubtitle;
+    //final subtitle = activity.displaySubtitle;
     final isPositive = activity.isPositiveEffect;
     final isUnread = activity.isUnread;
 
@@ -116,7 +116,7 @@ class ActivityListItem extends StatelessWidget {
                     ),
                     
                     // Subtitle / Amount
-                    if (subtitle != null) ...[
+                    /*if (subtitle != null) ...[
                       const SizedBox(height: 6),
                       Text(
                         subtitle,
@@ -131,7 +131,7 @@ class ActivityListItem extends StatelessWidget {
                                   : null,
                         ),
                       ),
-                    ],
+                    ],*/
                   ],
                 ),
               ),

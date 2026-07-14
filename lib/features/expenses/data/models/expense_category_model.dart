@@ -15,7 +15,7 @@ class ExpenseCategoryModel extends ExpenseCategoryEntity {
       name: json['name'] as String,
       icon: json['icon'] as String,
       color: json['color'] as String,
-      isDefault: json['is_default'] as bool,
+      isDefault: json['is_default'] as bool? ?? false,
     );
   }
 }

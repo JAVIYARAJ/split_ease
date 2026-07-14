@@ -1,4 +1,5 @@
 import 'package:split_ease/features/expenses/domain/entities/expense_detail_entity.dart';
+import 'package:split_ease/features/expenses/data/models/expense_category_model.dart';
 
 class ExpenseDetailModel extends ExpenseDetailEntity {
   const ExpenseDetailModel({
@@ -9,10 +10,10 @@ class ExpenseDetailModel extends ExpenseDetailEntity {
     required super.expenseDate,
     required super.createdAt,
     super.group,
+    super.category,
     required super.paidBy,
     required super.createdBy,
     required super.splits,
-    required super.comments,
     super.notes,
     super.updatedAt,
     super.updatedBy,
@@ -29,13 +30,11 @@ class ExpenseDetailModel extends ExpenseDetailEntity {
       expenseDate: json['expense_date'] as String,
       createdAt: json['created_at'] as String,
       group: json['group'] != null ? ExpenseGroupModel.fromJson(json['group']) : null,
+      category: json['category'] != null ? ExpenseCategoryModel.fromJson(json['category']) : null,
       paidBy: ExpenseUserModel.fromJson(json['paid_by']),
       createdBy: ExpenseUserModel.fromJson(json['created_by']),
       splits: (json['splits'] as List)
           .map((e) => ExpenseSplitModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      comments: (json['comments'] as List? ?? [])
-          .map((e) => ExpenseCommentModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       updatedAt: json['updated_at'] as String?,
       updatedBy: json['updated_by'] != null ? ExpenseUserModel.fromJson(json['updated_by']) : null,

@@ -12,10 +12,13 @@ abstract class ExpenseRemoteDataSource {
   Future<void> createExpense(CreateExpenseParams params);
   Future<void> updateExpense(UpdateExpenseParams params);
   Future<ExpenseDetailModel> getExpenseDetail(String expenseId);
+  Future<List<ExpenseCommentModel>> getExpenseComments(String expenseId);
   Future<void> deleteExpense(String expenseId);
   Future<void> restoreExpense(String expenseId);
   Future<List<ExpenseUserModel>> getExpenseParticipants({String? groupId, String? friendUserId});
   Future<void> addExpenseComment({required String expenseId, required String comment});
+  Future<void> updateExpenseComment({required String commentId, required String comment});
+  Future<void> deleteExpenseComment({required String commentId});
   Future<void> settleUp({
     required String toUserId,
     required double amount,
@@ -35,7 +38,7 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
   Future<void> createExpense(CreateExpenseParams params) async {
     try {
       await client.rpc(
-        'create_expense_rpc',
+        'create_expense_updated',
         params: params.toJson(),
       );
 
@@ -49,7 +52,7 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
   Future<void> updateExpense(UpdateExpenseParams params) async {
     try {
       await client.rpc(
-        'update_expense_rpc',
+        'update_expense_new',
         params: params.toJson(),
       );
     } catch (e) {
@@ -69,6 +72,23 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
 
       // The RPC returns a JSON object.
       return ExpenseDetailModel.fromJson(response as Map<String, dynamic>);
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+
+  @override
+  Future<List<ExpenseCommentModel>> getExpenseComments(String expenseId) async {
+    try {
+      final response = await client.rpc(
+        'get_expense_comments_rpc',
+        params: {
+          'p_expense_id': expenseId,
+        },
+      );
+
+      final List<dynamic> data = response as List<dynamic>;
+      return data.map((e) => ExpenseCommentModel.fromJson(e as Map<String, dynamic>)).toList();
     } catch (e) {
       throw ServerException(message: e.toString());
     }
@@ -129,6 +149,35 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
         params: {
           'p_expense_id': expenseId,
           'p_comment': comment,
+        },
+      );
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+
+  @override
+  Future<void> updateExpenseComment({required String commentId, required String comment}) async {
+    try {
+      await client.rpc(
+        'update_expense_comment_rpc',
+        params: {
+          'p_comment_id': commentId,
+          'p_comment': comment,
+        },
+      );
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+
+  @override
+  Future<void> deleteExpenseComment({required String commentId}) async {
+    try {
+      await client.rpc(
+        'delete_expense_comment_rpc',
+        params: {
+          'p_comment_id': commentId,
         },
       );
     } catch (e) {

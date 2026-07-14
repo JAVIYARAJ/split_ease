@@ -72,12 +72,21 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
       (categories) {
         ExpenseCategoryEntity? defaultCategory;
         try {
-          // Prioritize 'Other' category by name (allow variations like "Others"), fallback to isDefault
-          defaultCategory = categories.firstWhere((c) => c.name.toLowerCase().contains('other'), 
-            orElse: () => categories.firstWhere((c) => c.isDefault));
-        } catch (_) {
-          if (categories.isNotEmpty) defaultCategory = categories.first;
+          if (event.lastUsedCategoryId != null) {
+            defaultCategory = categories.firstWhere((c) => c.id == event.lastUsedCategoryId);
+          }
+        } catch (_) {}
+
+        if (defaultCategory == null) {
+          try {
+            // Prioritize 'Other' category by name (allow variations like "Others"), fallback to isDefault
+            defaultCategory = categories.firstWhere((c) => c.name.toLowerCase().contains('other'), 
+              orElse: () => categories.firstWhere((c) => c.isDefault));
+          } catch (_) {
+            if (categories.isNotEmpty) defaultCategory = categories.first;
+          }
         }
+
         emit(state.copyWith(categories: categories, selectedCategory: () => state.selectedCategory ?? defaultCategory));
       },
     );
@@ -137,7 +146,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
       }
     }
     
-    add(const FetchCategories());
+    add(FetchCategories(lastUsedCategoryId: event.lastUsedCategoryId));
   }
 
   /// Updates the state when the user selects a group from the picker.
@@ -323,7 +332,6 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
         // Handle Update
         final params = UpdateExpenseParams(
           expenseId: state.expenseId!,
-          groupId: state.group?.id,
           description: state.description.isEmpty ? "No description" : state.description,
           notes: state.notes,
           categoryId: state.selectedCategory?.id,
@@ -485,6 +493,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
       friend: () => friend,
       notes: expense.notes ?? '',
       origin: (expense.group != null && expense.group?.id != null) ? ExpenseOrigin.group : ExpenseOrigin.friend,
+      selectedCategory: () => expense.category,
     ));
 
 

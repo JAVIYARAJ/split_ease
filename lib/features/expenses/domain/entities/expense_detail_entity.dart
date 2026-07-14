@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:split_ease/features/expenses/domain/entities/expense_category_entity.dart';
 
 class ExpenseDetailEntity extends Equatable {
   final String id;
@@ -8,12 +9,12 @@ class ExpenseDetailEntity extends Equatable {
   final String expenseDate;
   final String createdAt;
   final ExpenseGroupEntity? group;
+  final ExpenseCategoryEntity? category;
   final ExpenseUserEntity paidBy;
   final ExpenseUserEntity createdBy;
   final String? notes;
   final String? updatedAt;
   final ExpenseUserEntity? updatedBy;
-  final List<ExpenseCommentEntity> comments;
   final List<ExpenseSplitEntity> splits;
   final bool isDeleted;
 
@@ -26,11 +27,11 @@ class ExpenseDetailEntity extends Equatable {
     required this.expenseDate,
     required this.createdAt,
     this.group,
+    this.category,
     required this.paidBy,
     required this.createdBy,
     this.updatedAt,
     this.updatedBy,
-    required this.comments,
     required this.splits,
     this.isDeleted = false,
   });
@@ -45,11 +46,11 @@ class ExpenseDetailEntity extends Equatable {
         expenseDate,
         createdAt,
         group,
+        category,
         paidBy,
         createdBy,
         updatedAt,
         updatedBy,
-        comments,
         splits,
         isDeleted,
       ];

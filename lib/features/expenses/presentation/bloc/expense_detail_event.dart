@@ -45,3 +45,45 @@ class AddExpenseCommentEvent extends ExpenseDetailEvent {
   @override
   List<Object> get props => [expenseId, comment];
 }
+
+class FetchExpenseCommentsEvent extends ExpenseDetailEvent {
+  final String expenseId;
+
+  const FetchExpenseCommentsEvent(this.expenseId);
+
+  @override
+  List<Object> get props => [expenseId];
+}
+
+class UpdateExpenseCommentEvent extends ExpenseDetailEvent {
+  final String expenseId;
+  final String commentId;
+  final String comment;
+
+  const UpdateExpenseCommentEvent({required this.expenseId, required this.commentId, required this.comment});
+
+  @override
+  List<Object> get props => [expenseId, commentId, comment];
+}
+
+class DeleteExpenseCommentEvent extends ExpenseDetailEvent {
+  final String expenseId;
+  final String commentId;
+
+  const DeleteExpenseCommentEvent({required this.expenseId, required this.commentId});
+
+  @override
+  List<Object> get props => [expenseId, commentId];
+}
+
+class SetEditingCommentEvent extends ExpenseDetailEvent {
+  final String commentId;
+  final String commentText;
+
+  const SetEditingCommentEvent({required this.commentId, required this.commentText});
+
+  @override
+  List<Object> get props => [commentId, commentText];
+}
+
+class CancelEditingCommentEvent extends ExpenseDetailEvent {}

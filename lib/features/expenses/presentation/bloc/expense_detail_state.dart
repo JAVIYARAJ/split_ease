@@ -20,8 +20,23 @@ class ExpenseDetailLoaded extends ExpenseDetailState {
   final ExpenseDetailEntity expenseDetail;
   final String currentUserId;
   final String? currentUserRole;
+  final List<ExpenseCommentEntity> comments;
+  final bool commentsLoading;
+  final String? editingCommentId;
+  final String? editingCommentText;
 
-  const ExpenseDetailLoaded(this.expenseDetail, this.currentUserId, {this.currentUserRole, super.hasChanges});
+  const ExpenseDetailLoaded(
+    this.expenseDetail, 
+    this.currentUserId, 
+    {
+      this.currentUserRole, 
+      this.comments = const [],
+      this.commentsLoading = false,
+      this.editingCommentId,
+      this.editingCommentText,
+      super.hasChanges,
+    }
+  );
 
   /// Logic Moved from UI: Gets first name of the creator.
   String get creatorFirstName => expenseDetail.createdBy.fullName.split(' ').first;
@@ -64,18 +79,36 @@ class ExpenseDetailLoaded extends ExpenseDetailState {
     ExpenseDetailEntity? expenseDetail,
     String? currentUserId,
     String? currentUserRole,
+    List<ExpenseCommentEntity>? comments,
+    bool? commentsLoading,
+    String? editingCommentId,
+    String? editingCommentText,
+    bool clearEditing = false,
     bool? hasChanges,
   }) {
     return ExpenseDetailLoaded(
       expenseDetail ?? this.expenseDetail,
       currentUserId ?? this.currentUserId,
       currentUserRole: currentUserRole ?? this.currentUserRole,
+      comments: comments ?? this.comments,
+      commentsLoading: commentsLoading ?? this.commentsLoading,
+      editingCommentId: clearEditing ? null : (editingCommentId ?? this.editingCommentId),
+      editingCommentText: clearEditing ? null : (editingCommentText ?? this.editingCommentText),
       hasChanges: hasChanges ?? this.hasChanges,
     );
   }
 
   @override
-  List<Object?> get props => [expenseDetail, currentUserId, currentUserRole, hasChanges];
+  List<Object?> get props => [
+    expenseDetail, 
+    currentUserId, 
+    currentUserRole, 
+    comments, 
+    commentsLoading, 
+    editingCommentId,
+    editingCommentText,
+    hasChanges
+  ];
 }
 
 class ExpenseDetailError extends ExpenseDetailState {
