@@ -113,3 +113,8 @@ class CategoryChanged extends ExpenseEvent {
   final ExpenseCategoryEntity category;
   const CategoryChanged(this.category);
 }
+
+class ExpenseOriginChanged extends ExpenseEvent {
+  final ExpenseOrigin origin;
+  const ExpenseOriginChanged(this.origin);
+}

@@ -11,6 +11,7 @@ enum ExpenseOrigin {
   group,
   friend,
   global,
+  personal,
 }
 
 class ExpenseEntity extends Equatable {

@@ -157,6 +157,7 @@ class ActivityPage extends StatelessWidget {
       elevation: 0,
       scrolledUnderElevation: 0,
       toolbarHeight: 64,
+      centerTitle: false,
       automaticallyImplyLeading: false,
       title: Padding(
         padding: const EdgeInsets.only(left: 4.0),
@@ -181,16 +182,16 @@ class ActivityPage extends StatelessWidget {
           ],
         ),
       ),
-      actions: [
-        /*IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.search_rounded, color: AppColors.textBlack),
-          style: IconButton.styleFrom(
-              backgroundColor: AppColors.backgroundLightGrey,
-              padding: const EdgeInsets.all(12)),
-        ),
-        const SizedBox(width: 16),*/
-      ],
+      // actions: [
+      //   IconButton(
+      //     onPressed: () {},
+      //     icon: const Icon(Icons.search_rounded, color: AppColors.textBlack),
+      //     style: IconButton.styleFrom(
+      //         backgroundColor: AppColors.backgroundLightGrey,
+      //         padding: const EdgeInsets.all(12)),
+      //   ),
+      //   const SizedBox(width: 16),
+      // ],
     );
   }
 

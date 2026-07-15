@@ -183,6 +183,75 @@ class _AddExpensePageState extends State<AddExpensePage> {
                   child: Column(
                     children: [
                       const SizedBox(height: 24),
+                      // Type Toggle for Global Origin
+                      if (!state.isEdit && group == null && friend == null)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.borderGrey.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      if (state.origin == ExpenseOrigin.personal) {
+                                        context.read<ExpenseBloc>().add(const ExpenseOriginChanged(ExpenseOrigin.global));
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      decoration: BoxDecoration(
+                                        color: state.origin != ExpenseOrigin.personal ? Colors.white : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(24),
+                                        boxShadow: state.origin != ExpenseOrigin.personal
+                                            ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))]
+                                            : null,
+                                      ),
+                                      child: Text(
+                                        "Shared",
+                                        textAlign: TextAlign.center,
+                                        style: GoogleFonts.outfit(
+                                          fontWeight: state.origin != ExpenseOrigin.personal ? FontWeight.bold : FontWeight.w500,
+                                          color: state.origin != ExpenseOrigin.personal ? AppColors.textBlack : AppColors.textGrey,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      if (state.origin != ExpenseOrigin.personal) {
+                                        context.read<ExpenseBloc>().add(const ExpenseOriginChanged(ExpenseOrigin.personal));
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      decoration: BoxDecoration(
+                                        color: state.origin == ExpenseOrigin.personal ? Colors.white : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(24),
+                                        boxShadow: state.origin == ExpenseOrigin.personal
+                                            ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))]
+                                            : null,
+                                      ),
+                                      child: Text(
+                                        "Personal",
+                                        textAlign: TextAlign.center,
+                                        style: GoogleFonts.outfit(
+                                          fontWeight: state.origin == ExpenseOrigin.personal ? FontWeight.bold : FontWeight.w500,
+                                          color: state.origin == ExpenseOrigin.personal ? AppColors.textBlack : AppColors.textGrey,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       // Context Badge
                       if (group != null)
                         _buildContextBadge(
@@ -265,37 +334,40 @@ class _AddExpensePageState extends State<AddExpensePage> {
                                 label: "Category",
                                 value: state.selectedCategory?.name ?? "Select Category",
                                 isTop: true,
+                                isBottom: state.origin == ExpenseOrigin.personal,
                                 onTap: () => _showCategoryPicker(context, state),
                               ),
-                              _buildDivider(),
-                              _buildConfigRow(
-                                icon: Icons.person_outline_rounded,
-                                label: "Paid by",
-                                value: payerName ?? "you",
-                                onTap: () => _handlePaidBySelection(context, state, members),
-                              ),
-                              _buildDivider(),
-                              _buildConfigRow(
-                                icon: Icons.call_split_rounded,
-                                label: "Split",
-                                value: state.splitDescription,
-                                isBottom: state.origin == ExpenseOrigin.group,
-                                onTap: () => _handleSplitSelection(context, state, members),
-                              ),
-                              if (state.origin != ExpenseOrigin.group) ...[
+                              if (state.origin != ExpenseOrigin.personal) ...[
                                 _buildDivider(),
                                 _buildConfigRow(
-                                  icon: Icons.groups_outlined,
-                                  label: "Group",
-                                  value: state.group?.name ?? "Non-group expense",
-                                  isBottom: true,
-                                  onTap: () async {
-                                    final selectedGroup = await showGroupPickerFromList(context, state.commonGroups);
-                                    if(context.mounted) {
-                                      context.read<ExpenseBloc>().add(GroupChanged(selectedGroup));
-                                    }
-                                  },
+                                  icon: Icons.person_outline_rounded,
+                                  label: "Paid by",
+                                  value: payerName ?? "you",
+                                  onTap: () => _handlePaidBySelection(context, state, members),
                                 ),
+                                _buildDivider(),
+                                _buildConfigRow(
+                                  icon: Icons.call_split_rounded,
+                                  label: "Split",
+                                  value: state.splitDescription,
+                                  isBottom: state.origin == ExpenseOrigin.group,
+                                  onTap: () => _handleSplitSelection(context, state, members),
+                                ),
+                                if (state.origin != ExpenseOrigin.group) ...[
+                                  _buildDivider(),
+                                  _buildConfigRow(
+                                    icon: Icons.groups_outlined,
+                                    label: "Group",
+                                    value: state.group?.name ?? "Non-group expense",
+                                    isBottom: true,
+                                    onTap: () async {
+                                      final selectedGroup = await showGroupPickerFromList(context, state.commonGroups);
+                                      if(context.mounted) {
+                                        context.read<ExpenseBloc>().add(GroupChanged(selectedGroup));
+                                      }
+                                    },
+                                  ),
+                                ],
                               ],
                             ],
                           ),

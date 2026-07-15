@@ -38,7 +38,7 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
   Future<void> createExpense(CreateExpenseParams params) async {
     try {
       await client.rpc(
-        'create_expense_updated',
+        'create_expense_rpc',
         params: params.toJson(),
       );
     } catch (e) {

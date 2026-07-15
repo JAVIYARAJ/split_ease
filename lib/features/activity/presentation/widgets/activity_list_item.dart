@@ -41,7 +41,7 @@ class ActivityListItem extends StatelessWidget {
         splashColor: AppColors.primary.withValues(alpha: 0.05),
         highlightColor: Colors.transparent,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(

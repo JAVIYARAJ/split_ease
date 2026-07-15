@@ -63,6 +63,30 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     on<NotesChanged>(_onNotesChanged);
     on<FetchCategories>(_onFetchCategories);
     on<CategoryChanged>(_onCategoryChanged);
+    on<ExpenseOriginChanged>(_onExpenseOriginChanged);
+  }
+
+  void _onExpenseOriginChanged(ExpenseOriginChanged event, Emitter<ExpenseState> emit) {
+    if (event.origin == ExpenseOrigin.personal) {
+      emit(state.copyWith(
+        origin: event.origin,
+        group: () => null,
+        friend: () => null,
+        splits: [],
+        groupMembers: [],
+        payerId: () => state.currentUserId,
+      ));
+    } else {
+      // Switching back to shared/global
+      emit(state.copyWith(
+        origin: event.origin,
+        payerId: () => state.currentUserId,
+      ));
+      // Re-fetch participants for self if no group/friend
+      if (state.group == null && state.friend == null) {
+        add(FetchParticipants(friendUserId: state.friend?.id));
+      }
+    }
   }
 
   Future<void> _onFetchCategories(FetchCategories event, Emitter<ExpenseState> emit) async {
@@ -287,12 +311,14 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     try {
       // 1. Validation
       final finalPayerId = state.payerId ?? state.currentUserId;
-      if (finalPayerId == null) throw Exception("Please select who paid.");
+      if (state.origin != ExpenseOrigin.personal && finalPayerId == null) {
+        throw Exception("Please select who paid.");
+      }
 
       if (state.amount.isEmpty || double.tryParse(state.amount) == 0) {
         throw Exception("Please enter a valid amount.");
       }
-      if (!state.isEdit && state.group == null && state.friend == null) {
+      if (!state.isEdit && state.origin != ExpenseOrigin.personal && state.group == null && state.friend == null) {
          throw Exception("Please select a group or a friend.");
       }
 
@@ -336,7 +362,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
           notes: state.notes,
           categoryId: state.selectedCategory?.id,
           totalAmount: double.parse(state.amount),
-          paidByUserId: finalPayerId,
+          paidByUserId: finalPayerId ?? '',
           expenseDate: state.date ?? DateTime.now(),
           splitType: splitTypeName,
           splits: rpcSplits,
@@ -364,17 +390,26 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
           },
         );
       } else {
+        // Determine scope
+        String expenseScope = 'non_group';
+        if (state.origin == ExpenseOrigin.personal) {
+          expenseScope = 'personal';
+        } else if (state.group != null) {
+          expenseScope = 'group';
+        }
+
         // Handle Create
         final params = CreateExpenseParams(
+          expenseScope: expenseScope,
           groupId: state.group?.id,
           description: state.description.isEmpty ? "No description" : state.description,
           notes: state.notes,
           categoryId: state.selectedCategory?.id,
           totalAmount: double.parse(state.amount),
-          paidByUserId: finalPayerId,
+          paidByUserId: state.origin == ExpenseOrigin.personal ? null : finalPayerId,
           expenseDate: state.date ?? DateTime.now(),
-          splitType: splitTypeName,
-          splits: rpcSplits,
+          splitType: state.origin == ExpenseOrigin.personal ? null : splitTypeName,
+          splits: state.origin == ExpenseOrigin.personal ? null : rpcSplits,
         );
 
         final result = await addExpenseUseCase(params);
