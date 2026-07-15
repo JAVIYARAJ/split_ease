@@ -21,6 +21,15 @@ import '../../../activity/presentation/bloc/activity_bloc.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
+import '../bloc/dashboard/home_dashboard_bloc.dart';
+import '../bloc/dashboard/home_dashboard_event.dart';
+import '../bloc/dashboard/home_dashboard_state.dart';
+import '../../../../core/presentation/widgets/animations/animated_counter_text.dart';
+import 'package:split_ease/core/utils/app_formatter.dart';
+import 'package:skeletonizer/skeletonizer.dart';
+import '../../domain/entities/home_dashboard_entity.dart';
+import '../../../../features/analytics/presentation/bloc/expense_breakdown_bloc.dart';
+import '../../../../features/analytics/presentation/pages/expense_breakdown_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -94,6 +103,7 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: AppColors.backgroundLightGrey,
       child: MultiBlocProvider(
         providers: [
+          BlocProvider(create: (_) => sl<HomeDashboardBloc>()..add(LoadHomeDashboard())),
           BlocProvider(create: (_) => sl<FriendsBloc>()..add(LoadFriends())),
           BlocProvider(create: (_) => sl<GroupsBloc>()..add(LoadGroups())),
           BlocProvider(create: (_) => sl<ActivityBloc>()..add(LoadActivities())),
@@ -107,7 +117,7 @@ class _HomePageState extends State<HomePage> {
                 IndexedStack(
                   index: state.tabIndex,
                   children: [
-                    const _HomeComingSoon(),
+                    const _HomeDashboardView(),
                     const FriendsPage(),
                     const GroupsPage(),
                     const ActivityPage(),
@@ -253,200 +263,250 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// ── Coming Soon Dashboard Design ──
+// ── Home Dashboard UI ──
 
-class _HomeComingSoon extends StatelessWidget {
-  const _HomeComingSoon();
+class _HomeDashboardView extends StatelessWidget {
+  const _HomeDashboardView();
 
   @override
   Widget build(BuildContext context) {
     final userState = context.watch<AppUserCubit>().state;
     final String name = (userState is AppUserLoggedIn) ? (userState.user.name.split(' ').first) : "Splitting";
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.only(top: 64, left: 20, right: 20, bottom: 100),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 1. Welcome Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Hey $name,",
-                      style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textGrey),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      "The Laboratory",
-                      style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -1.0),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.bolt_rounded, size: 14, color: AppColors.primary),
-                    const SizedBox(width: 4),
-                    Text(
-                      "BETA",
-                      style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: AppColors.primary, letterSpacing: 1.0),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-
-          // 2. Feature Roadmap Section
-          Text(
-            "EXPLORING THE FUTURE",
-            style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1.5, color: AppColors.iconGrey),
-          ),
-          const SizedBox(height: 16),
-          _buildRoadmapCard(
-            title: "Smart Settlement",
-            desc: "AI-driven algorithms to minimize your total group transactions.",
-            icon: Icons.auto_awesome_rounded,
-            color: const Color(0xFF673AB7),
-            status: "Developing",
-          ),
-          const SizedBox(height: 16),
-          _buildRoadmapCard(
-            title: "Analytics Hub",
-            desc: "Visual insight into your spending habits across every group.",
-            icon: Icons.bar_chart_rounded,
-            color: const Color(0xFF009688),
-            status: "Coming Soon",
-          ),
-          const SizedBox(height: 16),
-          _buildRoadmapCard(
-            title: "Auto-Scan Receipts",
-            desc: "Snapshot your receipt and let our vision engine split the items.",
-            icon: Icons.camera_rounded,
-            color: const Color(0xFFFF9800),
-            status: "Coming Soon",
-          ),
-          const SizedBox(height: 32),
-
-          // 3. Immersive Placeholder Content
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.5)),
-            ),
-            child: Column(
+    return RefreshIndicator(
+      onRefresh: () async {
+        context.read<HomeDashboardBloc>().add(LoadHomeDashboard());
+        await Future.delayed(const Duration(milliseconds: 500));
+      },
+      color: AppColors.primary,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        padding: const EdgeInsets.only(top: 64, left: 20, right: 20, bottom: 100),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. Welcome Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
-                      child: const Icon(Icons.insights_rounded, color: AppColors.primary),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("Spending Activity", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textBlack)),
-                          Text("Real-time data engine", style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                // Skeletal Lines
-                _buildSkeletalLine(double.infinity),
-                const SizedBox(height: 12),
-                _buildSkeletalLine(200),
-                const SizedBox(height: 12),
-                _buildSkeletalLine(150),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRoadmapCard({
-    required String title,
-    required String desc,
-    required IconData icon,
-    required Color color,
-    required String status,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.5)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textBlack),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Hey $name,",
+                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textGrey),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(8)),
-                      child: Text(status, style: GoogleFonts.outfit(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.textGrey)),
-                    ),
-                  ],
+                      Text(
+                        "Your Dashboard",
+                        style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -1.0),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 4),
-                Text(desc, style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey, height: 1.4)),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+
+            BlocBuilder<HomeDashboardBloc, HomeDashboardState>(
+              builder: (context, state) {
+                if (state.status == HomeDashboardStatus.loading && state.dashboard == null) {
+                  return const _DashboardSkeleton();
+                } else if (state.status == HomeDashboardStatus.failure && state.dashboard == null) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Text(state.errorMessage, style: GoogleFonts.outfit(color: AppColors.textGrey)),
+                    ),
+                  );
+                }
+
+                final dash = state.dashboard;
+                if (dash == null) return const SizedBox.shrink();
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Top Metrics Grid
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildGridCard(
+                            "TOTAL SPENT", 
+                            dash.totalSpend.amount, 
+                            dash.totalSpend.expenseCount, 
+                            isPrimary: true
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildGridCard(
+                            "YOUR SHARE", 
+                            dash.moneyLost.amount, 
+                            dash.moneyLost.expenseCount, 
+                            isPrimary: false
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Analytics Entry Point
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BlocProvider(
+                              create: (_) => sl<ExpenseBreakdownBloc>(),
+                              child: const ExpenseBreakdownPage(),
+                            ),
+                          ),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(24),
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+                              child: const Icon(Icons.pie_chart_rounded, color: AppColors.primary, size: 24),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("Expense Breakdown", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack)),
+                                  Text("See your spending breakdown", style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.primary),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildSkeletalLine(double width) {
+  Widget _buildGridCard(String title, double amount, int count, {required bool isPrimary}) {
     return Container(
-      height: 8,
-      width: width,
-      decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(4)),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isPrimary ? AppColors.primary : Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: isPrimary ? null : Border.all(color: AppColors.borderGrey.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: isPrimary ? AppColors.primary.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.03),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title, 
+            style: GoogleFonts.outfit(
+              fontSize: 11, 
+              fontWeight: FontWeight.w800, 
+              color: isPrimary ? Colors.white.withValues(alpha: 0.8) : AppColors.iconGrey, 
+              letterSpacing: 1.2
+            )
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 32,
+            width: double.infinity,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: AnimatedCounterText(
+                value: amount, 
+                style: GoogleFonts.outfit(
+                  fontSize: 28, 
+                  fontWeight: FontWeight.w900, 
+                  color: isPrimary ? Colors.white : AppColors.textBlack, 
+                  height: 1.1
+                )
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: isPrimary ? Colors.white.withValues(alpha: 0.2) : AppColors.backgroundLightGrey,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.receipt_long_rounded, 
+                  size: 12, 
+                  color: isPrimary ? Colors.white : AppColors.textGrey
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  "$count Trx", 
+                  style: GoogleFonts.outfit(
+                    fontSize: 10, 
+                    fontWeight: FontWeight.w700, 
+                    color: isPrimary ? Colors.white : AppColors.textGrey
+                  )
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class _DashboardSkeleton extends StatelessWidget {
+  const _DashboardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Skeletonizer(
+      enabled: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            height: 160,
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28)),
+          ),
+          const SizedBox(height: 32),
+          Container(width: 120, height: 16, color: Colors.white),
+          const SizedBox(height: 16),
+          Container(width: double.infinity, height: 80, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20))),
+          const SizedBox(height: 12),
+          Container(width: double.infinity, height: 80, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20))),
+        ],
+      ),
     );
   }
 }

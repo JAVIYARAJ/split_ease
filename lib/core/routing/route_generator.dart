@@ -43,6 +43,8 @@ import '../../features/expenses/presentation/pages/record_payment_page.dart';
 import '../../features/expenses/presentation/bloc/settle_up/settle_up_cubit.dart';
 import '../../features/groups/presentation/pages/group_qr_page.dart';
 import '../../features/expenses/presentation/pages/category_selection_page.dart';
+import '../../features/account/presentation/pages/category_limits_page.dart';
+import '../../features/account/presentation/bloc/category_limits/category_limits_bloc.dart';
 
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -219,6 +221,14 @@ class RouteGenerator {
             categories: args['categories'],
             selectedCategory: args['selectedCategory'],
             lastUsedCategoryId: args['lastUsedCategoryId'],
+          ),
+          settings: RouteSettings(arguments: settings.arguments, name: settings.name),
+        );
+      case AppRoutes.categoryLimits:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => sl<CategoryLimitsBloc>(),
+            child: const CategoryLimitsPage(),
           ),
           settings: RouteSettings(arguments: settings.arguments, name: settings.name),
         );

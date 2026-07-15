@@ -24,7 +24,11 @@ class CategorySelectionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => CategorySelectionCubit()..init(categories, selectedCategory, lastUsedCategoryId),
+      create: (context) {
+        final sortedCategories = List<ExpenseCategoryEntity>.from(categories)
+          ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        return CategorySelectionCubit()..init(sortedCategories, selectedCategory, lastUsedCategoryId);
+      },
       child: Scaffold(
         backgroundColor: AppColors.backgroundLightGrey,
         appBar: AppBar(
@@ -135,8 +139,10 @@ class CategorySelectionPage extends StatelessWidget {
                             BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
                           ],
                         ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                           leading: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
@@ -148,14 +154,17 @@ class CategorySelectionPage extends StatelessWidget {
                           title: Row(
                             children: [
                               Flexible(
-                                child: Text(
-                                  category.name,
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 16,
-                                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                                    color: AppColors.textBlack,
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    category.name,
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 16,
+                                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                                      color: AppColors.textBlack,
+                                    ),
                                   ),
-                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               if (lastUsedCategoryId != null && lastUsedCategoryId == category.id) ...[
@@ -187,8 +196,9 @@ class CategorySelectionPage extends StatelessWidget {
                             Navigator.pop(context, category);
                           },
                         ),
-                      );
-                    },
+                      ),
+                    );
+                  },
                   );
                 },
               ),

@@ -7,6 +7,10 @@ import 'package:split_ease/features/account/domain/usecases/account_logout.dart'
 import 'package:split_ease/features/account/domain/usecases/submit_app_feedback_usecase.dart';
 import 'package:split_ease/features/account/presentation/bloc/account_bloc.dart';
 import 'package:split_ease/features/account/presentation/bloc/feedback/feedback_cubit.dart';
+import 'package:split_ease/features/account/domain/usecases/get_category_limits.dart';
+import 'package:split_ease/features/account/domain/usecases/set_category_limit.dart';
+import 'package:split_ease/features/account/domain/usecases/delete_category_limit.dart';
+import 'package:split_ease/features/account/presentation/bloc/category_limits/category_limits_bloc.dart';
 import 'package:split_ease/features/activity/data/datasources/activity_remote_data_source.dart';
 import 'package:split_ease/features/activity/data/repositories/activity_repository_impl.dart';
 import 'package:split_ease/features/activity/domain/repositories/activity_repository.dart';
@@ -105,6 +109,17 @@ import 'core/data/repositories/app_settings_repository_impl.dart';
 import 'core/domain/repositories/app_settings_repository.dart';
 import 'core/domain/usecases/is_first_time_user.dart';
 import 'core/domain/usecases/set_first_time_user_seen.dart';
+import 'features/home/data/datasources/home_remote_data_source.dart';
+import 'features/home/data/repositories/home_repository_impl.dart';
+import 'features/home/domain/repositories/home_repository.dart';
+import 'features/home/domain/usecases/get_home_dashboard.dart';
+import 'features/home/presentation/bloc/dashboard/home_dashboard_bloc.dart';
+
+import 'features/analytics/data/datasources/analytics_remote_data_source.dart';
+import 'features/analytics/data/repositories/analytics_repository_impl.dart';
+import 'features/analytics/domain/repositories/analytics_repository.dart';
+import 'features/analytics/domain/usecases/get_expense_breakdown.dart';
+import 'features/analytics/presentation/bloc/expense_breakdown_bloc.dart';
 
 // Service Locator (Shared Instance)
 // This is the central repository where all dependencies (objects) are stored and retrieved.
@@ -161,6 +176,14 @@ void _features() {
   _inviteCode();
   _profile();
   _expense();
+  _analytics();
+}
+
+void _analytics() {
+  sl.registerFactory<AnalyticsRemoteDataSource>(() => AnalyticsRemoteDataSourceImpl(supabaseClient: sl<SupabaseClient>()));
+  sl.registerFactory<AnalyticsRepository>(() => AnalyticsRepositoryImpl(remoteDataSource: sl<AnalyticsRemoteDataSource>()));
+  sl.registerFactory(() => GetExpenseBreakdown(sl<AnalyticsRepository>()));
+  sl.registerFactory(() => ExpenseBreakdownBloc(getExpenseBreakdown: sl<GetExpenseBreakdown>()));
 }
 
 void _expense() {
@@ -306,6 +329,14 @@ void _home() {
   // Presentation Layer — HomeBloc manages tab navigation state only.
   sl.registerFactory(() => HomeBloc());
 
+  sl.registerFactory<HomeRemoteDataSource>(() => HomeRemoteDataSourceImpl(supabaseClient: sl<SupabaseClient>()));
+  sl.registerFactory<HomeRepository>(() => HomeRepositoryImpl(remoteDataSource: sl<HomeRemoteDataSource>()));
+  sl.registerFactory(() => GetHomeDashboard(sl<HomeRepository>()));
+  sl.registerFactory(() => HomeDashboardBloc(
+    getHomeDashboard: sl<GetHomeDashboard>(),
+    dataRefreshCubit: sl<DataRefreshCubit>(),
+  ));
+
   sl.registerFactory<FriendsRemoteDataSource>(() => FriendsRemoteDataSourceImpl(client: sl<SupabaseClient>()),);
 
   sl.registerFactory<FriendsRepository>(() => FriendsRepositoryImpl(friendsRemoteDataSource: sl<FriendsRemoteDataSource>()),);
@@ -336,6 +367,16 @@ void _home() {
 
   sl.registerFactory(() => AccountLogout(sl<AccountRepository>()),);
   sl.registerFactory(() => SubmitAppFeedbackUseCase(sl<AccountRepository>()),);
+
+  sl.registerFactory(() => GetCategoryLimits(sl<AccountRepository>()));
+  sl.registerFactory(() => SetCategoryLimit(sl<AccountRepository>()));
+  sl.registerFactory(() => DeleteCategoryLimit(sl<AccountRepository>()));
+
+  sl.registerFactory(() => CategoryLimitsBloc(
+    getCategoryLimits: sl<GetCategoryLimits>(),
+    setCategoryLimit: sl<SetCategoryLimit>(),
+    deleteCategoryLimit: sl<DeleteCategoryLimit>(),
+  ));
 
   sl.registerFactory(() => AccountBloc(
         accountLogout: sl<AccountLogout>(),

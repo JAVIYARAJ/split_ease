@@ -347,6 +347,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
           (failure) => emit(state.copyWith(status: ExpenseStatus.failure, errorMessage: () => failure.message)),
           (_) {
             dataRefreshCubit.markMultipleForRefresh([
+              RefreshType.home,
               RefreshType.groups,
               RefreshType.friends,
               RefreshType.activity,
@@ -381,6 +382,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
           (failure) => emit(state.copyWith(status: ExpenseStatus.failure, errorMessage: () => failure.message)),
           (_) {
             dataRefreshCubit.markMultipleForRefresh([
+              RefreshType.home,
               RefreshType.groups,
               RefreshType.friends,
               RefreshType.activity,

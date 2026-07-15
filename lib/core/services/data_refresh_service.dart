@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 
 enum RefreshType {
+  home,
   groups,
   friends,
   activity,
@@ -51,6 +52,7 @@ class DataRefreshState extends Equatable {
 class DataRefreshCubit extends Cubit<DataRefreshState> {
   DataRefreshCubit() : super(const DataRefreshState(
     globalFlags: {
+      RefreshType.home: false,
       RefreshType.groups: false,
       RefreshType.friends: false,
       RefreshType.activity: false,

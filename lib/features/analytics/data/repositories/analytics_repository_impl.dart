@@ -1,0 +1,24 @@
+import 'package:fpdart/fpdart.dart';
+import 'package:split_ease/core/error/exception.dart';
+import 'package:split_ease/core/error/failure.dart';
+import '../../domain/entities/expense_breakdown_entity.dart';
+import '../../domain/repositories/analytics_repository.dart';
+import '../datasources/analytics_remote_data_source.dart';
+
+class AnalyticsRepositoryImpl implements AnalyticsRepository {
+  final AnalyticsRemoteDataSource remoteDataSource;
+
+  AnalyticsRepositoryImpl({required this.remoteDataSource});
+
+  @override
+  Future<Either<Failure, ExpenseBreakdownEntity>> getExpenseBreakdown() async {
+    try {
+      final breakdown = await remoteDataSource.getExpenseBreakdown();
+      return right(breakdown);
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    } catch (e) {
+      return left(Failure(message: e.toString()));
+    }
+  }
+}

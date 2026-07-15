@@ -119,6 +119,12 @@ extension ActivityUIPresentation on ActivityEntity {
       case ActivityType.groupCreated:
         return '$subject created the group "$groupName"';
 
+      case ActivityType.limitExceeded:
+        if (description != null && description!.isNotEmpty) {
+          return description!;
+        }
+        return 'Category limit exceeded';
+
       case ActivityType.unknown:
       default:
         return '$subject performed an action$groupInfo';
@@ -167,6 +173,8 @@ extension ActivityUIPresentation on ActivityEntity {
         return Icons.edit_note_rounded;
       case ActivityType.groupCreated:
         return Icons.group_add_rounded;
+      case ActivityType.limitExceeded:
+        return Icons.warning_amber_rounded;
       default:
         return Icons.notifications_active_rounded;
     }
@@ -193,6 +201,8 @@ extension ActivityUIPresentation on ActivityEntity {
         return Colors.amber.shade700;
       case ActivityType.groupCreated:
         return AppColors.primary;
+      case ActivityType.limitExceeded:
+        return AppColors.errorRed;
       default:
         return AppColors.textGrey;
     }

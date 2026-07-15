@@ -123,6 +123,15 @@ class ActivityPage extends StatelessWidget {
                                         },
                                       );
                                     }
+                                  } else if (activity.activityAction == ActivityType.limitExceeded) {
+                                    NavigationUtils.handleResult(
+                                      context: context,
+                                      navigation: NavigationService.pushNamed(AppRoutes.categoryLimits),
+                                      refreshType: RefreshType.activity,
+                                      onRefresh: () {
+                                        context.read<ActivityBloc>().add(LoadActivities());
+                                      },
+                                    );
                                   }
                                 },
                               ),

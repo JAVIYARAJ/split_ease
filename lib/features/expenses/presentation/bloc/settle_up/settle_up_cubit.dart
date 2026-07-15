@@ -90,6 +90,7 @@ class SettleUpCubit extends Cubit<SettleUpState> {
       (failure) => emit(state.copyWith(status: SettleUpStatus.failure, errorMessage: failure.message)),
       (_) {
         dataRefreshCubit.markMultipleForRefresh([
+          RefreshType.home,
           RefreshType.groups,
           RefreshType.friends,
           RefreshType.activity,

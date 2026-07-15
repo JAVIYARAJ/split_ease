@@ -9,6 +9,7 @@ enum ActivityType {
   restored,
   roleUpdated,
   groupCreated,
+  limitExceeded,
   unknown,
 }
 
@@ -77,6 +78,8 @@ class ActivityEntity {
         return ActivityType.roleUpdated;
       case 'group_created':
         return ActivityType.groupCreated;
+      case 'limit_exceeded':
+        return ActivityType.limitExceeded;
     }
 
     switch (type) {

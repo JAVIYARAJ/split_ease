@@ -25,4 +25,5 @@ class AppRoutes {
   static const String recordPayment = '/recordPayment';
   static const String groupQr = '/groupQr';
   static const String categorySelection = '/categorySelection';
+  static const String categoryLimits = '/categoryLimits';
 }

@@ -159,6 +159,7 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
       (failure) => emit(ExpenseDeleteError(failure.message)),
       (_) {
         _dataRefreshCubit.markMultipleForRefresh([
+          RefreshType.home,
           RefreshType.groups,
           RefreshType.friends,
           RefreshType.activity,
@@ -194,6 +195,7 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
       (failure) => emit(ExpenseRestoreError(failure.message)),
       (_) {
         _dataRefreshCubit.markMultipleForRefresh([
+          RefreshType.home,
           RefreshType.groups,
           RefreshType.friends,
           RefreshType.activity,

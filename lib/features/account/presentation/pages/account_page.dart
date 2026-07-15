@@ -341,6 +341,11 @@ class AccountPage extends StatelessWidget {
       children: [
         _buildSectionHeader("PREFERENCES"),
         _buildSettingItem(icon: Icons.notifications_none_rounded, title: "Notifications", onTap: () {}),
+        _buildSettingItem(
+          icon: Icons.pie_chart_outline_rounded,
+          title: "Expense Category Limits",
+          onTap: () => NavigationService.pushNamed(AppRoutes.categoryLimits),
+        ),
         const SizedBox(height: 24),
         _buildSectionHeader("SUPPORT"),
         _buildSettingItem(icon: Icons.star_outline_rounded, title: "Rate SplitEase", onTap: () => FeedbackSheet.show(context)),

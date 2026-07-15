@@ -207,7 +207,7 @@ class _GroupsPageState extends State<GroupsPage> {
                         ),
                         const SizedBox(height: 4),
                         AnimatedCounterText(
-                          value: totalBalance.abs(),
+                          value: totalBalance,
                           style: GoogleFonts.outfit(fontSize: 40, fontWeight: FontWeight.w900, color: Colors.white),
                         ),
                         const SizedBox(height: 16),

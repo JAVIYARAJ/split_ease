@@ -188,13 +188,11 @@ class _FriendsPageState extends State<FriendsPage> {
         builder: (context, state) {
           double totalYouOwe = 0;
           double totalOwesYou = 0;
-          if (state.status == FriendsStatus.success) {
-            for (var friend in state.friends) {
-              if (friend.overallBalance < 0) {
-                totalYouOwe += friend.overallBalance.abs();
-              } else if (friend.overallBalance > 0){
-                totalOwesYou += friend.overallBalance;
-              }
+          for (var friend in state.friends) {
+            if (friend.overallBalance < 0) {
+              totalYouOwe += friend.overallBalance.abs();
+            } else if (friend.overallBalance > 0){
+              totalOwesYou += friend.overallBalance;
             }
           }
 
@@ -234,7 +232,7 @@ class _FriendsPageState extends State<FriendsPage> {
                         ),
                         const SizedBox(height: 4),
                         AnimatedCounterText(
-                          value: netBalance.abs(),
+                          value: netBalance,
                           style: GoogleFonts.outfit(fontSize: 40, fontWeight: FontWeight.w900, color: Colors.white),
                         ),
                         const SizedBox(height: 16),
