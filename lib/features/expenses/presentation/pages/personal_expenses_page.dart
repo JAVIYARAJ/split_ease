@@ -13,6 +13,10 @@ import 'package:intl/intl.dart';
 import 'package:split_ease/core/utils/icon_utils.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
+import 'package:flutter/rendering.dart';
+import 'package:split_ease/core/presentation/widgets/animations/smooth_animated_fab.dart';
+import 'package:split_ease/core/utils/navigation_utils.dart';
+import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 
 class PersonalExpensesPage extends StatefulWidget {
   const PersonalExpensesPage({super.key});
@@ -22,10 +26,53 @@ class PersonalExpensesPage extends StatefulWidget {
 }
 
 class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
+  late final ScrollController _scrollController;
+  bool _isFabExtended = true;
+
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
     context.read<PersonalExpensesBloc>().add(LoadPersonalExpenses());
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.userScrollDirection == ScrollDirection.reverse) {
+      if (_isFabExtended) {
+        setState(() {
+          _isFabExtended = false;
+        });
+      }
+    } else if (_scrollController.position.userScrollDirection == ScrollDirection.forward) {
+      if (!_isFabExtended) {
+        setState(() {
+          _isFabExtended = true;
+        });
+      }
+    }
+  }
+
+  Future<void> _openAddExpense() async {
+    NavigationUtils.handleResult(
+      context: context,
+      navigation: NavigationService.pushNamed(
+        AppRoutes.addExpense,
+        args: {
+          'origin': ExpenseOrigin.personal,
+        },
+      ),
+      onRefresh: () {
+        context.read<PersonalExpensesBloc>().add(LoadPersonalExpenses());
+      },
+    );
   }
 
   @override
@@ -48,6 +95,14 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
           icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textBlack, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
+      ),
+      floatingActionButton: SmoothAnimatedFAB(
+        isExtended: _isFabExtended,
+        onPressed: _openAddExpense,
+        icon: Icons.add_rounded,
+        label: "Add Expense",
+        backgroundColor: AppColors.primary,
+        heroTag: "personal_expenses_fab",
       ),
       body: BlocBuilder<PersonalExpensesBloc, PersonalExpensesState>(
         builder: (context, state) {
@@ -102,6 +157,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                 context.read<PersonalExpensesBloc>().add(LoadPersonalExpenses());
               },
               child: CustomScrollView(
+                controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
                   SliverToBoxAdapter(
@@ -242,9 +298,15 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
               child: InkWell(
                 borderRadius: BorderRadius.circular(20),
                 onTap: () {
-                  NavigationService.pushNamed(
-                    AppRoutes.expanseDetail,
-                    args: {'expanse_id': expense.id},
+                  NavigationUtils.handleResult(
+                    context: context,
+                    navigation: NavigationService.pushNamed(
+                      AppRoutes.expanseDetail,
+                      args: {'expanse_id': expense.id},
+                    ),
+                    onRefresh: () {
+                      context.read<PersonalExpensesBloc>().add(LoadPersonalExpenses());
+                    },
                   );
                 },
                 child: Padding(

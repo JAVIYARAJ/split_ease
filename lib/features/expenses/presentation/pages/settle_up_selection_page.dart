@@ -13,7 +13,8 @@ class SettleUpSelectionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     final List<GroupMemberBalanceEntity> balances = args?['balances'] ?? [];
     final String? groupId = args?['groupId'];
 
@@ -42,7 +43,12 @@ class SettleUpSelectionPage extends StatelessWidget {
         slivers: [
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 12.0, bottom: 8.0),
+              padding: const EdgeInsets.only(
+                left: 20.0,
+                right: 20.0,
+                top: 12.0,
+                bottom: 8.0,
+              ),
               child: Text(
                 "Select a member to settle with",
                 style: GoogleFonts.outfit(
@@ -61,7 +67,10 @@ class SettleUpSelectionPage extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.borderGreyLight, width: 0.5),
+                    border: Border.all(
+                      color: AppColors.borderGreyLight,
+                      width: 0.5,
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.02),
@@ -75,21 +84,30 @@ class SettleUpSelectionPage extends StatelessWidget {
                       for (int i = 0; i < balances.length; i++) ...[
                         _buildBalanceItem(context, balances[i], groupId),
                         if (i < balances.length - 1)
-                          const Divider(height: 1, thickness: 0.5, color: AppColors.borderGreyLight, indent: 64),
-                      ]
+                          const Divider(
+                            height: 1,
+                            thickness: 0.5,
+                            color: AppColors.borderGreyLight,
+                            indent: 64,
+                          ),
+                      ],
                     ],
                   ),
                 ),
               ),
             ),
           if (balances.isEmpty)
-             SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(48.0),
                 child: Center(
                   child: Column(
                     children: [
-                      const Icon(Icons.check_circle_outline_rounded, size: 64, color: AppColors.successGreen),
+                      const Icon(
+                        Icons.check_circle_outline_rounded,
+                        size: 64,
+                        color: AppColors.successGreen,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         "All settled up!",
@@ -109,7 +127,11 @@ class SettleUpSelectionPage extends StatelessWidget {
     );
   }
 
-  Widget _buildBalanceItem(BuildContext context, GroupMemberBalanceEntity balance, String? groupId) {
+  Widget _buildBalanceItem(
+    BuildContext context,
+    GroupMemberBalanceEntity balance,
+    String? groupId,
+  ) {
     final bool isOwed = balance.balance > 0;
     final Color color = isOwed ? AppColors.successGreen : AppColors.errorRed;
 
@@ -131,10 +153,7 @@ class SettleUpSelectionPage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Row(
           children: [
-            AppAvatar(
-              url: balance.avatar,
-              radius: 18,
-            ),
+            AppAvatar(url: balance.avatar, radius: 18),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -169,7 +188,11 @@ class SettleUpSelectionPage extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.iconGrey),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: AppColors.iconGrey,
+            ),
           ],
         ),
       ),

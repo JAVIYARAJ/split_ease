@@ -62,12 +62,10 @@ class AccountPage extends StatelessWidget {
                       verticalOffset: 30,
                       children: [
                         _buildProfileHero(context, userName, userEmail, userAvatar, userState),
-                        const SizedBox(height: 16),
-                        _buildUserStats(context),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 24),
                         if (FeatureFlags.isSubscriptionEnabled) ...[
                           _buildProBanner(),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 24),
                         ],
                         _buildQuickActions(context, userState),
                         const SizedBox(height: 32),
@@ -117,20 +115,32 @@ class AccountPage extends StatelessWidget {
   }
 
   Widget _buildProfileHero(BuildContext context, String name, String email, String? avatar, AppUserState userState) {
+    final friendsCount = context.watch<FriendsBloc>().state.friends.length;
+    final groupsCount = context.watch<GroupsBloc>().state.groups.length;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       decoration: BoxDecoration(
-        color: AppColors.backgroundLightGrey,
-        borderRadius: BorderRadius.circular(40),
-        image: DecorationImage(
-          image: const NetworkImage('https://www.transparenttextures.com/patterns/cubes.png'),
-          opacity: 0.03,
-          repeat: ImageRepeat.repeat,
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary,
+            const Color(0xFF005b52),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.25),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
         children: [
+          const SizedBox(height: 24),
           GestureDetector(
             onTap: () {
               HapticFeedback.mediumImpact();
@@ -145,8 +155,9 @@ class AccountPage extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 4),
                   boxShadow: [
-                    BoxShadow(color: AppColors.primary.withValues(alpha: 0.2), blurRadius: 30, spreadRadius: 5),
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 15, spreadRadius: 2),
                   ],
                 ),
                 child: Stack(
@@ -159,12 +170,18 @@ class AccountPage extends StatelessWidget {
                       iconColor: AppColors.primary.withValues(alpha: 0.5),
                     ),
                     Positioned(
-                      bottom: 4,
-                      right: 4,
+                      bottom: 0,
+                      right: 0,
                       child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))]),
-                        child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 14),
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
+                          ],
+                        ),
+                        child: const Icon(Icons.camera_alt_rounded, color: AppColors.primary, size: 14),
                       ),
                     ),
                   ],
@@ -172,44 +189,55 @@ class AccountPage extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Text(
             name,
-            style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -0.5),
+            style: GoogleFonts.outfit(
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: -0.5,
+            ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(100)),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(100),
+            ),
             child: Text(
               email,
-              style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
+              style: GoogleFonts.outfit(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.white.withValues(alpha: 0.9),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            height: 1,
+            color: Colors.white.withValues(alpha: 0.12),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildStatItem("Friends", friendsCount.toString(), Icons.people_outline_rounded),
+                Container(
+                  height: 32,
+                  width: 1,
+                  color: Colors.white.withValues(alpha: 0.12),
+                ),
+                _buildStatItem("Groups", groupsCount.toString(), Icons.layers_outlined),
+              ],
             ),
           ),
         ],
       ),
     );
-  }
-
-  Widget _buildUserStats(BuildContext context) {
-    final friendsCount = context.watch<FriendsBloc>().state.friends.length;
-    final groupsCount = context.watch<GroupsBloc>().state.groups.length;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildStatItem("Friends", friendsCount.toString(), Icons.people_outline_rounded),
-          _buildDividerVert(),
-          _buildStatItem("Groups", groupsCount.toString(), Icons.layers_outlined),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDividerVert() {
-    return Container(height: 24, width: 1, color: AppColors.borderGrey.withValues(alpha: 0.5));
   }
 
   Widget _buildStatItem(String label, String value, IconData icon) {
@@ -218,12 +246,27 @@ class AccountPage extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: AppColors.textGrey),
-            const SizedBox(width: 4),
-            Text(value, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textBlack)),
+            Icon(icon, size: 16, color: Colors.white.withValues(alpha: 0.7)),
+            const SizedBox(width: 6),
+            Text(
+              value,
+              style: GoogleFonts.outfit(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+              ),
+            ),
           ],
         ),
-        Text(label, style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textGrey)),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: GoogleFonts.outfit(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Colors.white.withValues(alpha: 0.6),
+          ),
+        ),
       ],
     );
   }
@@ -283,7 +326,8 @@ class AccountPage extends StatelessWidget {
           child: _buildActionCard(
             icon: Icons.qr_code_rounded,
             title: "My QR",
-            color: Color(0xFF673AB7),
+            subtitle: "Scan & share code",
+            color: const Color(0xFF673AB7),
             onTap: () {
               HapticFeedback.lightImpact();
               if (userState is AppUserLoggedIn) {
@@ -301,7 +345,8 @@ class AccountPage extends StatelessWidget {
           child: _buildActionCard(
             icon: Icons.edit_note_rounded,
             title: "Edit Profile",
-            color: Color(0xFF009688),
+            subtitle: "Update name & photo",
+            color: const Color(0xFF009688),
             onTap: () {
               HapticFeedback.lightImpact();
               if (userState is AppUserLoggedIn) {
@@ -314,22 +359,65 @@ class AccountPage extends StatelessWidget {
     );
   }
 
-  Widget _buildActionCard({required IconData icon, required String title, required Color color, required VoidCallback onTap}) {
+  Widget _buildActionCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: color.withValues(alpha: 0.1)),
+          border: Border.all(color: color.withValues(alpha: 0.15), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 8),
-            Text(title, style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textBlack)),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              title,
+              style: GoogleFonts.outfit(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textBlack,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: GoogleFonts.outfit(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textGrey.withValues(alpha: 0.8),
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ),
       ),
@@ -340,17 +428,43 @@ class AccountPage extends StatelessWidget {
     return Column(
       children: [
         _buildSectionHeader("PREFERENCES"),
-        _buildSettingItem(icon: Icons.notifications_none_rounded, title: "Notifications", onTap: () {}),
+        _buildSettingItem(
+          icon: Icons.notifications_none_rounded,
+          title: "Notifications",
+          onTap: () {},
+          iconColor: const Color(0xFF2196F3),
+          iconBgColor: const Color(0xFF2196F3).withValues(alpha: 0.1),
+        ),
         _buildSettingItem(
           icon: Icons.pie_chart_outline_rounded,
           title: "Expense Category Limits",
           onTap: () => NavigationService.pushNamed(AppRoutes.categoryLimits),
+          iconColor: AppColors.primary,
+          iconBgColor: AppColors.primary.withValues(alpha: 0.1),
         ),
         const SizedBox(height: 24),
         _buildSectionHeader("SUPPORT"),
-        _buildSettingItem(icon: Icons.star_outline_rounded, title: "Rate SplitEase", onTap: () => FeedbackSheet.show(context)),
-        _buildSettingItem(icon: Icons.mail_outline_rounded, title: "Contact Support", onTap: () {}),
-        _buildSettingItem(icon: Icons.info_outline_rounded, title: "About", onTap: () {}),
+        _buildSettingItem(
+          icon: Icons.star_outline_rounded,
+          title: "Rate SplitEase",
+          onTap: () => FeedbackSheet.show(context),
+          iconColor: const Color(0xFFFF9800),
+          iconBgColor: const Color(0xFFFF9800).withValues(alpha: 0.1),
+        ),
+        _buildSettingItem(
+          icon: Icons.mail_outline_rounded,
+          title: "Contact Support",
+          onTap: () {},
+          iconColor: const Color(0xFF9C27B0),
+          iconBgColor: const Color(0xFF9C27B0).withValues(alpha: 0.1),
+        ),
+        _buildSettingItem(
+          icon: Icons.info_outline_rounded,
+          title: "About",
+          onTap: () {},
+          iconColor: const Color(0xFF607D8B),
+          iconBgColor: const Color(0xFF607D8B).withValues(alpha: 0.1),
+        ),
       ],
     );
   }
@@ -368,26 +482,68 @@ class AccountPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingItem({required IconData icon, required String title, required VoidCallback onTap}) {
+  Widget _buildSettingItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    required Color iconColor,
+    required Color iconBgColor,
+  }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.borderGrey.withValues(alpha:0.5)),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, color: AppColors.textGrey, size: 22),
-              const SizedBox(width: 16),
-              Text(title, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack)),
-              const Spacer(),
-              Icon(Icons.chevron_right_rounded, color: AppColors.iconGrey, size: 20),
-            ],
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.3)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              onTap();
+            },
+            borderRadius: BorderRadius.circular(24),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: iconBgColor,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(icon, color: iconColor, size: 22),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textBlack,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.iconGrey.withValues(alpha: 0.8),
+                    size: 22,
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

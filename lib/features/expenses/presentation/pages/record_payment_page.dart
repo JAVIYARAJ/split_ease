@@ -17,7 +17,8 @@ class RecordPaymentPage extends StatefulWidget {
   State<RecordPaymentPage> createState() => _RecordPaymentPageState();
 }
 
-class _RecordPaymentPageState extends State<RecordPaymentPage> with SingleTickerProviderStateMixin {
+class _RecordPaymentPageState extends State<RecordPaymentPage>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _noteController = TextEditingController();
   late AnimationController _hintAnimController;
   late Animation<double> _hintFade;
@@ -33,11 +34,15 @@ class _RecordPaymentPageState extends State<RecordPaymentPage> with SingleTicker
       vsync: this,
       duration: const Duration(milliseconds: 350),
     );
-    _hintFade = CurvedAnimation(parent: _hintAnimController, curve: Curves.easeInOut);
+    _hintFade = CurvedAnimation(
+      parent: _hintAnimController,
+      curve: Curves.easeInOut,
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      final args =
+          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
       final String? targetUserId = args?['targetUserId'];
       final double? balance = args?['balance'];
       final String? groupId = args?['groupId'];
@@ -69,11 +74,14 @@ class _RecordPaymentPageState extends State<RecordPaymentPage> with SingleTicker
       listener: (context, state) {
         if (state.status == SettleUpStatus.success) {
           AppAlerts.showSuccess(context, "Payment recorded successfully!");
-          Navigator.of(context).popUntil((route) =>
-              route.settings.name == AppRoutes.groupDetail ||
-              route.settings.name == AppRoutes.friendDetail ||
-              route.settings.name == AppRoutes.home);
-        } else if (state.status == SettleUpStatus.failure && state.errorMessage != null) {
+          Navigator.of(context).popUntil(
+            (route) =>
+                route.settings.name == AppRoutes.groupDetail ||
+                route.settings.name == AppRoutes.friendDetail ||
+                route.settings.name == AppRoutes.home,
+          );
+        } else if (state.status == SettleUpStatus.failure &&
+            state.errorMessage != null) {
           AppAlerts.showError(context, state.errorMessage!);
         }
 
@@ -108,21 +116,32 @@ class _RecordPaymentPageState extends State<RecordPaymentPage> with SingleTicker
             final userState = context.read<AppUserCubit>().state;
             if (userState is! AppUserLoggedIn) return const SizedBox();
             final currentUser = userState.user;
-            final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+            final args =
+                ModalRoute.of(context)?.settings.arguments
+                    as Map<String, dynamic>?;
 
             // Determine direction: balance > 0 = they owe you = they paid you
             //                      balance < 0 = you owe them = you paid them
             final double rawBalance = args?['balance'] ?? 0.0;
-            final bool theyPayYou = rawBalance > 0; // they owe you → they're paying you
+            final bool theyPayYou =
+                rawBalance > 0; // they owe you → they're paying you
 
             final String directionLabel = theyPayYou
                 ? "${_targetUserName ?? "Friend"} paid you"
                 : "You paid ${_targetUserName ?? "Friend"}";
 
-            final String? payerAvatar = theyPayYou ? _targetUserAvatar : currentUser.avatarUrl;
-            final String? payeeAvatar = theyPayYou ? currentUser.avatarUrl : _targetUserAvatar;
-            final String payerName = theyPayYou ? (_targetUserName ?? "Friend") : "You";
-            final String payeeName = theyPayYou ? "You" : (_targetUserName ?? "Friend");
+            final String? payerAvatar = theyPayYou
+                ? _targetUserAvatar
+                : currentUser.avatarUrl;
+            final String? payeeAvatar = theyPayYou
+                ? currentUser.avatarUrl
+                : _targetUserAvatar;
+            final String payerName = theyPayYou
+                ? (_targetUserName ?? "Friend")
+                : "You";
+            final String payeeName = theyPayYou
+                ? "You"
+                : (_targetUserName ?? "Friend");
 
             final formatter = NumberFormat('#,##0.##', 'en_IN');
             final double balance = state.targetBalance;
@@ -131,7 +150,8 @@ class _RecordPaymentPageState extends State<RecordPaymentPage> with SingleTicker
             // Find selected group name
             String groupName = "Non-group expense";
             if (state.groupId != null) {
-              final selectedGroup = state.commonGroups.any((g) => g.id == state.groupId)
+              final selectedGroup =
+                  state.commonGroups.any((g) => g.id == state.groupId)
                   ? state.commonGroups.firstWhere((g) => g.id == state.groupId)
                   : null;
               groupName = selectedGroup?.name ?? "Selected Group";
@@ -206,7 +226,9 @@ class _RecordPaymentPageState extends State<RecordPaymentPage> with SingleTicker
                             lastDate: DateTime.now(),
                             builder: (context, child) => Theme(
                               data: Theme.of(context).copyWith(
-                                colorScheme: const ColorScheme.light(primary: AppColors.primary),
+                                colorScheme: const ColorScheme.light(
+                                  primary: AppColors.primary,
+                                ),
                               ),
                               child: child!,
                             ),
@@ -222,7 +244,10 @@ class _RecordPaymentPageState extends State<RecordPaymentPage> with SingleTicker
 
                       // ── Note Input ──────────────────────────────────────────
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
@@ -235,7 +260,11 @@ class _RecordPaymentPageState extends State<RecordPaymentPage> with SingleTicker
                             color: AppColors.textBlack,
                           ),
                           decoration: InputDecoration(
-                            icon: const Icon(Icons.notes_rounded, color: AppColors.primary, size: 20),
+                            icon: const Icon(
+                              Icons.notes_rounded,
+                              color: AppColors.primary,
+                              size: 20,
+                            ),
                             hintText: "Add a note...",
                             hintStyle: GoogleFonts.outfit(
                               fontSize: 15,
@@ -244,7 +273,8 @@ class _RecordPaymentPageState extends State<RecordPaymentPage> with SingleTicker
                             ),
                             border: InputBorder.none,
                           ),
-                          onChanged: (val) => context.read<SettleUpCubit>().onNoteChanged(val),
+                          onChanged: (val) =>
+                              context.read<SettleUpCubit>().onNoteChanged(val),
                         ),
                       ),
 
@@ -258,7 +288,9 @@ class _RecordPaymentPageState extends State<RecordPaymentPage> with SingleTicker
                         textAlign: TextAlign.center,
                         style: GoogleFonts.outfit(
                           fontSize: 13,
-                          color: state.isOverpayment ? AppColors.warningOrange : AppColors.textGrey,
+                          color: state.isOverpayment
+                              ? AppColors.warningOrange
+                              : AppColors.textGrey,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -296,7 +328,9 @@ class _RecordPaymentPageState extends State<RecordPaymentPage> with SingleTicker
                                   : "Settling ₹${formatter.format(enteredAmt)} of ₹${formatter.format(balance)}",
                               style: GoogleFonts.outfit(
                                 fontSize: 13,
-                                color: state.isOverpayment ? AppColors.warningOrange : AppColors.textGrey,
+                                color: state.isOverpayment
+                                    ? AppColors.warningOrange
+                                    : AppColors.textGrey,
                                 fontWeight: FontWeight.w500,
                               ),
                               textAlign: TextAlign.center,
@@ -305,12 +339,16 @@ class _RecordPaymentPageState extends State<RecordPaymentPage> with SingleTicker
                         ElevatedButton(
                           onPressed: state.status == SettleUpStatus.loading
                               ? null
-                              : () => context.read<SettleUpCubit>().submitPayment(),
+                              : () => context
+                                    .read<SettleUpCubit>()
+                                    .submitPayment(),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
                             minimumSize: const Size(double.infinity, 56),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                             elevation: 0,
                           ),
                           child: state.status == SettleUpStatus.loading
@@ -319,12 +357,17 @@ class _RecordPaymentPageState extends State<RecordPaymentPage> with SingleTicker
                                   width: 24,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 3,
-                                    valueColor: AlwaysStoppedAnimation(Colors.white),
+                                    valueColor: AlwaysStoppedAnimation(
+                                      Colors.white,
+                                    ),
                                   ),
                                 )
                               : Text(
                                   "Confirm Settle Up",
-                                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700),
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                         ),
                       ],
@@ -370,18 +413,32 @@ class _RecordPaymentPageState extends State<RecordPaymentPage> with SingleTicker
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label,
-                      style: GoogleFonts.outfit(
-                          fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textGrey)),
+                  Text(
+                    label,
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textGrey,
+                    ),
+                  ),
                   const SizedBox(height: 2),
-                  Text(value,
-                      style: GoogleFonts.outfit(
-                          fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textBlack)),
+                  Text(
+                    value,
+                    style: GoogleFonts.outfit(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textBlack,
+                    ),
+                  ),
                 ],
               ),
             ),
             if (showArrow)
-              const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.iconGrey, size: 14),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: AppColors.iconGrey,
+                size: 14,
+              ),
           ],
         ),
       ),
@@ -477,7 +534,10 @@ class _DirectionCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
@@ -485,7 +545,11 @@ class _DirectionCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.arrow_forward_rounded, size: 12, color: AppColors.primary),
+                          const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 12,
+                            color: AppColors.primary,
+                          ),
                           const SizedBox(width: 3),
                           Text(
                             "CASH",
@@ -516,7 +580,11 @@ class _UserNode extends StatelessWidget {
   final String name;
   final String role;
 
-  const _UserNode({required this.avatar, required this.name, required this.role});
+  const _UserNode({
+    required this.avatar,
+    required this.name,
+    required this.role,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -529,7 +597,10 @@ class _UserNode extends StatelessWidget {
           Text(
             name,
             style: GoogleFonts.outfit(
-                fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textBlack,
+            ),
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -538,7 +609,10 @@ class _UserNode extends StatelessWidget {
           Text(
             role,
             style: GoogleFonts.outfit(
-                fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textGrey),
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textGrey,
+            ),
           ),
         ],
       ),
@@ -569,7 +643,9 @@ class _AmountInputState extends State<_AmountInput> {
     super.initState();
     final initial = widget.initialAmount == 0
         ? ''
-        : widget.initialAmount.toStringAsFixed(2).replaceAll(RegExp(r'\.00$'), '');
+        : widget.initialAmount
+              .toStringAsFixed(2)
+              .replaceAll(RegExp(r'\.00$'), '');
     _controller = TextEditingController(text: initial);
     if (initial.isNotEmpty) {
       _hasReceivedRealAmount = true;
@@ -587,7 +663,9 @@ class _AmountInputState extends State<_AmountInput> {
     // We catch the first real (non-zero) value here and populate the controller.
     if (!_hasReceivedRealAmount && widget.initialAmount != 0) {
       _hasReceivedRealAmount = true;
-      final value = widget.initialAmount.toStringAsFixed(2).replaceAll(RegExp(r'\.00$'), '');
+      final value = widget.initialAmount
+          .toStringAsFixed(2)
+          .replaceAll(RegExp(r'\.00$'), '');
       _controller.text = value;
       _controller.selection = TextSelection.collapsed(offset: value.length);
       widget.onChanged(value);
@@ -622,7 +700,9 @@ class _AmountInputState extends State<_AmountInput> {
               child: TextField(
                 controller: _controller,
                 textAlign: TextAlign.center,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
                 ],
@@ -691,7 +771,9 @@ class _OverpaymentHint extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.warningOrange.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: AppColors.warningOrange.withValues(alpha: 0.3),
+        ),
       ),
       child: Row(
         children: [
@@ -701,7 +783,11 @@ class _OverpaymentHint extends StatelessWidget {
               color: AppColors.warningOrange.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.info_outline_rounded, color: AppColors.warningOrange, size: 16),
+            child: const Icon(
+              Icons.info_outline_rounded,
+              color: AppColors.warningOrange,
+              size: 16,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -716,12 +802,18 @@ class _OverpaymentHint extends StatelessWidget {
                   const TextSpan(text: "You're settling "),
                   TextSpan(
                     text: "₹${formatter.format(settlementAmount)}",
-                    style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.successGreen),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.successGreen,
+                    ),
                   ),
                   const TextSpan(text: " and paying "),
                   TextSpan(
                     text: "₹${formatter.format(overpaymentAmount)}",
-                    style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.warningOrange),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.warningOrange,
+                    ),
                   ),
                   const TextSpan(text: " extra"),
                 ],
