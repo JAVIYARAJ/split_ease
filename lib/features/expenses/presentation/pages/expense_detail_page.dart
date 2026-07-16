@@ -9,9 +9,15 @@ import 'package:split_ease/core/presentation/widgets/base_screen.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
+import 'package:split_ease/features/expenses/presentation/widgets/expense_media_list.dart';
+import 'dart:io';
 import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
 import 'package:split_ease/core/utils/navigation_utils.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_detail_entity.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_bloc.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_event.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_state.dart';
@@ -32,6 +38,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
   final ValueNotifier<bool> _canPop = ValueNotifier<bool>(false);
   final TextEditingController _commentController = TextEditingController();
   final FocusNode _commentFocusNode = FocusNode();
+  ExpenseDetailLoaded? _lastLoadedState;
 
   @override
   void dispose() {
@@ -113,20 +120,28 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 actions: [
                   BlocBuilder<ExpenseDetailBloc, ExpenseDetailState>(
                     builder: (context, state) {
-                      if (state is! ExpenseDetailLoaded) return const SizedBox.shrink();
+                      final loadedState = state is ExpenseDetailLoaded ? state : _lastLoadedState;
+                      if (loadedState == null) return const SizedBox.shrink();
 
                       // If deleted, don't show edit/delete but show a restoration option in the banner/body instead
-                      if (state.isDeleted) {
+                      if (loadedState.isDeleted) {
                         return const SizedBox.shrink();
                       }
 
-                      if (!state.canManageExpense) {
+                      if (!loadedState.canManageExpense) {
                         return const SizedBox.shrink();
                       }
 
                       return Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          if (state is ExpenseDetailLoading || state is ExpenseDeleteLoading || state is ExpenseRestoreLoading)
+                            Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 16),
+                              width: 16,
+                              height: 16,
+                              child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryTeal),
+                            ),
                           Container(
                             margin: const EdgeInsets.symmetric(horizontal: 4),
                             decoration: BoxDecoration(
@@ -138,12 +153,12 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                               onPressed: () {
                                 NavigationUtils.handleResult(
                                   context: context,
-                                  navigation: NavigationService.pushNamed(AppRoutes.addExpense, args: {'expense': state.expenseDetail}),
+                                  navigation: NavigationService.pushNamed(AppRoutes.addExpense, args: {'expense': loadedState.expenseDetail}),
                                   refreshType: RefreshType.expenseDetail,
-                                  id: state.expenseDetail.id,
+                                  id: loadedState.expenseDetail.id,
                                   onRefresh: () {
                                     context.read<ExpenseDetailBloc>().add(MarkExpenseAsChanged());
-                                    context.read<ExpenseDetailBloc>().add(FetchExpenseDetailEvent(state.expenseDetail.id));
+                                    context.read<ExpenseDetailBloc>().add(FetchExpenseDetailEvent(loadedState.expenseDetail.id));
                                   },
                                 );
                               },
@@ -158,7 +173,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                             child: IconButton(
                               icon: const Icon(Icons.delete_outline_rounded, color: Colors.white, size: 20),
                               onPressed: () {
-                                _showDeleteConfirmationDialog(context, state.expenseDetail.id);
+                                _showDeleteConfirmationDialog(context, loadedState.expenseDetail.id);
                               },
                             ),
                           ),
@@ -184,16 +199,17 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                     AppAlerts.showError(context, state.message);
                   } else if (state is CommentActionError) {
                     AppAlerts.showError(context, state.message);
-                  } else if (state is ExpenseDetailLoaded) {
-                    if (state.editingCommentId == null) {
-                      _commentController.clear();
-                      _commentFocusNode.unfocus();
-                    } else if (_commentController.text != state.editingCommentText) {
-                      _commentController.text = state.editingCommentText ?? '';
-                      _commentFocusNode.requestFocus();
+                    } else if (state is ExpenseDetailLoaded) {
+                      _lastLoadedState = state;
+                      if (state.editingCommentId == null) {
+                        _commentController.clear();
+                        _commentFocusNode.unfocus();
+                      } else if (_commentController.text != state.editingCommentText) {
+                        _commentController.text = state.editingCommentText ?? '';
+                        _commentFocusNode.requestFocus();
+                      }
                     }
-                  }
-                },
+                  },
                 child: BlocBuilder<ExpenseDetailBloc, ExpenseDetailState>(
                   builder: (context, state) {
                     if (state is ExpenseDetailError) {
@@ -205,14 +221,16 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                                          state is ExpenseDeleteLoading ||
                                          state is ExpenseRestoreLoading;
                                          
-                    final entity = state is ExpenseDetailLoaded ? state.expenseDetail : _getMockEntity();
-                    final bool isDeleted = state is ExpenseDetailLoaded && state.isDeleted;
+                    final loadedState = state is ExpenseDetailLoaded ? state : _lastLoadedState;
+                    final entity = loadedState?.expenseDetail ?? _getMockEntity();
+                    final bool isDeleted = loadedState?.isDeleted ?? false;
+                    final bool showSkeleton = isLoading && _lastLoadedState == null;
 
                     return Skeletonizer(
-                      enabled: isLoading,
+                      enabled: showSkeleton,
                       child: Column(
                         children: [
-                          if (isDeleted) _buildDeletedBanner(context, entity.id, (state as ExpenseDetailLoaded).canManageExpense),
+                          if (isDeleted) _buildDeletedBanner(context, entity.id, loadedState?.canManageExpense ?? false),
                           Expanded(
                             child: SingleChildScrollView(
                               physics: const AlwaysScrollableScrollPhysics(),
@@ -223,10 +241,10 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                                   children: [
                                     _buildHeaderAmount(entity, isDeleted),
                                     const SizedBox(height: 32),
-                                    _buildQuickInfo(state is ExpenseDetailLoaded ? state : ExpenseDetailLoaded(_getMockEntity(), "")),
-                                    if (state is ExpenseDetailLoaded && state.expenseDetail.updatedBy != null) ...[
+                                    _buildQuickInfo(loadedState ?? ExpenseDetailLoaded(_getMockEntity(), "")),
+                                    if (loadedState != null && loadedState.expenseDetail.updatedBy != null) ...[
                                       const SizedBox(height: 12),
-                                      _buildLastUpdatedInfo(state),
+                                      _buildLastUpdatedInfo(loadedState),
                                     ],
                                     const SizedBox(height: 24),
                                     _buildActionGrid(entity, isDeleted),
@@ -241,17 +259,25 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                                       _buildNotesSection(entity.notes!),
                                       const SizedBox(height: 24),
                                     ],
-                                    _buildSectionTitle("Split Details"),
-                                    const SizedBox(height: 8),
-                                    _buildSplitsList(entity),
-                                    const SizedBox(height: 24),
+                                    if (entity.splits.isNotEmpty) ...[
+                                      _buildSectionTitle("Split Details"),
+                                      const SizedBox(height: 8),
+                                      _buildSplitsList(entity),
+                                      const SizedBox(height: 24),
+                                    ],
+                                    if (entity.media.isNotEmpty) ...[
+                                      _buildSectionTitle("Attachments"),
+                                      const SizedBox(height: 8),
+                                      ExpenseMediaList(entity: entity, canManageExpense: loadedState?.canManageExpense ?? false),
+                                      const SizedBox(height: 24),
+                                    ],
                                     _buildSectionTitle("Comments"),
                                     const SizedBox(height: 8),
                                     _buildCommentsList(
-                                      state is ExpenseDetailLoaded ? state.comments : _getMockComments(), 
-                                      state is ExpenseDetailLoaded ? state.currentUserId : "", 
+                                      loadedState?.comments ?? _getMockComments(), 
+                                      loadedState?.currentUserId ?? "", 
                                       isDeleted,
-                                      state is ExpenseDetailLoaded ? state.commentsLoading : false,
+                                      loadedState?.commentsLoading ?? false,
                                       entity.id,
                                     ),
                                     const SizedBox(height: 80), 
@@ -276,7 +302,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                                   .padding
                                   .bottom : 20,
                             ),
-                            child: _buildCommentsSection(entity, state is ExpenseDetailLoaded ? state.editingCommentId : null),
+                            child: _buildCommentsSection(entity, loadedState?.editingCommentId),
                           ),
                         ],
                       ),
@@ -505,7 +531,10 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
           Container(width: 1, height: 32, color: AppColors.borderGreyLight),
           _buildInfoItem(Icons.person_outline_rounded, "Added By", state.creatorFirstName),
           Container(width: 1, height: 32, color: AppColors.borderGreyLight),
-          _buildInfoItem(Icons.group_outlined, "Group", state.groupDisplayName),
+          if (entity.splits.isEmpty)
+            _buildInfoItem(Icons.lock_outline_rounded, "Scope", "Personal")
+          else
+            _buildInfoItem(Icons.group_outlined, "Group", state.groupDisplayName),
         ],
       ),
     );
@@ -603,27 +632,64 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.borderGreyLight),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
+      child: Column(
         children: [
-          AppAvatar(url: entity.paidBy.avatar, radius: 18, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
               children: [
-                Text(
-                  entity.paidBy.fullName,
-                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                AppAvatar(url: entity.paidBy.avatar, radius: 18, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        entity.paidBy.fullName,
+                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                      ),
+                      Text("Paid 100% of the cost", style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
+                    ],
+                  ),
                 ),
-                Text("Paid 100% of the cost", style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
+                Text(
+                  "₹${NumberFormat('#,##0.00', 'en_IN').format(entity.totalAmount)}",
+                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+                ),
               ],
             ),
           ),
-          Text(
-            "₹${NumberFormat('#,##0.00', 'en_IN').format(entity.totalAmount)}",
-            style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack),
-          ),
+          if (entity.paymentMethod != null) ...[
+            Divider(height: 1, color: AppColors.borderGreyLight, indent: 16, endIndent: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Color(int.parse(entity.paymentMethod!.color.replaceFirst('#', '0xFF'))).withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      IconUtils.getIconFromString(entity.paymentMethod!.icon),
+                      color: Color(int.parse(entity.paymentMethod!.color.replaceFirst('#', '0xFF'))),
+                      size: 16,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    "Paid via ${entity.paymentMethod!.name}",
+                    style: GoogleFonts.outfit(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textGrey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );

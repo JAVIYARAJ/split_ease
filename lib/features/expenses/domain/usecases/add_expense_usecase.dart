@@ -5,13 +5,13 @@ import 'package:split_ease/features/expenses/domain/usecases/create_expense_para
 import '../../../../core/error/failure.dart';
 import '../../../../core/usecases/use_case.dart';
 
-class AddExpenseUseCase implements UseCase<void, CreateExpenseParams> {
+class AddExpenseUseCase implements UseCase<String, CreateExpenseParams> {
   final ExpenseRepository repository;
 
   AddExpenseUseCase(this.repository);
 
   @override
-  Future<Either<Failure, void>> call(CreateExpenseParams params) async {
+  Future<Either<Failure, String>> call(CreateExpenseParams params) async {
     return await repository.createExpense(params);
   }
 }

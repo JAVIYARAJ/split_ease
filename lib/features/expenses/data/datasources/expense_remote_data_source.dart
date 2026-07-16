@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../domain/entities/expense_media_entity.dart';
 import 'package:split_ease/features/expenses/domain/usecases/create_expense_params.dart';
 import 'package:split_ease/features/expenses/domain/usecases/update_expense_params.dart';
 import 'package:split_ease/core/utils/error_message_utils.dart';
@@ -7,9 +8,12 @@ import '../../../../core/error/exception.dart';
 
 import 'package:split_ease/features/expenses/data/models/expense_detail_model.dart';
 import 'package:split_ease/features/expenses/data/models/expense_category_model.dart';
+import 'package:split_ease/features/expenses/data/models/expense_metadata_model.dart';
+import 'package:split_ease/features/expenses/data/models/personal_expenses_model.dart';
+import 'package:split_ease/features/expenses/data/models/expense_media_model.dart';
 
 abstract class ExpenseRemoteDataSource {
-  Future<void> createExpense(CreateExpenseParams params);
+  Future<String> createExpense(CreateExpenseParams params);
   Future<void> updateExpense(UpdateExpenseParams params);
   Future<ExpenseDetailModel> getExpenseDetail(String expenseId);
   Future<List<ExpenseCommentModel>> getExpenseComments(String expenseId);
@@ -25,7 +29,10 @@ abstract class ExpenseRemoteDataSource {
     String? groupId,
     String? note,
   });
-  Future<List<ExpenseCategoryModel>> getExpenseCategories();
+  Future<ExpenseMetadataModel> getExpenseMetadata();
+  Future<PersonalExpensesModel> getPersonalExpenses();
+  Future<void> attachExpenseMedia(String expenseId, List<ExpenseMediaEntity> media);
+  Future<void> deleteExpenseMedia(String mediaId);
 }
 
 
@@ -35,12 +42,23 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
   ExpenseRemoteDataSourceImpl({required this.client});
 
   @override
-  Future<void> createExpense(CreateExpenseParams params) async {
+  Future<String> createExpense(CreateExpenseParams params) async {
     try {
-      await client.rpc(
+      final response = await client.rpc(
         'create_expense_rpc',
         params: params.toJson(),
       );
+      if (response is Map<String, dynamic>) {
+        if (response['success'] == true) {
+          return response['expense_id'] as String;
+        } else {
+          throw ServerException(message: response['message'] as String? ?? 'Failed to create expense');
+        }
+      } else if (response is String) {
+        return response;
+      } else {
+        throw ServerException(message: 'Invalid response format from server');
+      }
     } catch (e) {
       throw ServerException(message: ErrorMessageUtils.generate(e));
     }
@@ -49,10 +67,14 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
   @override
   Future<void> updateExpense(UpdateExpenseParams params) async {
     try {
-      await client.rpc(
-        'update_expense_new',
+      final response = await client.rpc(
+        'update_expense_rpc',
         params: params.toJson(),
       );
+      
+      if (response is Map<String, dynamic> && response['success'] == false) {
+        throw ServerException(message: response['message'] as String? ?? 'Failed to update expense');
+      }
     } catch (e) {
       throw ServerException(message: ErrorMessageUtils.generate(e));
     }
@@ -204,12 +226,64 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
   }
 
   @override
-  Future<List<ExpenseCategoryModel>> getExpenseCategories() async {
+  Future<ExpenseMetadataModel> getExpenseMetadata() async {
     try {
-      final response = await client.rpc('get_expense_categories_rpc');
-      return (response as List)
-          .map((e) => ExpenseCategoryModel.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final response = await client.rpc('get_expense_metadata_rpc');
+      return ExpenseMetadataModel.fromJson(response as Map<String, dynamic>);
+    } catch (e) {
+      throw ServerException(message: ErrorMessageUtils.generate(e));
+    }
+  }
+
+  @override
+  Future<PersonalExpensesModel> getPersonalExpenses() async {
+    try {
+      final response = await client.rpc('get_personal_expense_rpc');
+      return PersonalExpensesModel.fromJson(response as Map<String, dynamic>);
+    } catch (e) {
+      throw ServerException(message: ErrorMessageUtils.generate(e));
+    }
+  }
+
+  @override
+  Future<void> attachExpenseMedia(String expenseId, List<ExpenseMediaEntity> media) async {
+    try {
+      final mediaJson = media.map((m) {
+        if (m is ExpenseMediaModel) return m.toJson();
+        return ExpenseMediaModel(
+          id: m.id,
+          url: m.url,
+          publicId: m.publicId,
+          mediaType: m.mediaType,
+          fileName: m.fileName,
+          mimeType: m.mimeType,
+          fileSize: m.fileSize,
+          width: m.width,
+          height: m.height,
+        ).toJson();
+      }).toList();
+
+      await client.rpc(
+        'attach_expense_media_rpc',
+        params: {
+          'p_expense_id': expenseId,
+          'p_media': mediaJson,
+        },
+      );
+    } catch (e) {
+      throw ServerException(message: ErrorMessageUtils.generate(e));
+    }
+  }
+
+  @override
+  Future<void> deleteExpenseMedia(String mediaId) async {
+    try {
+      await client.rpc(
+        'delete_expense_media_rpc',
+        params: {
+          'p_media_id': mediaId,
+        },
+      );
     } catch (e) {
       throw ServerException(message: ErrorMessageUtils.generate(e));
     }

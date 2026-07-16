@@ -5,6 +5,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_formatter.dart';
 import 'package:split_ease/core/presentation/widgets/animations/animated_counter_text.dart';
+import 'package:split_ease/core/utils/icon_utils.dart';
 import '../../domain/entities/expense_breakdown_entity.dart';
 import '../bloc/expense_breakdown_bloc.dart';
 import '../bloc/expense_breakdown_event.dart';
@@ -298,7 +299,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
         (context, index) {
           final category = categories[index];
           final color = _parseColor(category.color);
-          final iconData = _parseIcon(category.icon);
+          final iconData = IconUtils.getIconFromString(category.icon);
 
           return Container(
             margin: const EdgeInsets.only(bottom: 16),
@@ -520,24 +521,5 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
     }
   }
 
-  IconData _parseIcon(String iconString) {
-    switch (iconString) {
-      case 'restaurant':
-        return Icons.restaurant_rounded;
-      case 'local_movies':
-        return Icons.local_movies_rounded;
-      case 'directions_car':
-        return Icons.directions_car_rounded;
-      case 'shopping_cart':
-        return Icons.shopping_cart_rounded;
-      case 'flight':
-        return Icons.flight_rounded;
-      case 'home':
-        return Icons.home_rounded;
-      case 'medical_services':
-        return Icons.medical_services_rounded;
-      default:
-        return Icons.category_rounded;
-    }
-  }
+
 }

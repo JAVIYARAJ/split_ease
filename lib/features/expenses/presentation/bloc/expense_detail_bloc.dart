@@ -8,10 +8,13 @@ import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_st
 import 'package:split_ease/features/expenses/domain/usecases/add_expense_comment_usecase.dart';
 import 'package:split_ease/features/expenses/domain/usecases/update_expense_comment_usecase.dart';
 import 'package:split_ease/features/expenses/domain/usecases/delete_expense_comment_usecase.dart';
+import 'package:split_ease/features/expenses/domain/usecases/delete_expense_media_usecase.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:split_ease/features/groups/domain/entities/group_member_entity.dart';
 import 'package:split_ease/features/groups/domain/usecases/get_group_members.dart';
 import 'package:split_ease/features/expenses/domain/usecases/get_expense_comments.dart';
+import 'package:split_ease/core/services/cloudinary_upload_service.dart';
 
 class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
   /// Logic Coordinator for the Expense Detail Page.
@@ -25,6 +28,7 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
   final AddExpenseCommentUseCase _addExpenseCommentUseCase;
   final UpdateExpenseCommentUseCase _updateExpenseCommentUseCase;
   final DeleteExpenseCommentUseCase _deleteExpenseCommentUseCase;
+  final DeleteExpenseMediaUseCase _deleteExpenseMediaUseCase;
   final AppUserCubit _appUserCubit;
   final DataRefreshCubit _dataRefreshCubit;
   final GetExpenseComments _getExpenseComments;
@@ -37,6 +41,7 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
     this._addExpenseCommentUseCase, 
     this._updateExpenseCommentUseCase,
     this._deleteExpenseCommentUseCase,
+    this._deleteExpenseMediaUseCase,
     this._appUserCubit, 
     this._dataRefreshCubit,
     this._getExpenseComments,
@@ -51,6 +56,7 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
     on<DeleteExpenseCommentEvent>(_onDeleteExpenseComment);
     on<SetEditingCommentEvent>(_onSetEditingComment);
     on<CancelEditingCommentEvent>(_onCancelEditingComment);
+    on<DeleteExpenseMediaEvent>(_onDeleteExpenseMedia);
   }
 
   void _onSetEditingComment(
@@ -268,6 +274,39 @@ class ExpenseDetailBloc extends Bloc<ExpenseDetailEvent, ExpenseDetailState> {
       },
       (_) {
         add(FetchExpenseCommentsEvent(event.expenseId));
+        add(MarkExpenseAsChanged());
+      },
+    );
+  }
+
+  Future<void> _onDeleteExpenseMedia(
+    DeleteExpenseMediaEvent event,
+    Emitter<ExpenseDetailState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! ExpenseDetailLoaded) return;
+    
+    emit(ExpenseDetailLoading(hasChanges: currentState.hasChanges));
+    final result = await _deleteExpenseMediaUseCase(event.mediaId);
+    
+    result.fold(
+      (failure) {
+        emit(CommentActionError(failure.message, currentState));
+        emit(currentState); // Restore state
+      },
+      (_) async {
+        try {
+          final mediaToDelete = currentState.expenseDetail.media.where((m) => m.id == event.mediaId).firstOrNull;
+          if (mediaToDelete != null && mediaToDelete.publicId.isNotEmpty) {
+            final resourceType = mediaToDelete.mimeType.startsWith('image/') ? 'image' : 'raw';
+            await CloudinaryUploadService.deleteFile(mediaToDelete.publicId, resourceType);
+          }
+        } catch (e) {
+          debugPrint("Failed to delete from Cloudinary: $e");
+        }
+        
+        // Trigger a refresh of the expense details
+        add(FetchExpenseDetailEvent(event.expenseId));
         add(MarkExpenseAsChanged());
       },
     );

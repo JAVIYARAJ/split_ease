@@ -87,3 +87,13 @@ class SetEditingCommentEvent extends ExpenseDetailEvent {
 }
 
 class CancelEditingCommentEvent extends ExpenseDetailEvent {}
+
+class DeleteExpenseMediaEvent extends ExpenseDetailEvent {
+  final String expenseId;
+  final String mediaId;
+
+  const DeleteExpenseMediaEvent({required this.expenseId, required this.mediaId});
+
+  @override
+  List<Object> get props => [expenseId, mediaId];
+}

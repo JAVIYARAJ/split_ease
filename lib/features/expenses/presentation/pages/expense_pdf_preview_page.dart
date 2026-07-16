@@ -36,9 +36,8 @@ class ExpensePdfPreviewPage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.share_rounded, color: AppColors.primary),
             onPressed: () async {
-              await Share.shareXFiles(
-                [XFile(pdfPath)],
-                text: 'Here is the expense receipt for "$expenseDescription".',
+              await SharePlus.instance.share(
+                ShareParams(files: [XFile(pdfPath)],text: 'Here is the expense receipt for "$expenseDescription".',)
               );
             },
           ),

@@ -11,6 +11,10 @@ import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:split_ease/core/services/image_picker_service.dart';
+import 'package:split_ease/injection_container.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_detail_entity.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_category_entity.dart';
@@ -188,65 +192,87 @@ class _AddExpensePageState extends State<AddExpensePage> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
                           child: Container(
+                            padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: AppColors.borderGrey.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(24),
+                              color: AppColors.borderGrey.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            child: Row(
+                            child: Stack(
                               children: [
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      if (state.origin == ExpenseOrigin.personal) {
-                                        context.read<ExpenseBloc>().add(const ExpenseOriginChanged(ExpenseOrigin.global));
-                                      }
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(vertical: 12),
-                                      decoration: BoxDecoration(
-                                        color: state.origin != ExpenseOrigin.personal ? Colors.white : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(24),
-                                        boxShadow: state.origin != ExpenseOrigin.personal
-                                            ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))]
-                                            : null,
-                                      ),
-                                      child: Text(
-                                        "Shared",
-                                        textAlign: TextAlign.center,
-                                        style: GoogleFonts.outfit(
-                                          fontWeight: state.origin != ExpenseOrigin.personal ? FontWeight.bold : FontWeight.w500,
-                                          color: state.origin != ExpenseOrigin.personal ? AppColors.textBlack : AppColors.textGrey,
+                                Positioned.fill(
+                                  child: AnimatedAlign(
+                                    duration: const Duration(milliseconds: 250),
+                                    curve: Curves.easeInOutCubic,
+                                    alignment: state.origin != ExpenseOrigin.personal ? Alignment.centerLeft : Alignment.centerRight,
+                                    child: FractionallySizedBox(
+                                      widthFactor: 0.5,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(12),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.04),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
+                                            )
+                                          ],
                                         ),
                                       ),
                                     ),
                                   ),
                                 ),
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      if (state.origin != ExpenseOrigin.personal) {
-                                        context.read<ExpenseBloc>().add(const ExpenseOriginChanged(ExpenseOrigin.personal));
-                                      }
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(vertical: 12),
-                                      decoration: BoxDecoration(
-                                        color: state.origin == ExpenseOrigin.personal ? Colors.white : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(24),
-                                        boxShadow: state.origin == ExpenseOrigin.personal
-                                            ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))]
-                                            : null,
-                                      ),
-                                      child: Text(
-                                        "Personal",
-                                        textAlign: TextAlign.center,
-                                        style: GoogleFonts.outfit(
-                                          fontWeight: state.origin == ExpenseOrigin.personal ? FontWeight.bold : FontWeight.w500,
-                                          color: state.origin == ExpenseOrigin.personal ? AppColors.textBlack : AppColors.textGrey,
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: GestureDetector(
+                                        behavior: HitTestBehavior.opaque,
+                                        onTap: () {
+                                          if (state.origin == ExpenseOrigin.personal) {
+                                            context.read<ExpenseBloc>().add(const ExpenseOriginChanged(ExpenseOrigin.global));
+                                          }
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          alignment: Alignment.center,
+                                          child: AnimatedDefaultTextStyle(
+                                            duration: const Duration(milliseconds: 250),
+                                            curve: Curves.easeInOut,
+                                            style: GoogleFonts.outfit(
+                                              fontSize: 14,
+                                              fontWeight: state.origin != ExpenseOrigin.personal ? FontWeight.w700 : FontWeight.w600,
+                                              color: state.origin != ExpenseOrigin.personal ? AppColors.textBlack : AppColors.textGrey,
+                                            ),
+                                            child: const Text("Shared"),
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
+                                    Expanded(
+                                      child: GestureDetector(
+                                        behavior: HitTestBehavior.opaque,
+                                        onTap: () {
+                                          if (state.origin != ExpenseOrigin.personal) {
+                                            context.read<ExpenseBloc>().add(const ExpenseOriginChanged(ExpenseOrigin.personal));
+                                          }
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          alignment: Alignment.center,
+                                          child: AnimatedDefaultTextStyle(
+                                            duration: const Duration(milliseconds: 250),
+                                            curve: Curves.easeInOut,
+                                            style: GoogleFonts.outfit(
+                                              fontSize: 14,
+                                              fontWeight: state.origin == ExpenseOrigin.personal ? FontWeight.w700 : FontWeight.w600,
+                                              color: state.origin == ExpenseOrigin.personal ? AppColors.textBlack : AppColors.textGrey,
+                                            ),
+                                            child: const Text("Personal"),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -324,8 +350,12 @@ class _AddExpensePageState extends State<AddExpensePage> {
                         ),
                         child: Skeletonizer(
                           enabled: state.groupMembersStatus == ExpenseStatus.loading,
-                          child: Column(
-                            children: [
+                          child: AnimatedSize(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            alignment: Alignment.topCenter,
+                            child: Column(
+                              children: [
                               _buildConfigRow(
                                 icon: state.selectedCategory != null ? IconUtils.getIconFromString(state.selectedCategory!.icon) : Icons.category_rounded,
                                 iconColor: state.selectedCategory != null 
@@ -334,8 +364,19 @@ class _AddExpensePageState extends State<AddExpensePage> {
                                 label: "Category",
                                 value: state.selectedCategory?.name ?? "Select Category",
                                 isTop: true,
-                                isBottom: state.origin == ExpenseOrigin.personal,
+                                isBottom: false,
                                 onTap: () => _showCategoryPicker(context, state),
+                              ),
+                              _buildDivider(),
+                              _buildConfigRow(
+                                icon: state.selectedPaymentMethod != null ? IconUtils.getIconFromString(state.selectedPaymentMethod!.icon) : Icons.payments_rounded,
+                                iconColor: state.selectedPaymentMethod != null 
+                                    ? Color(int.parse(state.selectedPaymentMethod!.color.replaceFirst('#', '0xFF'))) 
+                                    : null,
+                                label: "Payment Method",
+                                value: state.selectedPaymentMethod?.name ?? "Select Method",
+                                isBottom: state.origin == ExpenseOrigin.personal,
+                                onTap: () => _showPaymentMethodPicker(context, state),
                               ),
                               if (state.origin != ExpenseOrigin.personal) ...[
                                 _buildDivider(),
@@ -370,6 +411,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                                 ],
                               ],
                             ],
+                            ),
                           ),
                         ),
                       ),
@@ -411,7 +453,6 @@ class _AddExpensePageState extends State<AddExpensePage> {
                               label: "Note",
                               value: state.notes.isNotEmpty ? state.notes : "Add a note",
                               valueColor: state.notes.isNotEmpty ? AppColors.textBlack : AppColors.textGrey,
-                              isBottom: true,
                               onTap: () async {
                                 final result = await NavigationService.pushNamed(
                                   AppRoutes.expenseNote,
@@ -424,6 +465,20 @@ class _AddExpensePageState extends State<AddExpensePage> {
                                   context.read<ExpenseBloc>().add(NotesChanged(result));
                                 }
                               },
+                            ),
+                            _buildDivider(),
+                            Builder(
+                              builder: (context) {
+                                final totalAttachments = state.attachments.length + state.existingMedia.length;
+                                return _buildConfigRow(
+                                  icon: Icons.receipt_long_rounded,
+                                  label: "Receipt",
+                                  value: totalAttachments > 0 ? "$totalAttachments attached" : "Add receipt",
+                                  valueColor: totalAttachments > 0 ? AppColors.textBlack : AppColors.textGrey,
+                                  isBottom: true,
+                                  onTap: () => _showAttachmentPicker(context, state),
+                                );
+                              }
                             ),
                           ],
                         ),
@@ -586,6 +641,241 @@ class _AddExpensePageState extends State<AddExpensePage> {
     );
     if (result != null && result is ExpenseCategoryEntity && context.mounted) {
       context.read<ExpenseBloc>().add(CategoryChanged(result));
+    }
+  }
+
+  void _showPaymentMethodPicker(BuildContext context, ExpenseState state) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (bottomSheetContext) {
+        return Container(
+          padding: EdgeInsets.only(
+            top: 24, 
+            bottom: MediaQuery.of(bottomSheetContext).padding.bottom + 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Select Payment Method",
+                style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  itemCount: state.paymentMethods.length,
+                  itemBuilder: (listContext, index) {
+                    final method = state.paymentMethods[index];
+                    final isSelected = state.selectedPaymentMethod?.id == method.id;
+                    final color = Color(int.parse(method.color.replaceFirst('#', '0xFF')));
+                    return ListTile(
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(IconUtils.getIconFromString(method.icon), color: color, size: 24),
+                      ),
+                      title: Text(
+                        method.name,
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: AppColors.textBlack,
+                        ),
+                      ),
+                      trailing: isSelected ? const Icon(Icons.check_circle_rounded, color: AppColors.primaryTeal) : null,
+                      onTap: () {
+                        context.read<ExpenseBloc>().add(PaymentMethodChanged(method));
+                        Navigator.pop(bottomSheetContext);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showAttachmentPicker(BuildContext context, ExpenseState state) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (BuildContext bottomSheetContext) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          padding: EdgeInsets.only(
+            top: 12,
+            left: 24,
+            right: 24,
+            bottom: MediaQuery.of(bottomSheetContext).padding.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 48,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: AppColors.borderGrey.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryTeal.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.attach_file_rounded, color: AppColors.primaryTeal, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    "Add Attachment",
+                    style: GoogleFonts.outfit(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textBlack,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Select a clear image or PDF of your receipt.",
+                style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textGrey),
+              ),
+              const SizedBox(height: 32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildAttachmentOption(
+                    context: bottomSheetContext,
+                    icon: Icons.camera_alt_rounded,
+                    label: "Camera",
+                    color: const Color(0xFF4F46E5),
+                    onTap: () {
+                      Navigator.pop(bottomSheetContext);
+                      _pickMedia(context, state, true);
+                    },
+                  ),
+                  _buildAttachmentOption(
+                    context: bottomSheetContext,
+                    icon: Icons.photo_library_rounded,
+                    label: "Gallery",
+                    color: const Color(0xFF10B981),
+                    onTap: () {
+                      Navigator.pop(bottomSheetContext);
+                      _pickMedia(context, state, false);
+                    },
+                  ),
+                  _buildAttachmentOption(
+                    context: bottomSheetContext,
+                    icon: Icons.picture_as_pdf_rounded,
+                    label: "Document",
+                    color: const Color(0xFFF59E0B),
+                    onTap: () async {
+                      Navigator.pop(bottomSheetContext);
+                      await Future.delayed(const Duration(milliseconds: 300));
+                      try {
+                        FilePickerResult? result = await FilePicker.pickFiles(
+                          type: FileType.any,
+                        );
+                        if (result != null && result.files.single.path != null && context.mounted) {
+                          final currentAttachments = List<String>.from(state.attachments);
+                          currentAttachments.add(result.files.single.path!);
+                          context.read<ExpenseBloc>().add(AttachmentsChanged(currentAttachments));
+                        }
+                      } catch (e) {
+                        debugPrint("FilePicker Error: $e");
+                        if (context.mounted) {
+                          AppAlerts.showError(context, "Error: $e");
+                        }
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAttachmentOption({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            height: 72,
+            width: 72,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.15),
+                  blurRadius: 15,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Icon(icon, color: color, size: 32),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            label,
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textBlack,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickMedia(BuildContext context, ExpenseState state, bool isCamera) async {
+    try {
+      final picker = sl<ImagePickerService>();
+      final file = isCamera ? await picker.pickImage(source: ImageSource.camera) : await picker.pickImage(source: ImageSource.gallery);
+      
+      if (file != null && context.mounted) {
+        final currentAttachments = List<String>.from(state.attachments);
+        currentAttachments.add(file.path);
+        context.read<ExpenseBloc>().add(AttachmentsChanged(currentAttachments));
+      }
+    } catch (e) {
+      if (context.mounted) {
+         AppAlerts.showError(context, "Could not pick image");
+      }
     }
   }
 }

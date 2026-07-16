@@ -21,8 +21,12 @@ class ExpenseState {
   final List<GroupEntity> commonGroups;
   final List<ExpenseCategoryEntity> categories;
   final ExpenseCategoryEntity? selectedCategory;
+  final List<ExpensePaymentMethodEntity> paymentMethods;
+  final ExpensePaymentMethodEntity? selectedPaymentMethod;
   final ExpenseOrigin origin;
   final String notes;
+  final List<String> attachments; // List of file paths
+  final List<ExpenseMediaEntity> existingMedia; // Existing server attachments
   final String? errorMessage;
 
 
@@ -44,8 +48,12 @@ class ExpenseState {
     this.commonGroups = const [],
     this.categories = const [],
     this.selectedCategory,
+    this.paymentMethods = const [],
+    this.selectedPaymentMethod,
     this.origin = ExpenseOrigin.global,
     this.notes = '',
+    this.attachments = const [],
+    this.existingMedia = const [],
     this.errorMessage,
   });
 
@@ -108,8 +116,12 @@ class ExpenseState {
     List<GroupEntity>? commonGroups,
     List<ExpenseCategoryEntity>? categories,
     ExpenseCategoryEntity? Function()? selectedCategory,
+    List<ExpensePaymentMethodEntity>? paymentMethods,
+    ExpensePaymentMethodEntity? Function()? selectedPaymentMethod,
     ExpenseOrigin? origin,
     String? notes,
+    List<String>? attachments,
+    List<ExpenseMediaEntity>? existingMedia,
     String? Function()? errorMessage,
   }) {
     return ExpenseState(
@@ -130,8 +142,12 @@ class ExpenseState {
       commonGroups: commonGroups ?? this.commonGroups,
       categories: categories ?? this.categories,
       selectedCategory: selectedCategory != null ? selectedCategory() : this.selectedCategory,
+      paymentMethods: paymentMethods ?? this.paymentMethods,
+      selectedPaymentMethod: selectedPaymentMethod != null ? selectedPaymentMethod() : this.selectedPaymentMethod,
       origin: origin ?? this.origin,
       notes: notes ?? this.notes,
+      attachments: attachments ?? this.attachments,
+      existingMedia: existingMedia ?? this.existingMedia,
       errorMessage: errorMessage != null ? errorMessage() : this.errorMessage,
     );
   }

@@ -26,4 +26,5 @@ class AppRoutes {
   static const String groupQr = '/groupQr';
   static const String categorySelection = '/categorySelection';
   static const String categoryLimits = '/categoryLimits';
+  static const String personalExpenses = '/personalExpenses';
 }

@@ -1,5 +1,9 @@
 import 'package:split_ease/features/expenses/domain/entities/expense_detail_entity.dart';
 import 'package:split_ease/features/expenses/data/models/expense_category_model.dart';
+import 'package:split_ease/features/expenses/data/models/expense_media_model.dart';
+import 'package:split_ease/features/expenses/domain/entities/expense_media_entity.dart';
+
+import '../../domain/entities/expense_media_entity.dart';
 
 class ExpenseDetailModel extends ExpenseDetailEntity {
   const ExpenseDetailModel({
@@ -17,7 +21,9 @@ class ExpenseDetailModel extends ExpenseDetailEntity {
     super.notes,
     super.updatedAt,
     super.updatedBy,
+    super.media = const [],
     super.isDeleted,
+    super.paymentMethod,
   });
 
   factory ExpenseDetailModel.fromJson(Map<String, dynamic> json) {
@@ -33,12 +39,20 @@ class ExpenseDetailModel extends ExpenseDetailEntity {
       category: json['category'] != null ? ExpenseCategoryModel.fromJson(json['category']) : null,
       paidBy: ExpenseUserModel.fromJson(json['paid_by']),
       createdBy: ExpenseUserModel.fromJson(json['created_by']),
-      splits: (json['splits'] as List)
-          .map((e) => ExpenseSplitModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      splits: json['splits'] != null
+          ? (json['splits'] as List)
+              .map((e) => ExpenseSplitModel.fromJson(e as Map<String, dynamic>))
+              .toList()
+          : [],
       updatedAt: json['updated_at'] as String?,
       updatedBy: json['updated_by'] != null ? ExpenseUserModel.fromJson(json['updated_by']) : null,
+      media: json['media'] != null
+          ? (json['media'] as List)
+              .map<ExpenseMediaEntity>((e) => ExpenseMediaModel.fromJson(e as Map<String, dynamic>))
+              .toList()
+          : [],
       isDeleted: json['is_deleted'] as bool? ?? false,
+      paymentMethod: json['payment_method'] != null ? ExpensePaymentMethodModel.fromJson(json['payment_method']) : null,
     );
   }
 }
@@ -110,6 +124,24 @@ class ExpenseCommentModel extends ExpenseCommentEntity {
       content: json['comment'] as String,
       createdAt: json['created_at'] as String,
       user: ExpenseUserModel.fromJson(json['user']),
+    );
+  }
+}
+
+class ExpensePaymentMethodModel extends ExpensePaymentMethodEntity {
+  const ExpensePaymentMethodModel({
+    required super.id,
+    required super.name,
+    required super.icon,
+    required super.color,
+  });
+
+  factory ExpensePaymentMethodModel.fromJson(Map<String, dynamic> json) {
+    return ExpensePaymentMethodModel(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      icon: json['icon'] as String,
+      color: json['color'] as String,
     );
   }
 }

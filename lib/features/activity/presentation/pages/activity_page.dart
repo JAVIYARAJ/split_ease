@@ -43,7 +43,11 @@ class ActivityPage extends StatelessWidget {
                 ? state.activities
                 : [];
 
-            final groupedActivities = _groupActivities(activities);
+            final List<ActivityEntity> displayActivities = (isLoading && activities.isEmpty)
+                ? _getDummyActivities()
+                : activities;
+
+            final groupedActivities = _groupActivities(displayActivities);
 
             return CustomRefreshIndicator(
               onRefresh: () async {
@@ -260,5 +264,22 @@ class ActivityPage extends StatelessWidget {
     }
 
     return grouped;
+  }
+
+  List<ActivityEntity> _getDummyActivities() {
+    return List.generate(
+      6,
+      (index) => ActivityEntity(
+        activityId: 'dummy_$index',
+        type: 'expense',
+        action: 'created',
+        actorName: 'Loading Name',
+        groupName: 'Loading Group',
+        description: 'Loading description text goes here',
+        amountType: 'owe',
+        balanceEffect: 500.0,
+        createdAt: DateTime.now().subtract(Duration(days: index ~/ 2)),
+      ),
+    );
   }
 }

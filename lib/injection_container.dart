@@ -84,6 +84,7 @@ import 'package:split_ease/features/expenses/domain/usecases/update_expense.dart
 import 'package:split_ease/features/expenses/domain/usecases/add_expense_comment_usecase.dart';
 import 'package:split_ease/features/expenses/domain/usecases/update_expense_comment_usecase.dart';
 import 'package:split_ease/features/expenses/domain/usecases/delete_expense_comment_usecase.dart';
+import 'package:split_ease/features/expenses/domain/usecases/delete_expense_media_usecase.dart';
 import 'package:split_ease/features/expenses/domain/usecases/get_expense_comments.dart';
 import 'package:split_ease/features/expenses/domain/usecases/settle_up_usecase.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/settle_up/settle_up_cubit.dart';
@@ -91,7 +92,10 @@ import 'package:split_ease/features/expenses/presentation/bloc/settle_up/settle_
 import 'package:split_ease/features/expenses/domain/usecases/get_expense_detail_usecase.dart';
 import 'package:split_ease/features/expenses/domain/usecases/restore_expense_usecase.dart';
 import 'package:split_ease/features/expenses/domain/usecases/get_expense_participants_usecase.dart';
-import 'package:split_ease/features/expenses/domain/usecases/get_expense_categories.dart';
+import 'package:split_ease/features/expenses/domain/usecases/get_personal_expenses.dart';
+import 'package:split_ease/features/expenses/domain/usecases/get_expense_metadata_usecase.dart';
+import 'package:split_ease/features/expenses/domain/usecases/attach_expense_media_usecase.dart';
+import 'package:split_ease/features/expenses/presentation/bloc/personal_expenses/personal_expenses_bloc.dart';
 import 'features/groups/domain/usecases/group_insert_icon.dart';
 import 'features/groups/presentation/bloc/groups_bloc.dart';
 import 'features/groups/presentation/bloc/create_group_bloc.dart';
@@ -197,6 +201,7 @@ void _expense() {
   sl.registerLazySingleton(() => AddExpenseCommentUseCase(sl()));
   sl.registerLazySingleton(() => UpdateExpenseCommentUseCase(sl()));
   sl.registerLazySingleton(() => DeleteExpenseCommentUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteExpenseMediaUseCase(sl()));
   sl.registerLazySingleton(() => GetExpenseComments(sl()));
   sl.registerLazySingleton(() => SettleUpUseCase(sl()));
   sl.registerLazySingleton(() => RestoreExpenseUseCase(sl()));
@@ -208,7 +213,9 @@ void _expense() {
   sl.registerLazySingleton<ExpenseRemoteDataSource>(() => ExpenseRemoteDataSourceImpl(client: sl<SupabaseClient>())); // Note: explicit cast to SupabaseClient if needed, or just sl() since we registered sc.client as SupabaseClient
 
   sl.registerLazySingleton(() => GetCommonGroupsUseCase(sl()));
-  sl.registerLazySingleton(() => GetExpenseCategories(sl()));
+  sl.registerLazySingleton(() => GetExpenseMetadataUseCase(sl()));
+  sl.registerLazySingleton(() => GetPersonalExpenses(sl()));
+  sl.registerLazySingleton(() => AttachExpenseMediaUseCase(sl()));
 
   sl.registerFactory(() => ExpenseBloc(
         addExpenseUseCase: sl(),
@@ -216,7 +223,9 @@ void _expense() {
         getGroupMembers: sl(),
         getCommonGroupsUseCase: sl(),
         getExpenseParticipantsUsecase: sl(),
-        getExpenseCategories: sl(),
+        getExpenseMetadata: sl(),
+        getMyFriends: sl(),
+        attachExpenseMediaUseCase: sl(),
         dataRefreshCubit: sl(),
       ));
 
@@ -233,6 +242,7 @@ void _expense() {
         sl<AddExpenseCommentUseCase>(),
         sl<UpdateExpenseCommentUseCase>(),
         sl<DeleteExpenseCommentUseCase>(),
+        sl<DeleteExpenseMediaUseCase>(),
         sl<AppUserCubit>(),
         sl<DataRefreshCubit>(),
         sl<GetExpenseComments>(),
@@ -240,6 +250,7 @@ void _expense() {
   sl.registerFactory(() => PayerBloc());
   sl.registerFactory(() => SplitBloc());
   sl.registerFactory(() => DateBloc());
+  sl.registerFactory(() => PersonalExpensesBloc(getPersonalExpenses: sl()));
 }
 
 void _profile() {

@@ -45,6 +45,8 @@ import '../../features/groups/presentation/pages/group_qr_page.dart';
 import '../../features/expenses/presentation/pages/category_selection_page.dart';
 import '../../features/account/presentation/pages/category_limits_page.dart';
 import '../../features/account/presentation/bloc/category_limits/category_limits_bloc.dart';
+import '../../features/expenses/presentation/pages/personal_expenses_page.dart';
+import '../../features/expenses/presentation/bloc/personal_expenses/personal_expenses_bloc.dart';
 
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -229,6 +231,14 @@ class RouteGenerator {
           builder: (_) => BlocProvider(
             create: (context) => sl<CategoryLimitsBloc>(),
             child: const CategoryLimitsPage(),
+          ),
+          settings: RouteSettings(arguments: settings.arguments, name: settings.name),
+        );
+      case AppRoutes.personalExpenses:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => sl<PersonalExpensesBloc>(),
+            child: const PersonalExpensesPage(),
           ),
           settings: RouteSettings(arguments: settings.arguments, name: settings.name),
         );

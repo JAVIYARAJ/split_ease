@@ -136,8 +136,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                   final isLoading = state.status == GroupDetailStatus.loading || state.status == GroupDetailStatus.initial;
                   final hasGroup = state.groupEntity != null;
                   
-                  // Hide group info panel entirely in non-group context
-                  if (_groupId == null) return const SliverToBoxAdapter(child: SizedBox());
+                  // Allow group info panel for non-group context to show overall balance
 
                   // Show shimmer while group is loading
                   if (isLoading) {
@@ -149,15 +148,15 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                     );
                   }
 
-                  // Hide if no group or history is entirely empty (and we want to hide it)
-                  if (!hasGroup) return const SliverToBoxAdapter(child: SizedBox());
+                  // Hide if no group AND it's not a non-group context
+                  if (!hasGroup && _groupId != null) return const SliverToBoxAdapter(child: SizedBox());
 
                   // Show info iff we have members or if we have historical expenses
-                  final hasMembers = (state.groupEntity?.members?.length ?? 0) > 1;
+                  final hasMembers = _groupId == null || (state.groupEntity?.members?.length ?? 0) > 1;
                   final hasExpenses = (state.expenseHistory?.expenses?.isNotEmpty ?? false);
                   if (!hasMembers && !hasExpenses) return const SliverToBoxAdapter(child: SizedBox());
 
-                  return _GroupDetailInfo(state.groupEntity!);
+                  return _GroupDetailInfo(isNonGroup: _groupId == null);
                 },
               ),
 
@@ -356,9 +355,9 @@ class _ShimmerTransactionList extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _GroupDetailInfo extends StatelessWidget {
-  final GroupEntity group;
+  final bool isNonGroup;
 
-  const _GroupDetailInfo(this.group);
+  const _GroupDetailInfo({this.isNonGroup = false});
 
   @override
   Widget build(BuildContext context) {
@@ -383,8 +382,10 @@ class _GroupDetailInfo extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const _BalanceSummary(),
-              const SizedBox(height: 16),
-              const _ActionButtons(),
+              if (!isNonGroup) ...[
+                const SizedBox(height: 16),
+                const _ActionButtons(),
+              ],
             ],
           ),
         ),

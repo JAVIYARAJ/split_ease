@@ -114,7 +114,21 @@ class CategoryChanged extends ExpenseEvent {
   const CategoryChanged(this.category);
 }
 
+class PaymentMethodChanged extends ExpenseEvent {
+  final ExpensePaymentMethodEntity paymentMethod;
+  const PaymentMethodChanged(this.paymentMethod);
+}
+
 class ExpenseOriginChanged extends ExpenseEvent {
   final ExpenseOrigin origin;
   const ExpenseOriginChanged(this.origin);
+}
+
+class FetchAllFriendsForGlobalMode extends ExpenseEvent {
+  const FetchAllFriendsForGlobalMode();
+}
+
+class AttachmentsChanged extends ExpenseEvent {
+  final List<String> attachments; // We can store File paths as Strings to avoid dragging dart:io into event definitions unnecessarily, or just import dart:io
+  const AttachmentsChanged(this.attachments);
 }

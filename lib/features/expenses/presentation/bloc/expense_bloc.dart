@@ -6,14 +6,20 @@ import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 import 'package:split_ease/features/groups/domain/usecases/get_common_groups_usecase.dart';
 import 'package:split_ease/features/expenses/domain/usecases/get_expense_participants_usecase.dart';
+import 'package:split_ease/features/friends/domain/usecases/get_my_friends.dart';
 import '../../domain/usecases/add_expense_usecase.dart';
-import '../../domain/usecases/update_expense.dart';
 import '../../domain/usecases/create_expense_params.dart';
+import '../../domain/usecases/update_expense.dart';
 import '../../domain/usecases/update_expense_params.dart';
+import '../../domain/usecases/attach_expense_media_usecase.dart';
+import 'package:split_ease/features/expenses/domain/entities/expense_media_entity.dart';
+import 'package:split_ease/core/services/cloudinary_upload_service.dart';
+import 'dart:io';
 import '../../domain/entities/expense_detail_entity.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_category_entity.dart';
-import 'package:split_ease/features/expenses/domain/usecases/get_expense_categories.dart';
+import 'package:split_ease/features/expenses/domain/entities/expense_metadata_entity.dart';
+import 'package:split_ease/features/expenses/domain/usecases/get_expense_metadata_usecase.dart';
 import 'package:split_ease/core/usecases/use_case.dart';
 
 
@@ -33,7 +39,9 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   final GetGroupMembers getGroupMembers;
   final GetCommonGroupsUseCase getCommonGroupsUseCase;
   final GetExpenseParticipantsUsecase getExpenseParticipantsUsecase;
-  final GetExpenseCategories getExpenseCategories;
+  final GetExpenseMetadataUseCase getExpenseMetadata;
+  final GetMyFriends getMyFriends;
+  final AttachExpenseMediaUseCase attachExpenseMediaUseCase;
   final DataRefreshCubit dataRefreshCubit;
 
 
@@ -43,7 +51,9 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     required this.getGroupMembers,
     required this.getCommonGroupsUseCase,
     required this.getExpenseParticipantsUsecase,
-    required this.getExpenseCategories,
+    required this.getExpenseMetadata,
+    required this.getMyFriends,
+    required this.attachExpenseMediaUseCase,
     required this.dataRefreshCubit,
   }) : super(const ExpenseState()) {
     on<ExpenseInitialized>(_onInitialized);
@@ -63,7 +73,14 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     on<NotesChanged>(_onNotesChanged);
     on<FetchCategories>(_onFetchCategories);
     on<CategoryChanged>(_onCategoryChanged);
+    on<PaymentMethodChanged>(_onPaymentMethodChanged);
     on<ExpenseOriginChanged>(_onExpenseOriginChanged);
+    on<FetchAllFriendsForGlobalMode>(_onFetchAllFriendsForGlobalMode);
+    on<AttachmentsChanged>(_onAttachmentsChanged);
+  }
+
+  void _onAttachmentsChanged(AttachmentsChanged event, Emitter<ExpenseState> emit) {
+    emit(state.copyWith(attachments: event.attachments));
   }
 
   void _onExpenseOriginChanged(ExpenseOriginChanged event, Emitter<ExpenseState> emit) {
@@ -84,40 +101,56 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
       ));
       // Re-fetch participants for self if no group/friend
       if (state.group == null && state.friend == null) {
-        add(FetchParticipants(friendUserId: state.friend?.id));
+        add(const FetchAllFriendsForGlobalMode());
       }
     }
   }
 
   Future<void> _onFetchCategories(FetchCategories event, Emitter<ExpenseState> emit) async {
-    final result = await getExpenseCategories(NoParams());
+    final result = await getExpenseMetadata();
     result.fold(
       (failure) => {}, // Handle error silently or show error
-      (categories) {
+      (metadata) {
         ExpenseCategoryEntity? defaultCategory;
         try {
           if (event.lastUsedCategoryId != null) {
-            defaultCategory = categories.firstWhere((c) => c.id == event.lastUsedCategoryId);
+            defaultCategory = metadata.categories.firstWhere((c) => c.id == event.lastUsedCategoryId);
           }
         } catch (_) {}
 
         if (defaultCategory == null) {
           try {
             // Prioritize 'Other' category by name (allow variations like "Others"), fallback to isDefault
-            defaultCategory = categories.firstWhere((c) => c.name.toLowerCase().contains('other'), 
-              orElse: () => categories.firstWhere((c) => c.isDefault));
+            defaultCategory = metadata.categories.firstWhere((c) => c.name.toLowerCase().contains('other'), 
+              orElse: () => metadata.categories.firstWhere((c) => c.isDefault));
           } catch (_) {
-            if (categories.isNotEmpty) defaultCategory = categories.first;
+            if (metadata.categories.isNotEmpty) defaultCategory = metadata.categories.first;
           }
         }
 
-        emit(state.copyWith(categories: categories, selectedCategory: () => state.selectedCategory ?? defaultCategory));
+        ExpensePaymentMethodEntity? defaultPaymentMethod;
+        try {
+          defaultPaymentMethod = metadata.paymentMethods.firstWhere((pm) => pm.name.toLowerCase().contains('cash'));
+        } catch (_) {
+          if (metadata.paymentMethods.isNotEmpty) defaultPaymentMethod = metadata.paymentMethods.first;
+        }
+
+        emit(state.copyWith(
+          categories: metadata.categories,
+          selectedCategory: () => state.selectedCategory ?? defaultCategory,
+          paymentMethods: metadata.paymentMethods,
+          selectedPaymentMethod: () => state.selectedPaymentMethod ?? defaultPaymentMethod,
+        ));
       },
     );
   }
 
   void _onCategoryChanged(CategoryChanged event, Emitter<ExpenseState> emit) {
     emit(state.copyWith(selectedCategory: () => event.category));
+  }
+
+  void _onPaymentMethodChanged(PaymentMethodChanged event, Emitter<ExpenseState> emit) {
+    emit(state.copyWith(selectedPaymentMethod: () => event.paymentMethod));
   }
 
   /// Logic Moved from UI: Validates basic form requirements before allowing navigation
@@ -163,11 +196,15 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     } else if (event.friend != null) {
       // For single-friend context, we fetch participants (usually current user + friend)
       add(FetchParticipants(friendUserId: event.friend!.id));
-      
-      // Also fetch groups they share to enable optional group selection
-      if (event.currentUserId != null) {
-         add(FetchCommonGroups([event.currentUserId!, event.friend!.id]));
-      }
+    } else if (event.origin == ExpenseOrigin.global) {
+      add(const FetchAllFriendsForGlobalMode());
+    }
+    
+    if (event.currentUserId != null) {
+      final userIds = event.friend != null 
+          ? [event.currentUserId!, event.friend!.id] 
+          : [event.currentUserId!];
+      add(FetchCommonGroups(userIds));
     }
     
     add(FetchCategories(lastUsedCategoryId: event.lastUsedCategoryId));
@@ -233,6 +270,54 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     );
   }
 
+  Future<void> _onFetchAllFriendsForGlobalMode(FetchAllFriendsForGlobalMode event, Emitter<ExpenseState> emit) async {
+    emit(state.copyWith(groupMembersStatus: ExpenseStatus.loading));
+    
+    final result = await getMyFriends(NoParams());
+    
+    result.fold(
+      (failure) {
+        final members = <GroupMemberEntity>[];
+        if (state.currentUserId != null) {
+          members.add(GroupMemberEntity(
+            userId: state.currentUserId,
+            fullName: state.payerName ?? "You",
+            email: '',
+            role: 'member',
+            
+          ));
+        }
+        emit(state.copyWith(
+          groupMembersStatus: ExpenseStatus.failure,
+          errorMessage: () => failure.message,
+        ));
+        _initializeSplitsWithMembers(members, emit);
+      },
+      (friends) {
+        final members = friends.map((f) => GroupMemberEntity(
+          userId: f.id,
+          fullName: f.name,
+          email: f.email ?? '',
+          avtar: f.imageUrl ?? '',
+          role: 'member',
+          
+        )).toList();
+        
+        if (state.currentUserId != null && !members.any((m) => m.userId == state.currentUserId)) {
+          members.insert(0, GroupMemberEntity(
+            userId: state.currentUserId,
+            fullName: state.payerName ?? "You",
+            email: '',
+            role: 'member',
+            
+          ));
+        }
+
+        _initializeSplitsWithMembers(members, emit);
+      }
+    );
+  }
+
   /// Internal helper to initialize the split list once participants are known.
   void _initializeSplitsWithMembers(List<GroupMemberEntity> members, Emitter<ExpenseState> emit) {
     if (state.isEdit && state.splits.isNotEmpty) {
@@ -244,13 +329,36 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
       ));
     } else {
       // For NEW expenses, or if we switched context (clearing the splits), 
-      // we default to including all members in the split.
-      final initialSplits = members.map((m) => ExpenseSplit(
-        userId: m.userId!,
-        amount: 0,
-        percentage: 0,
-        shares: 1,
-      )).toList();
+      // we default to including all members in the split, EXCEPT in global mode
+      // where we only want to include the current user initially to prevent accidentally
+      // splitting with all friends.
+      List<ExpenseSplit> initialSplits;
+      if (state.origin == ExpenseOrigin.global && state.group == null && state.friend == null) {
+        initialSplits = members
+            .where((m) => m.userId == state.currentUserId)
+            .map((m) => ExpenseSplit(
+              userId: m.userId!,
+              amount: 0,
+              percentage: 0,
+              shares: 1,
+            )).toList();
+        
+        if (initialSplits.isEmpty && members.isNotEmpty) {
+          initialSplits = [ExpenseSplit(
+            userId: members.first.userId!,
+            amount: 0,
+            percentage: 0,
+            shares: 1,
+          )];
+        }
+      } else {
+        initialSplits = members.map((m) => ExpenseSplit(
+          userId: m.userId!,
+          amount: 0,
+          percentage: 0,
+          shares: 1,
+        )).toList();
+      }
 
       emit(state.copyWith(
         groupMembersStatus: ExpenseStatus.success,
@@ -308,7 +416,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   Future<void> _onAddExpenseSubmitted(AddExpenseSubmitted event, Emitter<ExpenseState> emit) async {
     emit(state.copyWith(status: ExpenseStatus.loading));
     
-    try {
+    //try {
       // 1. Validation
       final finalPayerId = state.payerId ?? state.currentUserId;
       if (state.origin != ExpenseOrigin.personal && finalPayerId == null) {
@@ -317,9 +425,6 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
 
       if (state.amount.isEmpty || double.tryParse(state.amount) == 0) {
         throw Exception("Please enter a valid amount.");
-      }
-      if (!state.isEdit && state.origin != ExpenseOrigin.personal && state.group == null && state.friend == null) {
-         throw Exception("Please select a group or a friend.");
       }
 
       // 2. Format splits for the RPC
@@ -353,25 +458,58 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
 
 
       final splitTypeName = state.splitType == SplitType.shares ? 'share' : state.splitType.name;
+      
+      // Post-split formatting validation for Global mode
+      if (!state.isEdit && state.origin != ExpenseOrigin.personal && state.group == null && state.friend == null) {
+         final hasOtherParticipants = rpcSplits.any((s) => s['user_id'] != state.currentUserId);
+         if (!hasOtherParticipants) {
+            throw Exception("Please select friends to split with or switch to Personal mode.");
+         }
+      }
 
       if (state.isEdit && state.expenseId != null) {
+        // Determine scope
+        String expenseScope = 'non_group';
+        if (state.origin == ExpenseOrigin.personal) {
+          expenseScope = 'personal';
+        } else if (state.group?.id != null) {
+          expenseScope = 'group';
+        }
+
         // Handle Update
         final params = UpdateExpenseParams(
           expenseId: state.expenseId!,
           description: state.description.isEmpty ? "No description" : state.description,
           notes: state.notes,
           categoryId: state.selectedCategory?.id,
+          paymentMethodId: state.selectedPaymentMethod?.id,
           totalAmount: double.parse(state.amount),
           paidByUserId: finalPayerId ?? '',
           expenseDate: state.date ?? DateTime.now(),
           splitType: splitTypeName,
           splits: rpcSplits,
+          groupId: state.group?.id,
+          expenseScope: expenseScope,
         );
 
         final result = await updateExpenseUseCase(params);
-        result.fold(
-          (failure) => emit(state.copyWith(status: ExpenseStatus.failure, errorMessage: () => failure.message)),
-          (_) {
+        await result.fold(
+          (failure) async => emit(state.copyWith(status: ExpenseStatus.failure, errorMessage: () => failure.message)),
+          (_) async {
+            if (state.attachments.isNotEmpty) {
+              try {
+                final mediaList = await Future.wait(
+                  state.attachments.map((path) => CloudinaryUploadService.uploadFile(File(path)))
+                );
+                await attachExpenseMediaUseCase(AttachExpenseMediaParams(
+                  expenseId: state.expenseId!, 
+                  media: mediaList,
+                ));
+              } catch (e) {
+                // Non-fatal error, expense is already updated
+              }
+            }
+
             dataRefreshCubit.markMultipleForRefresh([
               RefreshType.home,
               RefreshType.groups,
@@ -405,6 +543,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
           description: state.description.isEmpty ? "No description" : state.description,
           notes: state.notes,
           categoryId: state.selectedCategory?.id,
+          paymentMethodId: state.selectedPaymentMethod?.id,
           totalAmount: double.parse(state.amount),
           paidByUserId: state.origin == ExpenseOrigin.personal ? null : finalPayerId,
           expenseDate: state.date ?? DateTime.now(),
@@ -413,9 +552,23 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
         );
 
         final result = await addExpenseUseCase(params);
-        result.fold(
-          (failure) => emit(state.copyWith(status: ExpenseStatus.failure, errorMessage: () => failure.message)),
-          (_) {
+        await result.fold(
+          (failure) async => emit(state.copyWith(status: ExpenseStatus.failure, errorMessage: () => failure.message)),
+          (expenseId) async {
+            if (state.attachments.isNotEmpty) {
+              try {
+                final mediaList = await Future.wait(
+                  state.attachments.map((path) => CloudinaryUploadService.uploadFile(File(path)))
+                );
+                await attachExpenseMediaUseCase(AttachExpenseMediaParams(
+                  expenseId: expenseId, 
+                  media: mediaList,
+                ));
+              } catch (e) {
+                // Non-fatal error
+              }
+            }
+
             dataRefreshCubit.markMultipleForRefresh([
               RefreshType.home,
               RefreshType.groups,
@@ -432,9 +585,9 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
           },
         );
       }
-    } catch (e) {
-      emit(state.copyWith(status: ExpenseStatus.failure, errorMessage: () => e.toString()));
-    }
+    // } catch (e) {
+    //   emit(state.copyWith(status: ExpenseStatus.failure, errorMessage: () => e.toString()));
+    // }
   }
 
   void _onEditInitialized(ExpenseEditInitialized event, Emitter<ExpenseState> emit) {
@@ -485,9 +638,15 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
       ));
     }
 
-    // Determine friend if it's a non-group expense
     FriendEntity? friend;
-    if (expense.group == null || expense.group?.id == null) {
+    ExpenseOrigin origin = ExpenseOrigin.group;
+
+    if (expense.group != null && expense.group?.id != null) {
+      origin = ExpenseOrigin.group;
+    } else if (expense.splits.isEmpty) {
+      origin = ExpenseOrigin.personal;
+    } else {
+      origin = ExpenseOrigin.friend;
       ExpenseSplitEntity? otherSplit;
       for (var s in expense.splits) {
         if (s.userId != event.currentUserId) {
@@ -498,7 +657,6 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
       otherSplit ??= expense.splits.first;
 
       friend = FriendEntity(
-
         id: otherSplit.userId,
         name: otherSplit.fullName,
         email: '',
@@ -509,7 +667,6 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
         status: 'accepted',
         groupBreakdown: const [],
       );
-
     }
 
     emit(state.copyWith(
@@ -529,8 +686,10 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
       group: () => (expense.group != null && expense.group?.id != null) ? GroupEntity(id: expense.group!.id!, name: expense.group!.name ?? '', groupIcon: expense.group!.groupIcon) : null,
       friend: () => friend,
       notes: expense.notes ?? '',
-      origin: (expense.group != null && expense.group?.id != null) ? ExpenseOrigin.group : ExpenseOrigin.friend,
+      origin: origin,
       selectedCategory: () => expense.category,
+      selectedPaymentMethod: () => expense.paymentMethod,
+      existingMedia: expense.media,
     ));
 
 

@@ -3,10 +3,14 @@ import 'package:split_ease/features/expenses/domain/usecases/create_expense_para
 import 'package:split_ease/features/expenses/domain/usecases/update_expense_params.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_detail_entity.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_category_entity.dart';
+import 'package:split_ease/features/expenses/domain/entities/expense_metadata_entity.dart';
 import '../../../../core/error/failure.dart';
+import 'package:split_ease/features/expenses/domain/entities/personal_expenses_entity.dart';
+
+import 'package:split_ease/features/expenses/domain/entities/expense_media_entity.dart';
 
 abstract class ExpenseRepository {
-  Future<Either<Failure, void>> createExpense(CreateExpenseParams params);
+  Future<Either<Failure, String>> createExpense(CreateExpenseParams params);
   Future<Either<Failure, void>> updateExpense(UpdateExpenseParams params);
   Future<Either<Failure, ExpenseDetailEntity>> getExpenseDetail(String expenseId);
   Future<Either<Failure, List<ExpenseCommentEntity>>> getExpenseComments(String expenseId);
@@ -22,5 +26,8 @@ abstract class ExpenseRepository {
     String? groupId,
     String? note,
   });
-  Future<Either<Failure, List<ExpenseCategoryEntity>>> getExpenseCategories();
+  Future<Either<Failure, ExpenseMetadataEntity>> getExpenseMetadata();
+  Future<Either<Failure, PersonalExpensesEntity>> getPersonalExpenses();
+  Future<Either<Failure, void>> attachExpenseMedia(String expenseId, List<ExpenseMediaEntity> media);
+  Future<Either<Failure, void>> deleteExpenseMedia(String mediaId);
 }

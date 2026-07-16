@@ -10,6 +10,7 @@ class CreateExpenseParams extends Equatable {
   final String? splitType; // Nullable for personal
   final String? notes;
   final String? categoryId;
+  final String? paymentMethodId;
   final List<Map<String, dynamic>>? splits; // Nullable for personal
 
   const CreateExpenseParams({
@@ -18,6 +19,7 @@ class CreateExpenseParams extends Equatable {
     required this.description,
     this.notes,
     this.categoryId,
+    this.paymentMethodId,
     required this.totalAmount,
     this.paidByUserId,
     required this.expenseDate,
@@ -29,18 +31,16 @@ class CreateExpenseParams extends Equatable {
     final map = <String, dynamic>{
       'p_expense_scope': expenseScope,
       'p_category_id': categoryId,
+      'p_payment_method_id': paymentMethodId,
       'p_description': description,
       'p_total_amount': totalAmount,
       'p_expense_date': expenseDate.toIso8601String().split('T')[0], // YYYY-MM-DD
       'p_expense_note': notes,
+      'p_group_id': groupId,
+      'p_paid_by': paidByUserId,
+      'p_split_type': splitType,
+      'p_splits': splits,
     };
-
-    if (expenseScope != 'personal') {
-      map['p_group_id'] = groupId;
-      map['p_paid_by'] = paidByUserId;
-      map['p_split_type'] = splitType;
-      map['p_splits'] = splits;
-    }
 
     return map;
   }
@@ -51,6 +51,8 @@ class CreateExpenseParams extends Equatable {
         groupId,
         description,
         notes,
+        categoryId,
+        paymentMethodId,
         totalAmount,
         paidByUserId,
         expenseDate,

@@ -140,16 +140,22 @@ class _GroupTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (group.memberCount != null)
+                  if (group.id == null) ...[
                     Text(
-                      "${group.memberCount} member${group.memberCount == 1 ? '' : 's'}",
-                      style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                      "Record a personal or outside expense",
+                      style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w500),
                     ),
-                  if (group.memberCount == 1) ...[
-                    Text(
-                      "You're the only member in this group. Add members to start splitting expenses.",
-                      style: GoogleFonts.outfit(fontSize: 12, color: AppColors.errorRed, fontWeight: FontWeight.w500),
-                    ),
+                  ] else ...[
+                    if (group.memberCount != null)
+                      Text(
+                        "${group.memberCount} member${group.memberCount == 1 ? '' : 's'}",
+                        style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                      ),
+                    if (group.memberCount == 1)
+                      Text(
+                        "You're the only member in this group. Add members to start splitting expenses.",
+                        style: GoogleFonts.outfit(fontSize: 12, color: AppColors.errorRed, fontWeight: FontWeight.w500),
+                      ),
                   ],
                 ],
               ),
@@ -189,9 +195,19 @@ class _NonGroupTile extends StatelessWidget {
             ),
             const SizedBox(width: 14),
             Expanded(
-              child: Text(
-                "Non-group expense",
-                style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "Non-group expense",
+                    style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                  ),
+                  Text(
+                    "Record a personal or outside expense",
+                    style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                  ),
+                ],
               ),
             ),
           ],

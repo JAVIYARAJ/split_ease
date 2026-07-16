@@ -53,55 +53,99 @@ class ExpensePdfGenerator {
                 ),
                 child: pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
                     pw.Expanded(
                       child: pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
-                          pw.Text(entity.description, style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
-                          pw.SizedBox(height: 4),
-                          pw.Text('Group: ${entity.group?.name ?? "Non-group expense"}', style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
+                          pw.Text(entity.description, style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+                          pw.SizedBox(height: 8),
+                          if (entity.notes != null && entity.notes!.isNotEmpty)
+                            pw.Text('Notes: ${entity.notes}', style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
                         ],
                       ),
                     ),
                     pw.Text(
                       'Rs. ${formatter.format(entity.totalAmount)}',
-                      style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: PdfColors.green800),
+                      style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.green800),
                     ),
                   ],
                 ),
               ),
               pw.SizedBox(height: 20),
 
+              // Detailed Info Grid
+              pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Expanded(
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text('General Info', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                        pw.SizedBox(height: 6),
+                        pw.Text('Date: $formattedDate', style: const pw.TextStyle(fontSize: 12)),
+                        pw.Text('Added By: ${entity.createdBy.fullName}', style: const pw.TextStyle(fontSize: 12)),
+                        pw.Text('Scope: ${entity.splits.isEmpty ? 'Personal Expense' : 'Group - ${entity.group?.name ?? "N/A"}'}', style: const pw.TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  pw.Expanded(
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text('Classification', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                        pw.SizedBox(height: 6),
+                        pw.Text('Category: ${entity.category?.name ?? "N/A"}', style: const pw.TextStyle(fontSize: 12)),
+                        pw.Text('Payment Method: ${entity.paymentMethod?.name ?? "N/A"}', style: const pw.TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              pw.SizedBox(height: 20),
+
               // Paid By
-              pw.Text('Paid By', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+              pw.Text('Payment Details', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
               pw.SizedBox(height: 8),
               pw.Text('${entity.paidBy.fullName} paid Rs. ${formatter.format(entity.totalAmount)}', style: const pw.TextStyle(fontSize: 14)),
               pw.SizedBox(height: 20),
 
-              // Splits Title
-              pw.Text('Split Details', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
-              pw.SizedBox(height: 8),
+              if (entity.splits.isNotEmpty) ...[
+                // Splits Title
+                pw.Text('Split Details', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                pw.SizedBox(height: 8),
 
-              // Splits Table
-              pw.Table.fromTextArray(
-                border: pw.TableBorder.all(color: PdfColors.grey300),
-                headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
-                headerDecoration: const pw.BoxDecoration(color: PdfColors.teal),
-                cellHeight: 30,
-                cellAlignments: {0: pw.Alignment.centerLeft, 1: pw.Alignment.centerRight, 2: pw.Alignment.centerRight},
-                headers: ['Name', 'Role', 'Amount (Rs.)'],
-                data: entity.splits.map((split) {
-                  final amountText = split.type != "participant" ? "Owes" : "Participated";
-                  return [split.fullName, amountText, formatter.format(split.amount)];
-                }).toList(),
-              ),
+                // Splits Table
+                pw.TableHelper.fromTextArray(
+                  border: pw.TableBorder.all(color: PdfColors.grey300),
+                  headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+                  headerDecoration: const pw.BoxDecoration(color: PdfColors.teal),
+                  cellHeight: 30,
+                  cellAlignments: {0: pw.Alignment.centerLeft, 1: pw.Alignment.centerRight, 2: pw.Alignment.centerRight},
+                  headers: ['Name', 'Role', 'Amount (Rs.)'],
+                  data: entity.splits.map((split) {
+                    final amountText = split.type != "participant" ? "Owes" : "Participated";
+                    return [split.fullName, amountText, formatter.format(split.amount)];
+                  }).toList(),
+                ),
+              ],
 
               pw.Spacer(),
 
               // Footer
               pw.Divider(thickness: 1, color: PdfColors.grey300),
               pw.SizedBox(height: 8),
+              if (entity.updatedAt != null && entity.updatedBy != null) ...[
+                pw.Center(
+                  child: pw.Text(
+                    'Last updated by ${entity.updatedBy!.fullName}',
+                    style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+                  ),
+                ),
+                pw.SizedBox(height: 2),
+              ],
               pw.Center(
                 child: pw.Text(
                   'Generated with SplitEase - Keep your expenses in check',

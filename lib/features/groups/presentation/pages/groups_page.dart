@@ -85,14 +85,22 @@ class _GroupsPageState extends State<GroupsPage> {
             final group = await showGroupPickerSheet(context);
             if (group == null || !context.mounted) return;
 
-            if (group.memberCount == 1) {
+            final isNonGroup = group.id == null;
+
+            if (!isNonGroup && group.memberCount == 1) {
               NavigationService.pushNamed(AppRoutes.addMembers, args: {'groupId': group.id}).then((value) {
                 if (value == true && context.mounted) context.read<GroupsBloc>().add(LoadGroups());
               });
             } else if (mounted) {
               NavigationUtils.handleResult(
                 context: context,
-                navigation: NavigationService.pushNamed(AppRoutes.addExpense, args: {'group': group, 'origin': ExpenseOrigin.group}),
+                navigation: NavigationService.pushNamed(
+                  AppRoutes.addExpense, 
+                  args: {
+                    'group': isNonGroup ? null : group, 
+                    'origin': isNonGroup ? ExpenseOrigin.personal : ExpenseOrigin.group
+                  }
+                ),
                 onRefresh: () {
                   context.read<GroupsBloc>().add(LoadGroups());
                   context.read<ActivityBloc>().add(LoadActivities());

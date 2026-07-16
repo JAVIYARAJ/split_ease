@@ -30,6 +30,8 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../../domain/entities/home_dashboard_entity.dart';
 import '../../../../features/analytics/presentation/bloc/expense_breakdown_bloc.dart';
 import '../../../../features/analytics/presentation/pages/expense_breakdown_page.dart';
+import '../../../../core/routing/app_routes.dart';
+import '../../../../core/routing/navigation_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -392,6 +394,42 @@ class _HomeDashboardView extends StatelessWidget {
                               ),
                             ),
                             const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.primary),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Personal Expenses Entry Point
+                    InkWell(
+                      onTap: () {
+                        NavigationService.pushNamed(AppRoutes.personalExpenses);
+                      },
+                      borderRadius: BorderRadius.circular(24),
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF3E8FF), // Light purple
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: const Color(0xFFE9D5FF)),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: const BoxDecoration(color: Color(0xFFE9D5FF), shape: BoxShape.circle),
+                              child: const Icon(Icons.person_rounded, color: Color(0xFF9333EA), size: 24),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("Personal Expenses", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack)),
+                                  Text("Track your non-shared expenses", style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Color(0xFF9333EA)),
                           ],
                         ),
                       ),
