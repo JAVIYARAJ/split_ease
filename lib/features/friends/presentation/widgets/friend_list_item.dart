@@ -18,17 +18,17 @@ class FriendListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color statusColor = AppColors.textGrey;
-    String statusText = "";
+    String subtitleText = "";
     bool showBalance = true;
 
     if (friend.overallBalance > 0) {
       statusColor = AppColors.successGreen;
-      statusText = "owes you";
+      subtitleText = "${friend.name} owes you";
     } else if (friend.overallBalance < 0) {
       statusColor = AppColors.warningOrange;
-      statusText = "you owe";
+      subtitleText = "You owe ${friend.name}";
     } else {
-      statusText = "settled up";
+      subtitleText = "You and ${friend.name} are fully settled up";
       showBalance = false;
     }
 
@@ -72,50 +72,51 @@ class FriendListItem extends StatelessWidget {
                     ),
                     const SizedBox(width: 16),
                     
-                    // Name
+                    // Name and Subtitle
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(top: 4.0),
-                        child: Text(
-                          friend.name,
-                          style: GoogleFonts.outfit(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textBlack,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              friend.name,
+                              style: GoogleFonts.outfit(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textBlack,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitleText,
+                              style: GoogleFonts.outfit(
+                                fontSize: 13,
+                                color: showBalance ? statusColor : AppColors.textGrey,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                     
                     // Overall Balance
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            statusText,
-                            style: GoogleFonts.outfit(
-                              fontSize: 13,
-                              color: statusColor,
-                              fontWeight: FontWeight.w500,
-                            ),
+                    if (showBalance)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Text(
+                          "₹${formatter.format(friend.overallBalance.abs())}",
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            color: statusColor,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.5,
                           ),
-                          if (showBalance)
-                            Text(
-                              "₹${formatter.format(friend.overallBalance.abs())}",
-                              style: GoogleFonts.outfit(
-                                fontSize: 18,
-                                color: statusColor,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                        ],
+                        ),
                       ),
-                    ),
                   ],
                 ),
                 

@@ -21,6 +21,7 @@ import 'package:split_ease/features/expenses/domain/entities/expense_category_en
 import 'package:split_ease/core/utils/icon_utils.dart';
 import 'package:split_ease/core/config/app_configs.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/expense_bloc.dart';
+import 'package:split_ease/features/expenses/presentation/widgets/calculator_bottom_sheet.dart';
 
 import 'package:split_ease/features/friends/domain/entities/friend_entity.dart';
 import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
@@ -320,18 +321,50 @@ class _AddExpensePageState extends State<AddExpensePage> {
                       // Amount
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 32),
-                        child: TextField(
-                          controller: _amountController,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.outfit(fontSize: 64, fontWeight: FontWeight.w900, color: AppColors.textBlack, height: 1.0),
-                          decoration: InputDecoration(
-                            hintText: "₹0",
-                            hintStyle: GoogleFonts.outfit(fontSize: 64, fontWeight: FontWeight.w900, color: AppColors.textGrey.withValues(alpha: 0.3), height: 1.0),
-                            border: InputBorder.none,
-                            isDense: true,
-                          ),
-                          onChanged: (value) => context.read<ExpenseBloc>().add(AmountChanged(value)),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            TextField(
+                              controller: _amountController,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.outfit(fontSize: 64, fontWeight: FontWeight.w900, color: AppColors.textBlack, height: 1.0),
+                              decoration: InputDecoration(
+                                hintText: "₹0",
+                                hintStyle: GoogleFonts.outfit(fontSize: 64, fontWeight: FontWeight.w900, color: AppColors.textGrey.withValues(alpha: 0.3), height: 1.0),
+                                border: InputBorder.none,
+                                isDense: true,
+                              ),
+                              onChanged: (value) => context.read<ExpenseBloc>().add(AmountChanged(value)),
+                            ),
+                            Positioned(
+                              right: 0,
+                              child: IconButton(
+                                icon: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryTeal.withValues(alpha: 0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.calculate_rounded, color: AppColors.primaryTeal, size: 24),
+                                ),
+                                onPressed: () async {
+                                  // Hide keyboard before opening bottom sheet
+                                  FocusScope.of(context).unfocus();
+                                  final result = await showModalBottomSheet<String>(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    builder: (context) => CalculatorBottomSheet(initialValue: _amountController.text),
+                                  );
+                                  if (result != null && result.isNotEmpty && context.mounted) {
+                                    _amountController.text = result;
+                                    context.read<ExpenseBloc>().add(AmountChanged(result));
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       
@@ -734,34 +767,38 @@ class _AddExpensePageState extends State<AddExpensePage> {
                 ),
               ),
               const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryTeal.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.attach_file_rounded, color: AppColors.primaryTeal, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    "Add Attachment",
-                    style: GoogleFonts.outfit(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textBlack,
-                    ),
-                  ),
-                ],
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryTeal.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.receipt_long_rounded, color: AppColors.primaryTeal, size: 28),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Text(
-                "Select a clear image or PDF of your receipt.",
-                style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textGrey),
+                "Add a Receipt",
+                style: GoogleFonts.outfit(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textBlack,
+                ),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Text(
+                  "Attach a clear image or PDF document to keep track of your expenses.",
+                  style: GoogleFonts.outfit(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.textGrey,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [

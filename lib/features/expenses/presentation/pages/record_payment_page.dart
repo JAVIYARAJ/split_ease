@@ -8,7 +8,9 @@ import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
+import 'package:split_ease/core/utils/icon_utils.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/settle_up/settle_up_cubit.dart';
+import 'package:split_ease/features/expenses/presentation/pages/expense_note_page.dart';
 
 class RecordPaymentPage extends StatefulWidget {
   const RecordPaymentPage({super.key});
@@ -95,21 +97,48 @@ class _RecordPaymentPageState extends State<RecordPaymentPage>
       child: Scaffold(
         backgroundColor: AppColors.backgroundLightGrey,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: AppColors.backgroundLightGrey,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.close_rounded, color: AppColors.textBlack),
+          scrolledUnderElevation: 0,
+          leading: TextButton(
             onPressed: () => Navigator.pop(context),
+            child: Text(
+              "Cancel",
+              style: GoogleFonts.outfit(color: AppColors.textGrey, fontWeight: FontWeight.w600, fontSize: 16),
+            ),
           ),
+          leadingWidth: 80,
           title: Text(
             "Settle Up",
             style: GoogleFonts.outfit(
               color: AppColors.textBlack,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w800,
               fontSize: 18,
             ),
           ),
           centerTitle: true,
+          actions: [
+            BlocBuilder<SettleUpCubit, SettleUpState>(
+              builder: (context, state) {
+                if (state.status == SettleUpStatus.loading) {
+                   return const Padding(
+                     padding: EdgeInsets.only(right: 24.0),
+                     child: Center(child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryTeal))),
+                   );
+                }
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: TextButton(
+                    onPressed: () => context.read<SettleUpCubit>().submitPayment(),
+                    child: Text(
+                      "Save",
+                      style: GoogleFonts.outfit(color: AppColors.primaryTeal, fontWeight: FontWeight.w700, fontSize: 16),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
         body: BlocBuilder<SettleUpCubit, SettleUpState>(
           builder: (context, state) {
@@ -147,6 +176,14 @@ class _RecordPaymentPageState extends State<RecordPaymentPage>
             final double balance = state.targetBalance;
             final double? enteredAmt = double.tryParse(state.amount);
 
+            String getPaymentMethodName() {
+              if (state.paymentMethods.isEmpty) return "CASH";
+              for (var m in state.paymentMethods) {
+                if (m.id == state.selectedPaymentMethodId) return m.name;
+              }
+              return state.paymentMethods.first.name;
+            }
+
             // Find selected group name
             String groupName = "Non-group expense";
             if (state.groupId != null) {
@@ -157,12 +194,10 @@ class _RecordPaymentPageState extends State<RecordPaymentPage>
               groupName = selectedGroup?.name ?? "Selected Group";
             }
 
-            return Stack(
-              children: [
-                SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 140),
-                  child: Column(
-                    children: [
+            return SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+              child: Column(
+                children: [
                       const SizedBox(height: 20),
 
                       // ── Direction Summary Card ──────────────────────────────
@@ -174,6 +209,7 @@ class _RecordPaymentPageState extends State<RecordPaymentPage>
                         directionLabel: directionLabel,
                         balance: balance,
                         formatter: formatter,
+                        paymentMethodName: getPaymentMethodName(),
                       ),
 
                       const SizedBox(height: 32),
@@ -202,81 +238,164 @@ class _RecordPaymentPageState extends State<RecordPaymentPage>
 
                       const SizedBox(height: 28),
 
-                      // ── Group Row ───────────────────────────────────────────
-                      _buildActionItem(
-                        icon: Icons.group_rounded,
-                        label: "In Group",
-                        value: groupName,
-                        showArrow: false,
-                        onTap: () {},
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // ── Date Row ────────────────────────────────────────────
-                      _buildActionItem(
-                        icon: Icons.calendar_today_rounded,
-                        label: "Date of payment",
-                        value: DateFormat('MMM dd, yyyy').format(state.date),
-                        onTap: () async {
-                          final DateTime? picked = await showDatePicker(
-                            context: context,
-                            initialDate: state.date,
-                            firstDate: DateTime(2000),
-                            lastDate: DateTime.now(),
-                            builder: (context, child) => Theme(
-                              data: Theme.of(context).copyWith(
-                                colorScheme: const ColorScheme.light(
-                                  primary: AppColors.primary,
-                                ),
-                              ),
-                              child: child!,
-                            ),
-                          );
-                          if (picked != null && mounted) {
-                            // ignore: use_build_context_synchronously
-                            context.read<SettleUpCubit>().onDateChanged(picked);
-                          }
-                        },
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // ── Note Input ──────────────────────────────────────────
+                      // ── Settings Card ───────────────────────────────────────
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 4,
-                        ),
+                        margin: const EdgeInsets.symmetric(horizontal: 0),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.3)),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 20, offset: const Offset(0, 8)),
+                          ],
                         ),
-                        child: TextField(
-                          controller: _noteController,
-                          style: GoogleFonts.outfit(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textBlack,
-                          ),
-                          decoration: InputDecoration(
-                            icon: const Icon(
-                              Icons.notes_rounded,
-                              color: AppColors.primary,
-                              size: 20,
+                        child: Column(
+                          children: [
+                            _buildConfigRow(
+                              icon: Icons.group_rounded,
+                              label: "In Group",
+                              value: groupName,
+                              isTop: true,
+                              showArrow: false,
+                              onTap: () {},
                             ),
-                            hintText: "Add a note...",
-                            hintStyle: GoogleFonts.outfit(
-                              fontSize: 15,
-                              color: AppColors.textGrey,
-                              fontWeight: FontWeight.w500,
+                            _buildDivider(),
+                            _buildConfigRow(
+                              icon: Icons.calendar_today_rounded,
+                              label: "Date",
+                              value: DateFormat('MMM dd, yyyy').format(state.date),
+                              valueColor: AppColors.textBlack,
+                              onTap: () async {
+                                final DateTime? picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: state.date,
+                                  firstDate: DateTime(2000),
+                                  lastDate: DateTime.now(),
+                                  builder: (context, child) => Theme(
+                                    data: Theme.of(context).copyWith(
+                                      colorScheme: const ColorScheme.light(
+                                        primary: AppColors.primary,
+                                      ),
+                                    ),
+                                    child: child!,
+                                  ),
+                                );
+                                if (picked != null && mounted) {
+                                  context.read<SettleUpCubit>().onDateChanged(picked);
+                                }
+                              },
                             ),
-                            border: InputBorder.none,
-                          ),
-                          onChanged: (val) =>
-                              context.read<SettleUpCubit>().onNoteChanged(val),
+                            _buildDivider(),
+                            Builder(
+                              builder: (context) {
+                                final selectedMethod = state.paymentMethods.isNotEmpty 
+                                    ? (state.paymentMethods.any((m) => m.id == state.selectedPaymentMethodId)
+                                        ? state.paymentMethods.firstWhere((m) => m.id == state.selectedPaymentMethodId)
+                                        : state.paymentMethods.first)
+                                    : null;
+                                    
+                                return _buildConfigRow(
+                                  icon: selectedMethod != null ? IconUtils.getIconFromString(selectedMethod.icon) : Icons.account_balance_wallet_rounded,
+                                  iconColor: selectedMethod != null ? Color(int.parse(selectedMethod.color.replaceFirst('#', '0xFF'))) : null,
+                                  label: "Payment method",
+                                  value: state.paymentMethods.isNotEmpty
+                                      ? getPaymentMethodName()
+                                      : "Loading...",
+                                  onTap: () {
+                                    if (state.paymentMethods.isEmpty) return;
+                                    showModalBottomSheet(
+                                      context: context,
+                                      backgroundColor: Colors.white,
+                                      shape: const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                                      ),
+                                      builder: (ctx) {
+                                        return SafeArea(
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(vertical: 20),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  "Select Payment Method",
+                                                  style: GoogleFonts.outfit(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 16),
+                                                Flexible(
+                                                  child: SingleChildScrollView(
+                                                    child: Column(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: state.paymentMethods.map((method) {
+                                                        final isSelected = state.selectedPaymentMethodId == method.id;
+                                                        final color = Color(int.parse(method.color.replaceFirst('#', '0xFF')));
+                                                        return ListTile(
+                                                          leading: Container(
+                                                            padding: const EdgeInsets.all(8),
+                                                            decoration: BoxDecoration(
+                                                              color: color.withValues(alpha: 0.1),
+                                                              shape: BoxShape.circle,
+                                                            ),
+                                                            child: Icon(IconUtils.getIconFromString(method.icon), color: color, size: 24),
+                                                          ),
+                                                          title: Text(
+                                                            method.name,
+                                                            style: GoogleFonts.outfit(
+                                                              fontSize: 16,
+                                                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                                              color: AppColors.textBlack,
+                                                            ),
+                                                          ),
+                                                          trailing: isSelected
+                                                              ? const Icon(Icons.check_circle_rounded, color: AppColors.primaryTeal)
+                                                              : null,
+                                                          onTap: () {
+                                                            context.read<SettleUpCubit>().onPaymentMethodChanged(method.id);
+                                                            Navigator.pop(ctx);
+                                                          },
+                                                        );
+                                                      }).toList(),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                );
+                              }
+                            ),
+                            _buildDivider(),
+                            _buildConfigRow(
+                              icon: Icons.notes_rounded,
+                              label: "Notes",
+                              value: state.note.isEmpty ? "Add a note" : state.note,
+                              valueColor: state.note.isEmpty ? AppColors.textGrey : AppColors.textBlack,
+                              isBottom: true,
+                              onTap: () async {
+                                final result = await Navigator.push<String>(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ExpenseNotePage(initialNote: state.note),
+                                  ),
+                                );
+                                if (result != null && mounted) {
+                                  context.read<SettleUpCubit>().onNoteChanged(result);
+                                }
+                              },
+                            ),
+                          ],
                         ),
                       ),
+
+                      const SizedBox(height: 12),
+
+
 
                       const SizedBox(height: 20),
 
@@ -284,7 +403,7 @@ class _RecordPaymentPageState extends State<RecordPaymentPage>
                       Text(
                         state.isOverpayment
                             ? "The extra ₹${formatter.format(state.overpaymentAmount)} will be recorded as an advance payment."
-                            : "This records a cash payment and settles the pending balance.",
+                            : "This records a payment and settles the pending balance.",
                         textAlign: TextAlign.center,
                         style: GoogleFonts.outfit(
                           fontSize: 13,
@@ -296,149 +415,61 @@ class _RecordPaymentPageState extends State<RecordPaymentPage>
                       ),
                     ],
                   ),
-                ),
-
-                // ── Bottom CTA ────────────────────────────────────────────────
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, -5),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Amount preview above button
-                        if (enteredAmt != null && enteredAmt > 0)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: Text(
-                              state.isOverpayment
-                                  ? "Settling ₹${formatter.format(state.settlementAmount)} + ₹${formatter.format(state.overpaymentAmount)} advance"
-                                  : "Settling ₹${formatter.format(enteredAmt)} of ₹${formatter.format(balance)}",
-                              style: GoogleFonts.outfit(
-                                fontSize: 13,
-                                color: state.isOverpayment
-                                    ? AppColors.warningOrange
-                                    : AppColors.textGrey,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ElevatedButton(
-                          onPressed: state.status == SettleUpStatus.loading
-                              ? null
-                              : () => context
-                                    .read<SettleUpCubit>()
-                                    .submitPayment(),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            minimumSize: const Size(double.infinity, 56),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: state.status == SettleUpStatus.loading
-                              ? const SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 3,
-                                    valueColor: AlwaysStoppedAnimation(
-                                      Colors.white,
-                                    ),
-                                  ),
-                                )
-                              : Text(
-                                  "Confirm Settle Up",
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            );
+                );
           },
         ),
       ),
     );
   }
 
-  Widget _buildActionItem({
+  Widget _buildDivider() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 60, right: 20),
+      child: Divider(height: 1, color: AppColors.borderGrey.withValues(alpha: 0.2)),
+    );
+  }
+
+  Widget _buildConfigRow({
     required IconData icon,
     required String label,
     required String value,
+    Color? valueColor,
+    Color? iconColor,
     required VoidCallback onTap,
+    bool isTop = false,
+    bool isBottom = false,
     bool showArrow = true,
   }) {
+    final effectiveIconColor = iconColor ?? AppColors.primaryTeal;
     return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-        ),
+      onTap: showArrow ? onTap : null,
+      borderRadius: BorderRadius.vertical(
+        top: isTop ? const Radius.circular(24) : Radius.zero,
+        bottom: isBottom ? const Radius.circular(24) : Radius.zero,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: AppColors.primary, size: 20),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: effectiveIconColor.withValues(alpha: 0.1), shape: BoxShape.circle),
+              child: Icon(icon, color: effectiveIconColor, size: 20),
             ),
             const SizedBox(width: 16),
+            Text(label, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack)),
+            const SizedBox(width: 16),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textGrey,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    value,
-                    style: GoogleFonts.outfit(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textBlack,
-                    ),
-                  ),
-                ],
+              child: Text(
+                value,
+                style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w500, color: valueColor ?? AppColors.textGrey),
+                textAlign: TextAlign.right,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             if (showArrow)
-              const Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: AppColors.iconGrey,
-                size: 14,
-              ),
+              const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.iconGrey, size: 14),
           ],
         ),
       ),
@@ -458,6 +489,7 @@ class _DirectionCard extends StatelessWidget {
   final String directionLabel;
   final double balance;
   final NumberFormat formatter;
+  final String paymentMethodName;
 
   const _DirectionCard({
     required this.payerAvatar,
@@ -467,6 +499,7 @@ class _DirectionCard extends StatelessWidget {
     required this.directionLabel,
     required this.balance,
     required this.formatter,
+    required this.paymentMethodName,
   });
 
   @override
@@ -552,7 +585,7 @@ class _DirectionCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 3),
                           Text(
-                            "CASH",
+                            paymentMethodName.toUpperCase(),
                             style: GoogleFonts.outfit(
                               fontSize: 9,
                               fontWeight: FontWeight.w800,
@@ -680,65 +713,24 @@ class _AmountInputState extends State<_AmountInput> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text(
-              "₹",
-              style: GoogleFonts.outfit(
-                fontSize: 26,
-                fontWeight: FontWeight.w700,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(width: 6),
-            IntrinsicWidth(
-              child: TextField(
-                controller: _controller,
-                textAlign: TextAlign.center,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
-                ],
-                style: GoogleFonts.outfit(
-                  fontSize: 44,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textBlack,
-                  letterSpacing: -1,
-                ),
-                decoration: InputDecoration(
-                  isDense: true,
-                  border: InputBorder.none,
-                  hintText: "0",
-                  hintStyle: GoogleFonts.outfit(
-                    fontSize: 44,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.borderGreyLight,
-                    letterSpacing: -1,
-                  ),
-                ),
-                onChanged: widget.onChanged,
-              ),
-            ),
-          ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: TextField(
+        controller: _controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        textAlign: TextAlign.center,
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+        ],
+        style: GoogleFonts.outfit(fontSize: 64, fontWeight: FontWeight.w900, color: AppColors.textBlack, height: 1.0),
+        decoration: InputDecoration(
+          hintText: "₹0",
+          hintStyle: GoogleFonts.outfit(fontSize: 64, fontWeight: FontWeight.w900, color: AppColors.textGrey.withValues(alpha: 0.3), height: 1.0),
+          border: InputBorder.none,
+          isDense: true,
         ),
-        const SizedBox(height: 4),
-        Text(
-          "TAP TO EDIT AMOUNT",
-          style: GoogleFonts.outfit(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            color: AppColors.iconGrey,
-            letterSpacing: 1.2,
-          ),
-        ),
-      ],
+        onChanged: widget.onChanged,
+      ),
     );
   }
 }

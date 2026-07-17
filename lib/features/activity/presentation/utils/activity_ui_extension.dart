@@ -87,7 +87,9 @@ extension ActivityUIPresentation on ActivityEntity {
         return '$subject added "$desc"$toGroup';
 
       case ActivityType.settlement:
-        return '$subject recorded a settlement$groupInfo';
+        return groupName == null 
+            ? '$subject settled up a non-group expense'
+            : '$subject settled up$groupInfo';
 
       case ActivityType.payment:
         return '$subject recorded a payment$groupInfo';

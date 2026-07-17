@@ -9,6 +9,8 @@ import 'package:split_ease/features/expenses/domain/entities/personal_expenses_e
 import 'package:split_ease/features/expenses/presentation/bloc/personal_expenses/personal_expenses_bloc.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/personal_expenses/personal_expenses_event.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/personal_expenses/personal_expenses_state.dart';
+import 'package:split_ease/features/expenses/domain/entities/personal_expense_chart_entity.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:split_ease/core/utils/icon_utils.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
@@ -147,7 +149,28 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
             ),
           );
 
+          final dummyChartData = PersonalExpenseChartEntity(
+            summary: const PersonalExpenseChartSummaryEntity(
+              startDate: "2026-07-01",
+              endDate: "2026-07-31",
+              groupBy: "day",
+              totalSpent: 1500,
+              averageSpent: 500,
+              expenseCount: 3,
+              lowestExpense: 100,
+              highestExpense: 900,
+              changePercentage: -12.5,
+              previousPeriodSpent: 1714,
+            ),
+            chart: List.generate(7, (index) => PersonalExpenseChartItemEntity(
+              label: "0${index + 1} Jul",
+              amount: (index + 1) * 100.0,
+              sortDate: DateTime.now().subtract(Duration(days: 7 - index)),
+            )),
+          );
+
           final displayData = state is PersonalExpensesLoaded ? state.data : dummyData;
+          final displayChartData = state is PersonalExpensesLoaded ? state.chartData : dummyChartData;
 
           return Skeletonizer(
             enabled: isLoading,
@@ -160,23 +183,90 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                 controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
+                  SliverAppBar(
+                    pinned: true,
+                    automaticallyImplyLeading: false,
+                    backgroundColor: AppColors.backgroundWhite,
+                    elevation: 0,
+                    expandedHeight: 160,
+                    collapsedHeight: 64,
+                    toolbarHeight: 64,
+                    flexibleSpace: LayoutBuilder(
+                      builder: (BuildContext context, BoxConstraints constraints) {
+                        final top = constraints.biggest.height;
+                        final percent = ((top - 64) / (160 - 64)).clamp(0.0, 1.0);
+                        
+                        return ClipRect(
+                          child: Container(
+                            color: AppColors.backgroundWhite,
+                            child: Stack(
+                              children: [
+                                Positioned(
+                                  left: 24,
+                                  top: 10 + (14 * percent),
+                                  child: Text(
+                                    "Total Spent",
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 12 + (2 * percent),
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textGrey,
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  left: 24,
+                                  right: 24,
+                                  top: 26 + (22 * percent),
+                                  child: Transform.scale(
+                                    scale: 0.55 + (0.45 * percent),
+                                    alignment: Alignment.topLeft,
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      alignment: Alignment.topLeft,
+                                      child: AnimatedCounterText(
+                                        value: displayData.totalSpent,
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 48,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColors.textBlack,
+                                          letterSpacing: -1,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  left: 24,
+                                  right: 24,
+                                  top: 112 + (20 * (1 - percent)),
+                                  child: Opacity(
+                                    opacity: percent,
+                                    child: _buildHeroCardPills(displayData, displayChartData.summary),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.only(left: 24, right: 24, top: 16, bottom: 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildHeroCard(displayData),
+                          _buildChart(displayChartData, isLoading: isLoading),
                           const SizedBox(height: 32),
                           Text(
                             "Recent Activity",
                             style: GoogleFonts.outfit(
-                              fontSize: 18,
+                              fontSize: 20,
                               fontWeight: FontWeight.w700,
                               color: AppColors.textBlack,
                             ),
                           ),
-                          const SizedBox(height: 16),
                         ],
                       ),
                     ),
@@ -192,73 +282,66 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
     );
   }
 
-  Widget _buildHeroCard(PersonalExpensesEntity data) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8)),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: -10,
-            top: -20,
-            child: Skeleton.ignore(child: Icon(Icons.person_rounded, size: 120, color: Colors.white.withValues(alpha: 0.1))),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "TOTAL PERSONAL SPENT",
-                  style: GoogleFonts.outfit(
-                    fontSize: 11, 
-                    fontWeight: FontWeight.w900, 
-                    color: Colors.white.withValues(alpha: 0.6), 
-                    letterSpacing: 1.2
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 52,
-                  width: double.infinity,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: AnimatedCounterText(
-                      value: data.totalSpent,
-                      style: GoogleFonts.outfit(
-                        fontSize: 48,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
+  Widget _buildHeroCardPills(PersonalExpensesEntity data, PersonalExpenseChartSummaryEntity summary) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.primaryTeal.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.receipt_long_rounded, size: 14, color: AppColors.primaryTeal),
+                  const SizedBox(width: 6),
+                  Text(
+                    "${data.expenseCount} Transactions",
+                    style: GoogleFonts.outfit(
+                      fontSize: 13, 
+                      fontWeight: FontWeight.w600, 
+                      color: AppColors.primaryTeal,
                     ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "${data.expenseCount} Expenses",
-                  style: GoogleFonts.outfit(
-                    fontSize: 14, 
-                    fontWeight: FontWeight.w500, 
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+            if (summary.changePercentage != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: summary.changePercentage! > 0
+                      ? Colors.red.withValues(alpha: 0.1)
+                      : Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      summary.changePercentage! > 0
+                          ? Icons.trending_up_rounded
+                          : Icons.trending_down_rounded,
+                      size: 14,
+                      color: summary.changePercentage! > 0 ? Colors.red : Colors.green,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      "${summary.changePercentage!.abs().toStringAsFixed(1)}% vs last week",
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: summary.changePercentage! > 0 ? Colors.red : Colors.green,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        );
   }
 
   Widget _buildExpenseList(List<PersonalExpenseEntity> expenses) {
@@ -333,7 +416,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.textBlack,
                               ),
-                              maxLines: 1,
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 4),
@@ -374,5 +457,179 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
     } catch (e) {
       return AppColors.primary;
     }
+  }
+
+  Widget _buildChart(PersonalExpenseChartEntity chartData, {bool isLoading = false}) {
+    if (chartData.chart.isEmpty) return const SizedBox.shrink();
+
+    double maxAmount = 0;
+    for (var item in chartData.chart) {
+      if (item.amount.toDouble() > maxAmount) maxAmount = item.amount.toDouble();
+    }
+    final maxY = maxAmount > 0 ? maxAmount * 1.2 : 100.0;
+
+    return Container(
+      height: 220,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.15)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16.0),
+          child: Text(
+            "This Week's Spending",
+            style: GoogleFonts.outfit(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textBlack,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Skeleton.replace(
+            replace: isLoading,
+            replacement: _buildSkeletonChart(),
+            child: TweenAnimationBuilder<double>(
+              duration: const Duration(milliseconds: 1200),
+              curve: Curves.easeOutCubic,
+              tween: Tween<double>(begin: 0, end: 1),
+              builder: (context, animValue, child) {
+                return BarChart(
+                  BarChartData(
+              alignment: BarChartAlignment.spaceAround,
+              maxY: maxY,
+              minY: 0,
+              barTouchData: BarTouchData(
+                touchTooltipData: BarTouchTooltipData(
+                  getTooltipColor: (group) => AppColors.textBlack,
+                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                    return BarTooltipItem(
+                      AppFormatter.formatCurrency(rod.toY),
+                      GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              gridData: FlGridData(
+                show: true,
+                drawVerticalLine: false,
+                horizontalInterval: maxY / 3 > 0 ? maxY / 3 : 1,
+                getDrawingHorizontalLine: (value) {
+                  return FlLine(
+                    color: AppColors.borderGrey.withValues(alpha: 0.3),
+                    strokeWidth: 1,
+                    dashArray: [4, 4],
+                  );
+                },
+              ),
+              borderData: FlBorderData(show: false),
+              titlesData: FlTitlesData(
+                show: true,
+                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 28,
+                    getTitlesWidget: (value, meta) {
+                      final index = value.toInt();
+                      if (index < 0 || index >= chartData.chart.length) return const SizedBox.shrink();
+
+                      final item = chartData.chart[index];
+                      final dayName = DateFormat('E').format(item.sortDate);
+
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 10.0),
+                        child: Text(
+                          dayName,
+                          style: GoogleFonts.outfit(
+                            color: AppColors.textGrey,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              barGroups: chartData.chart.asMap().entries.map((entry) {
+                final index = entry.key;
+                final item = entry.value;
+                return BarChartGroupData(
+                  x: index,
+                  barRods: [
+                    BarChartRodData(
+                      toY: item.amount.toDouble() * animValue,
+                      gradient: LinearGradient(
+                        colors: isLoading
+                            ? [Colors.grey.shade300, Colors.grey.shade200]
+                            : [
+                                AppColors.primaryTeal,
+                                AppColors.primaryTeal.withValues(alpha: 0.7),
+                              ],
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                      ),
+                      width: 32,
+                      borderRadius: BorderRadius.circular(6),
+                      backDrawRodData: BackgroundBarChartRodData(
+                        show: true,
+                        toY: maxY,
+                        color: isLoading
+                            ? Colors.grey.shade100
+                            : AppColors.primaryTeal.withValues(alpha: 0.06),
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+            swapAnimationDuration: Duration.zero,
+          );
+        },
+      ),
+            ),
+        ),
+      ],
+            ),
+  );
+  }
+
+  Widget _buildSkeletonChart() {
+    final heights = [40.0, 80.0, 30.0, 100.0, 60.0, 40.0, 90.0];
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: List.generate(7, (index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 28),
+          child: Container(
+            width: 32,
+            height: heights[index],
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+        );
+      }),
+    );
   }
 }

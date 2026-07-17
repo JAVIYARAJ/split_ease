@@ -142,7 +142,8 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                               height: 16,
                               child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryTeal),
                             ),
-                          Container(
+                          if (loadedState.expenseDetail.expenseType != 'settlement')
+                            Container(
                             margin: const EdgeInsets.symmetric(horizontal: 4),
                             decoration: BoxDecoration(
                               color: Colors.black.withValues(alpha: 0.3),
@@ -231,6 +232,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                       child: Column(
                         children: [
                           if (isDeleted) _buildDeletedBanner(context, entity.id, loadedState?.canManageExpense ?? false),
+                          if (!isDeleted && entity.expenseType == 'settlement') _buildSettlementBanner(),
                           Expanded(
                             child: SingleChildScrollView(
                               physics: const AlwaysScrollableScrollPhysics(),
@@ -249,17 +251,24 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                                     const SizedBox(height: 24),
                                     _buildActionGrid(entity, isDeleted),
                                     const SizedBox(height: 24),
-                                    _buildSectionTitle("Paid By"),
-                                    const SizedBox(height: 8),
-                                    _buildPaidBySection(entity),
-                                    const SizedBox(height: 24),
+                                    if (entity.expenseType == 'settlement') ...[
+                                      _buildSectionTitle("Settlement Details"),
+                                      const SizedBox(height: 8),
+                                      _buildSettlementDetailsSection(entity),
+                                      const SizedBox(height: 24),
+                                    ] else ...[
+                                      _buildSectionTitle("Paid By"),
+                                      const SizedBox(height: 8),
+                                      _buildPaidBySection(entity),
+                                      const SizedBox(height: 24),
+                                    ],
                                     if (entity.notes != null && entity.notes!.isNotEmpty) ...[
                                       _buildSectionTitle("Notes"),
                                       const SizedBox(height: 8),
                                       _buildNotesSection(entity.notes!),
                                       const SizedBox(height: 24),
                                     ],
-                                    if (entity.splits.isNotEmpty) ...[
+                                    if (entity.expenseType != 'settlement' && entity.splits.isNotEmpty) ...[
                                       _buildSectionTitle("Split Details"),
                                       const SizedBox(height: 8),
                                       _buildSplitsList(entity),
@@ -379,6 +388,41 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettlementBanner() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.info_outline_rounded, color: AppColors.primary, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              "Settle up expense is not editable, you can just delete or revert this tnx",
+              style: GoogleFonts.outfit(
+                color: AppColors.textBlack,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -659,6 +703,111 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
               ],
             ),
           ),
+          if (entity.paymentMethod != null) ...[
+            Divider(height: 1, color: AppColors.borderGreyLight, indent: 16, endIndent: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Color(int.parse(entity.paymentMethod!.color.replaceFirst('#', '0xFF'))).withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      IconUtils.getIconFromString(entity.paymentMethod!.icon),
+                      color: Color(int.parse(entity.paymentMethod!.color.replaceFirst('#', '0xFF'))),
+                      size: 16,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    "Paid via ${entity.paymentMethod!.name}",
+                    style: GoogleFonts.outfit(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textGrey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettlementDetailsSection(ExpenseDetailEntity entity) {
+    final paidBy = entity.paidBy;
+    final paidTo = entity.splits.isNotEmpty ? entity.splits.first : null;
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceWhite,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderGreyLight),
+      ),
+      child: Column(
+        children: [
+          // Paid By
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                AppAvatar(url: paidBy.avatar, radius: 18, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        paidBy.fullName,
+                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                      ),
+                      Text("Paid By", style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
+                    ],
+                  ),
+                ),
+                Text(
+                  "₹${NumberFormat('#,##0.00', 'en_IN').format(entity.totalAmount)}",
+                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+                ),
+              ],
+            ),
+          ),
+          
+          if (paidTo != null) ...[
+            Divider(height: 1, color: AppColors.borderGreyLight, indent: 16, endIndent: 16),
+            // Paid To
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  AppAvatar(url: paidTo.avatar, radius: 18, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          paidTo.fullName,
+                          style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                        ),
+                        Text("Paid To", style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    "₹${NumberFormat('#,##0.00', 'en_IN').format(entity.totalAmount)}",
+                    style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          
           if (entity.paymentMethod != null) ...[
             Divider(height: 1, color: AppColors.borderGreyLight, indent: 16, endIndent: 16),
             Padding(

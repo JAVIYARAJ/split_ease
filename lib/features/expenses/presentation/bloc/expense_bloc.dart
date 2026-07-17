@@ -416,15 +416,28 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   Future<void> _onAddExpenseSubmitted(AddExpenseSubmitted event, Emitter<ExpenseState> emit) async {
     emit(state.copyWith(status: ExpenseStatus.loading));
     
-    //try {
+    try {
       // 1. Validation
+      if (state.description.trim().isEmpty) {
+        throw Exception("Please enter a description for the expense.");
+      }
+
+      final amountVal = double.tryParse(state.amount) ?? 0;
+      if (state.amount.isEmpty || amountVal <= 0) {
+        throw Exception("Please enter a valid amount greater than 0.");
+      }
+
+      if (state.selectedCategory == null) {
+        throw Exception("Please select an expense category.");
+      }
+
+      if (state.selectedPaymentMethod == null) {
+        throw Exception("Please select a payment method.");
+      }
+
       final finalPayerId = state.payerId ?? state.currentUserId;
       if (state.origin != ExpenseOrigin.personal && finalPayerId == null) {
         throw Exception("Please select who paid.");
-      }
-
-      if (state.amount.isEmpty || double.tryParse(state.amount) == 0) {
-        throw Exception("Please enter a valid amount.");
       }
 
       // 2. Format splits for the RPC
@@ -585,9 +598,16 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
           },
         );
       }
-    // } catch (e) {
-    //   emit(state.copyWith(status: ExpenseStatus.failure, errorMessage: () => e.toString()));
-    // }
+    } catch (e) {
+      // Extract just the message without "Exception: " if it exists
+      String errorMessage = e.toString();
+      if (errorMessage.startsWith("Exception: ")) {
+        errorMessage = errorMessage.substring(11); // Length of "Exception: "
+      }
+      emit(state.copyWith(status: ExpenseStatus.validationError, errorMessage: () => errorMessage));
+      // Reset status to initial to allow subsequent attempts
+      emit(state.copyWith(status: ExpenseStatus.initial));
+    }
   }
 
   void _onEditInitialized(ExpenseEditInitialized event, Emitter<ExpenseState> emit) {

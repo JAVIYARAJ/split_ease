@@ -364,7 +364,7 @@ class _FriendDetailAppBar extends StatelessWidget {
     final Color overallColor = friend.overallBalance == 0 ? Colors.white70 : (youAreOwed ? AppColors.successGreen : AppColors.errorRed);
     final formatter = NumberFormat('#,##0.##', 'en_IN');
     
-    String prefix = friend.overallBalance == 0 ? "Settled up" : (youAreOwed ? "Gets back" : "Owes");
+    String prefix = friend.overallBalance == 0 ? "You and ${friend.name} are fully settled up" : (youAreOwed ? "${friend.name} owes you" : "You owe ${friend.name}");
     String amount = friend.overallBalance == 0 ? "" : " ₹${formatter.format(absOverall)}";
 
     return Container(
@@ -538,10 +538,14 @@ class _TransactionItem extends StatelessWidget {
 
     final bool youAreOwed = expense.type == 'you_are_owed';
     final Color balanceColor = youAreOwed ? AppColors.successGreen : AppColors.errorRed; 
-    final String balanceLabel = youAreOwed ? 'Gets back' : 'Owes';
     final formatter = NumberFormat('#,##0.##', 'en_IN');
 
     final bool isSettlement = expense.description.toLowerCase().contains('settled up') || expense.description.toLowerCase().contains('settlement');
+    
+    final String balanceLabel = isSettlement 
+        ? (youAreOwed ? 'You paid' : 'You received')
+        : (youAreOwed ? 'Gets back' : 'Owes');
+        
     final IconData iconData = isSettlement ? Icons.handshake_rounded : Icons.receipt_long_rounded;
     final Color iconColor = isSettlement ? AppColors.successGreen : AppColors.primaryTeal;
     final Color iconBgColor = isSettlement ? AppColors.successGreen.withValues(alpha: 0.1) : AppColors.primaryTeal.withValues(alpha: 0.1);
@@ -613,7 +617,9 @@ class _TransactionItem extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        expense.description,
+                        isSettlement 
+                            ? (youAreOwed ? 'You paid' : 'You received payment')
+                            : expense.description,
                         style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,

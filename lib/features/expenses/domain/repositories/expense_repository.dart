@@ -6,6 +6,7 @@ import 'package:split_ease/features/expenses/domain/entities/expense_category_en
 import 'package:split_ease/features/expenses/domain/entities/expense_metadata_entity.dart';
 import '../../../../core/error/failure.dart';
 import 'package:split_ease/features/expenses/domain/entities/personal_expenses_entity.dart';
+import 'package:split_ease/features/expenses/domain/entities/personal_expense_chart_entity.dart';
 
 import 'package:split_ease/features/expenses/domain/entities/expense_media_entity.dart';
 
@@ -25,9 +26,16 @@ abstract class ExpenseRepository {
     required double amount,
     String? groupId,
     String? note,
+    String? paymentMethodId,
   });
   Future<Either<Failure, ExpenseMetadataEntity>> getExpenseMetadata();
   Future<Either<Failure, PersonalExpensesEntity>> getPersonalExpenses();
   Future<Either<Failure, void>> attachExpenseMedia(String expenseId, List<ExpenseMediaEntity> media);
   Future<Either<Failure, void>> deleteExpenseMedia(String mediaId);
+  Future<Either<Failure, PersonalExpenseChartEntity>> getPersonalExpenseChart({
+    required DateTime startDate,
+    required DateTime endDate,
+    String? categoryId,
+    String? paymentMethodId,
+  });
 }

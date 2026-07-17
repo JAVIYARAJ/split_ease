@@ -594,7 +594,7 @@ class _BalanceSummary extends StatelessWidget {
             ? AppColors.textGrey
             : (youAreOwed ? AppColors.successGreen : AppColors.errorRed);
         final overallLabel = overall == 0
-            ? "You are settled up"
+            ? "You are fully settled up in this group"
             : (youAreOwed ? "You are owed" : "You owe");
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -868,7 +868,9 @@ class _TransactionItem extends StatelessWidget {
     final bool involved = expense.yourBalanceEffect != 0;
 
     final Color balanceColor = youLent ? AppColors.successGreen : AppColors.errorRed;
-    final String balanceLabel = youLent ? 'you lent' : 'you owe';
+    final String balanceLabel = isSettlement 
+        ? (youLent ? 'you paid' : 'you received')
+        : (youLent ? 'you lent' : 'you owe');
     final formatter = NumberFormat('#,##0.##', 'en_IN');
 
     final IconData iconData = isSettlement ? Icons.handshake_rounded : Icons.receipt_long_rounded;
@@ -937,7 +939,7 @@ class _TransactionItem extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        expense.description,
+                        isSettlement ? "${expense.paidByName} paid" : expense.description,
                         style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,

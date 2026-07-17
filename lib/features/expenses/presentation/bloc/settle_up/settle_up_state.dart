@@ -13,6 +13,8 @@ class SettleUpState extends Equatable {
   final SettleUpStatus status;
   final String? errorMessage;
   final List<GroupEntity> commonGroups;
+  final List<ExpensePaymentMethodEntity> paymentMethods;
+  final String? selectedPaymentMethodId;
 
   SettleUpState({
     this.currentUserId,
@@ -25,6 +27,8 @@ class SettleUpState extends Equatable {
     this.status = SettleUpStatus.initial,
     this.errorMessage,
     this.commonGroups = const [],
+    this.paymentMethods = const [],
+    this.selectedPaymentMethodId,
   }) : date = date ?? DateTime.now();
 
   /// True if the entered amount is greater than the actual balance
@@ -60,6 +64,8 @@ class SettleUpState extends Equatable {
     SettleUpStatus? status,
     String? errorMessage,
     List<GroupEntity>? commonGroups,
+    List<ExpensePaymentMethodEntity>? paymentMethods,
+    String? selectedPaymentMethodId,
     bool? clearGroupId,
   }) {
     return SettleUpState(
@@ -73,6 +79,8 @@ class SettleUpState extends Equatable {
       status: status ?? this.status,
       errorMessage: errorMessage ?? this.errorMessage,
       commonGroups: commonGroups ?? this.commonGroups,
+      paymentMethods: paymentMethods ?? this.paymentMethods,
+      selectedPaymentMethodId: selectedPaymentMethodId ?? this.selectedPaymentMethodId,
     );
   }
 
@@ -88,5 +96,7 @@ class SettleUpState extends Equatable {
         status,
         errorMessage,
         commonGroups,
+        paymentMethods,
+        selectedPaymentMethodId,
       ];
 }

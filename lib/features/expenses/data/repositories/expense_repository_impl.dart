@@ -11,6 +11,7 @@ import 'package:split_ease/features/expenses/domain/entities/expense_metadata_en
 import '../../../../core/error/exception.dart';
 import '../../../../core/error/failure.dart';
 import 'package:split_ease/features/expenses/domain/entities/personal_expenses_entity.dart';
+import 'package:split_ease/features/expenses/domain/entities/personal_expense_chart_entity.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_media_entity.dart';
 
 class ExpenseRepositoryImpl implements ExpenseRepository {
@@ -144,6 +145,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     required double amount,
     String? groupId,
     String? note,
+    String? paymentMethodId,
   }) async {
     try {
       await remoteDataSource.settleUp(
@@ -151,6 +153,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
         amount: amount,
         groupId: groupId,
         note: note,
+        paymentMethodId: paymentMethodId,
       );
       return const Right(null);
     } on ServerException catch (e) {
@@ -176,6 +179,28 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
   Future<Either<Failure, PersonalExpensesEntity>> getPersonalExpenses() async {
     try {
       final result = await remoteDataSource.getPersonalExpenses();
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(Failure(message: e.message));
+    } catch (e) {
+      return Left(Failure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PersonalExpenseChartEntity>> getPersonalExpenseChart({
+    required DateTime startDate,
+    required DateTime endDate,
+    String? categoryId,
+    String? paymentMethodId,
+  }) async {
+    try {
+      final result = await remoteDataSource.getPersonalExpenseChart(
+        startDate: startDate,
+        endDate: endDate,
+        categoryId: categoryId,
+        paymentMethodId: paymentMethodId,
+      );
       return Right(result);
     } on ServerException catch (e) {
       return Left(Failure(message: e.message));

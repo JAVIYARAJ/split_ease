@@ -16,17 +16,17 @@ class GroupListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     // Determine overall status colors and text
     Color statusColor = AppColors.textGrey;
-    String statusText = "";
+    String subtitleText = "";
     bool showBalance = true;
 
     if (group.status == "you_are_owed") {
       statusColor = AppColors.primaryTeal;
-      statusText = "you are owed";
+      subtitleText = "You are owed";
     } else if (group.status == "you_owe") {
-      statusColor = AppColors.warningOrange; // Assuming orange for owe
-      statusText = "you owe";
+      statusColor = AppColors.warningOrange; 
+      subtitleText = "You owe";
     } else {
-      statusText = "settled up";
+      subtitleText = "You are fully settled up in this group";
       showBalance = false;
     }
 
@@ -84,50 +84,51 @@ class GroupListItem extends StatelessWidget {
                     ),
                     const SizedBox(width: 16),
 
-                    // Name
+                    // Name and Subtitle
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(top: 4.0), // Align name slightly down
-                        child: Text(
-                          group.name ?? "Non-group expense",
-                          style: GoogleFonts.outfit(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textBlack,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              group.name ?? "Non-group expense",
+                              style: GoogleFonts.outfit(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textBlack,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitleText,
+                              style: GoogleFonts.outfit(
+                                fontSize: 13,
+                                color: showBalance ? statusColor : AppColors.textGrey,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
 
                     // Overall Balance
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            statusText,
-                            style: GoogleFonts.outfit(
-                              fontSize: 13,
-                              color: statusColor,
-                              fontWeight: FontWeight.w500,
-                            ),
+                    if (showBalance && group.overallBalance != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Text(
+                          "₹${formatter.format(group.overallBalance!.abs())}",
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            color: statusColor,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.5,
                           ),
-                          if (showBalance && group.overallBalance != null)
-                            Text(
-                              "₹${formatter.format(group.overallBalance!.abs())}",
-                              style: GoogleFonts.outfit(
-                                fontSize: 18,
-                                color: statusColor,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                        ],
+                        ),
                       ),
-                    ),
                   ],
                 ),
                 
