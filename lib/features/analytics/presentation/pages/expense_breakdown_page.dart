@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_formatter.dart';
 import 'package:split_ease/core/presentation/widgets/animations/animated_counter_text.dart';
@@ -19,7 +20,6 @@ class ExpenseBreakdownPage extends StatefulWidget {
 }
 
 class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
-  int _selectedTab = 0; // 0 for Category, 1 for Group
 
   @override
   void initState() {
@@ -43,8 +43,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
             color: AppColors.textBlack,
           ),
         ),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textBlack, size: 20),
+        leading: AppBackButton(
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -73,7 +72,12 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
 
           // Provide dummy data for skeletonizer if loading
           final dummyBreakdown = ExpenseBreakdownEntity(
-            totalSpent: 1500,
+            summary: const ExpenseBreakdownSummaryEntity(
+              totalSpent: 1500,
+              groupExpenseShare: 800,
+              personalExpenseShare: 500,
+              nonGroupExpenseShare: 200,
+            ),
             categoryBreakdown: List.generate(
               5,
               (index) => CategoryDetailEntity(
@@ -82,17 +86,8 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                 name: "Loading Category",
                 color: "#CCCCCC",
                 amount: 300,
-                percentage: 20,
-                expenseCount: 2,
-              ),
-            ),
-            groupBreakdown: List.generate(
-              5,
-              (index) => GroupDetailEntity(
-                id: "$index",
-                name: "Loading Group",
-                amount: 300,
-                percentage: 20,
+                categoryPercentage: 20,
+                budgetPercentage: 10,
                 expenseCount: 2,
               ),
             ),
@@ -112,24 +107,88 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
+                  SliverAppBar(
+                    pinned: true,
+                    automaticallyImplyLeading: false,
+                    backgroundColor: AppColors.backgroundWhite,
+                    elevation: 0,
+                    expandedHeight: 120,
+                    collapsedHeight: 64,
+                    toolbarHeight: 64,
+                    flexibleSpace: LayoutBuilder(
+                      builder: (BuildContext context, BoxConstraints constraints) {
+                        final top = constraints.biggest.height;
+                        final percent = ((top - 64) / (120 - 64)).clamp(0.0, 1.0);
+                        
+                        return ClipRect(
+                          child: Container(
+                            color: AppColors.backgroundWhite,
+                            child: Stack(
+                              children: [
+                                Positioned(
+                                  left: 24,
+                                  top: 10 + (14 * percent),
+                                  child: Text(
+                                    "Total Expenses",
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 12 + (2 * percent),
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textGrey,
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  left: 24,
+                                  right: 24,
+                                  top: 26 + (22 * percent),
+                                  child: Transform.scale(
+                                    scale: 0.55 + (0.45 * percent),
+                                    alignment: Alignment.topLeft,
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      alignment: Alignment.topLeft,
+                                      child: AnimatedCounterText(
+                                        value: displayData.summary.totalSpent,
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 48,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColors.textBlack,
+                                          letterSpacing: -1,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.only(left: 24, right: 24, top: 16, bottom: 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildHeroCard(displayData),
+                          _buildSummaryGrid(displayData.summary),
                           const SizedBox(height: 32),
-                          _buildTabToggle(),
+                          Text(
+                            "Category Breakdown",
+                            style: GoogleFonts.outfit(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textBlack,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ),
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
-                    sliver: _selectedTab == 0
-                        ? _buildCategoryList(displayData.categoryBreakdown)
-                        : _buildGroupList(displayData.groupBreakdown),
+                    sliver: _buildCategoryList(displayData.categoryBreakdown),
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 40)),
                 ],
@@ -141,141 +200,84 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
     );
   }
 
-  Widget _buildHeroCard(ExpenseBreakdownEntity breakdown) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+  Widget _buildSummaryGrid(ExpenseBreakdownSummaryEntity summary) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildSummaryCard(
+            title: "Group Share",
+            amount: summary.groupExpenseShare,
+            color: AppColors.primary,
+            icon: Icons.groups_rounded,
+          ),
         ),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8)),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: -10,
-            top: -20,
-            child: Skeleton.ignore(child: Icon(Icons.analytics_rounded, size: 120, color: Colors.white.withValues(alpha: 0.1))),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildSummaryCard(
+            title: "Personal",
+            amount: summary.personalExpenseShare,
+            color: AppColors.primaryTeal,
+            icon: Icons.person_rounded,
           ),
-          Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "TOTAL EXPENSES",
-                  style: GoogleFonts.outfit(
-                    fontSize: 11, 
-                    fontWeight: FontWeight.w900, 
-                    color: Colors.white.withValues(alpha: 0.6), 
-                    letterSpacing: 1.2
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 52,
-                  width: double.infinity,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: AnimatedCounterText(
-                      value: breakdown.totalSpent,
-                      style: GoogleFonts.outfit(
-                        fontSize: 48,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildSummaryCard(
+            title: "Non-Group",
+            amount: summary.nonGroupExpenseShare,
+            color: AppColors.iconGrey,
+            icon: Icons.person_outline_rounded,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildTabToggle() {
+  Widget _buildSummaryCard({
+    required String title,
+    required double amount,
+    required Color color,
+    required IconData icon,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.borderGrey.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(16),
+        color: color.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
       ),
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Positioned.fill(
-            child: AnimatedAlign(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOutCubic,
-              alignment: _selectedTab == 0 ? Alignment.centerLeft : Alignment.centerRight,
-              child: FractionallySizedBox(
-                widthFactor: 0.5,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      )
-                    ],
-                  ),
-                ),
-              ),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: GoogleFonts.outfit(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textGrey,
             ),
           ),
-          Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => setState(() => _selectedTab = 0),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    alignment: Alignment.center,
-                    child: AnimatedDefaultTextStyle(
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeInOut,
-                      style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        fontWeight: _selectedTab == 0 ? FontWeight.w700 : FontWeight.w600,
-                        color: _selectedTab == 0 ? AppColors.textBlack : AppColors.textGrey,
-                      ),
-                      child: const Text("Categories"),
-                    ),
-                  ),
-                ),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              AppFormatter.formatCurrency(amount),
+              style: GoogleFonts.outfit(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textBlack,
               ),
-              Expanded(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => setState(() => _selectedTab = 1),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    alignment: Alignment.center,
-                    child: AnimatedDefaultTextStyle(
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeInOut,
-                      style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        fontWeight: _selectedTab == 1 ? FontWeight.w700 : FontWeight.w600,
-                        color: _selectedTab == 1 ? AppColors.textBlack : AppColors.textGrey,
-                      ),
-                      child: const Text("Groups"),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -339,7 +341,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: LinearProgressIndicator(
-                                value: category.percentage / 100,
+                                value: category.categoryPercentage / 100,
                                 backgroundColor: color.withValues(alpha: 0.15),
                                 valueColor: AlwaysStoppedAnimation<Color>(color),
                                 minHeight: 8,
@@ -348,7 +350,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            "${category.percentage.toStringAsFixed(1)}%",
+                            "${category.categoryPercentage.toStringAsFixed(1)}%",
                             style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.iconGrey),
                           ),
                         ],
@@ -402,114 +404,6 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
     );
   }
 
-  Widget _buildGroupList(List<GroupDetailEntity> groups) {
-    if (groups.isEmpty) {
-      return SliverToBoxAdapter(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 40),
-            child: Text("No group data available.", style: GoogleFonts.outfit(color: AppColors.textGrey)),
-          ),
-        ),
-      );
-    }
-
-    return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          final group = groups[index];
-
-          return Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceWhite,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                    image: group.groupIcon != null && group.groupIcon!.isNotEmpty
-                        ? DecorationImage(
-                            image: NetworkImage(group.groupIcon!),
-                            fit: BoxFit.cover,
-                          )
-                        : null,
-                  ),
-                  child: group.groupIcon == null || group.groupIcon!.isEmpty
-                      ? Icon(Icons.groups_rounded, color: AppColors.primary)
-                      : null,
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        group.name,
-                        style: GoogleFonts.outfit(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textBlack,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: LinearProgressIndicator(
-                                value: group.percentage / 100,
-                                backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-                                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                                minHeight: 8,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            "${group.percentage.toStringAsFixed(1)}%",
-                            style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.iconGrey),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      AppFormatter.formatCurrency(group.amount),
-                      style: GoogleFonts.outfit(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textBlack,
-                      ),
-                    ),
-                    Text(
-                      "${group.expenseCount} Trx",
-                      style: GoogleFonts.outfit(fontSize: 12, color: AppColors.iconGrey),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        },
-        childCount: groups.length,
-      ),
-    );
-  }
-
   Color _parseColor(String hexString) {
     try {
       final buffer = StringBuffer();
@@ -520,6 +414,4 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
       return AppColors.primary;
     }
   }
-
-
 }

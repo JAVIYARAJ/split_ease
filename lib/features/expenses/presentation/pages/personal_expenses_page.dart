@@ -20,6 +20,8 @@ import 'package:split_ease/core/presentation/widgets/animations/smooth_animated_
 import 'package:split_ease/core/utils/navigation_utils.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 
+import '../../../../core/presentation/widgets/app_back_button.dart';
+
 class PersonalExpensesPage extends StatefulWidget {
   const PersonalExpensesPage({super.key});
 
@@ -93,9 +95,10 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
             color: AppColors.textBlack,
           ),
         ),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textBlack, size: 20),
-          onPressed: () => Navigator.pop(context),
+        leading: AppBackButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
       ),
       floatingActionButton: SmoothAnimatedFAB(

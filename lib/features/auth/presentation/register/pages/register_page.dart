@@ -45,9 +45,11 @@ class _RegisterPageState extends State<RegisterPage> {
     return BlocListener<RegisterBloc, RegisterState>(
       listener: (context, state) {
         if (state is RegisterSuccess) {
-           Navigator.pushReplacement(
+          Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const RegisterSuccessPage()),
+            MaterialPageRoute(
+              builder: (context) => const RegisterSuccessPage(),
+            ),
           );
         } else if (state is RegisterGoogleSuccess) {
           AppAlerts.showSuccess(context, state.message);
@@ -74,18 +76,29 @@ class _RegisterPageState extends State<RegisterPage> {
                         color: AppColors.backgroundLightGrey,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textBlack),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        size: 18,
+                        color: AppColors.textBlack,
+                      ),
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.flash_on_rounded, size: 14, color: AppColors.primary),
+                        const Icon(
+                          Icons.flash_on_rounded,
+                          size: 14,
+                          color: AppColors.primary,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           "INSTANT ACCESS",
@@ -101,7 +114,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 32),
 
               // 2. Immersive Greeting
@@ -141,7 +154,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       validator: AppValidators.validateName,
                     ),
                     const SizedBox(height: 20),
-                    
+
                     // Enhanced Email Field
                     AuthField(
                       label: "Work Email",
@@ -151,7 +164,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       validator: AppValidators.validateEmail,
                     ),
                     const SizedBox(height: 20),
-                    
+
                     // Enhanced Password Field
                     ValueListenableBuilder<bool>(
                       valueListenable: _isObscured,
@@ -179,7 +192,7 @@ class _RegisterPageState extends State<RegisterPage> {
               // 4. Primary Action with Security Hint
               Column(
                 children: [
-                   BlocBuilder<RegisterBloc, RegisterState>(
+                  BlocBuilder<RegisterBloc, RegisterState>(
                     builder: (_, state) {
                       return AppPrimaryButton(
                         isLoading: state is RegisterLoading,
@@ -187,12 +200,12 @@ class _RegisterPageState extends State<RegisterPage> {
                         onPressed: () {
                           if (_formKey.currentState!.validate()) {
                             context.read<RegisterBloc>().add(
-                                  RegisterUser(
-                                    email: _emailController.text.trim(),
-                                    name: _nameController.text.trim(),
-                                    password: _passwordController.text.trim(),
-                                  ),
-                                );
+                              RegisterUser(
+                                email: _emailController.text.trim(),
+                                name: _nameController.text.trim(),
+                                password: _passwordController.text.trim(),
+                              ),
+                            );
                           }
                         },
                       );
@@ -202,7 +215,11 @@ class _RegisterPageState extends State<RegisterPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.verified_user_rounded, size: 14, color: AppColors.textGrey.withValues(alpha: 0.5)),
+                      Icon(
+                        Icons.verified_user_rounded,
+                        size: 14,
+                        color: AppColors.textGrey.withValues(alpha: 0.5),
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         "Your data is encrypted and secure",
@@ -247,7 +264,9 @@ class _RegisterPageState extends State<RegisterPage> {
                       text: "Google",
                       onPressed: isLoading
                           ? () {}
-                          : () => context.read<RegisterBloc>().add(GoogleSignInRequested()),
+                          : () => context.read<RegisterBloc>().add(
+                              GoogleSignInRequested(),
+                            ),
                       icon: isLoading
                           ? const SizedBox(
                               height: 20,
@@ -266,7 +285,10 @@ class _RegisterPageState extends State<RegisterPage> {
               Center(
                 child: RichText(
                   text: TextSpan(
-                    style: GoogleFonts.outfit(fontSize: 15, color: AppColors.textGrey),
+                    style: GoogleFonts.outfit(
+                      fontSize: 15,
+                      color: AppColors.textGrey,
+                    ),
                     children: [
                       const TextSpan(text: "Already a member? "),
                       WidgetSpan(

@@ -1,18 +1,38 @@
 import 'package:equatable/equatable.dart';
 
-class ExpenseBreakdownEntity extends Equatable {
-  final List<CategoryDetailEntity> categoryBreakdown;
-  final List<GroupDetailEntity> groupBreakdown;
+class ExpenseBreakdownSummaryEntity extends Equatable {
   final double totalSpent;
+  final double groupExpenseShare;
+  final double personalExpenseShare;
+  final double nonGroupExpenseShare;
 
-  const ExpenseBreakdownEntity({
-    required this.categoryBreakdown,
-    required this.groupBreakdown,
+  const ExpenseBreakdownSummaryEntity({
     required this.totalSpent,
+    required this.groupExpenseShare,
+    required this.personalExpenseShare,
+    required this.nonGroupExpenseShare,
   });
 
   @override
-  List<Object?> get props => [categoryBreakdown, groupBreakdown, totalSpent];
+  List<Object?> get props => [
+        totalSpent,
+        groupExpenseShare,
+        personalExpenseShare,
+        nonGroupExpenseShare,
+      ];
+}
+
+class ExpenseBreakdownEntity extends Equatable {
+  final ExpenseBreakdownSummaryEntity summary;
+  final List<CategoryDetailEntity> categoryBreakdown;
+
+  const ExpenseBreakdownEntity({
+    required this.summary,
+    required this.categoryBreakdown,
+  });
+
+  @override
+  List<Object?> get props => [summary, categoryBreakdown];
 }
 
 class CategoryDetailEntity extends Equatable {
@@ -21,7 +41,8 @@ class CategoryDetailEntity extends Equatable {
   final String name;
   final String color;
   final double amount;
-  final double percentage;
+  final double categoryPercentage;
+  final double budgetPercentage;
   final int expenseCount;
   final double? remaining;
   final double? limitAmount;
@@ -34,7 +55,8 @@ class CategoryDetailEntity extends Equatable {
     required this.name,
     required this.color,
     required this.amount,
-    required this.percentage,
+    required this.categoryPercentage,
+    required this.budgetPercentage,
     required this.expenseCount,
     this.remaining,
     this.limitAmount,
@@ -49,39 +71,12 @@ class CategoryDetailEntity extends Equatable {
         name,
         color,
         amount,
-        percentage,
+        categoryPercentage,
+        budgetPercentage,
         expenseCount,
         remaining,
         limitAmount,
         isOverLimit,
         spentThisMonth,
-      ];
-}
-
-class GroupDetailEntity extends Equatable {
-  final String id;
-  final String name;
-  final double amount;
-  final String? groupIcon;
-  final double percentage;
-  final int expenseCount;
-
-  const GroupDetailEntity({
-    required this.id,
-    required this.name,
-    required this.amount,
-    this.groupIcon,
-    required this.percentage,
-    required this.expenseCount,
-  });
-
-  @override
-  List<Object?> get props => [
-        id,
-        name,
-        amount,
-        groupIcon,
-        percentage,
-        expenseCount,
       ];
 }
