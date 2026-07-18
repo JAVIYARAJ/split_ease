@@ -25,19 +25,22 @@ SplitEase is a Flutter bill-splitting app backed by Supabase — built for frien
 
 | Feature | Description |
 |---|---|
-| 💰 **Expense Management** | Add, edit, and delete expenses with full detail view and comments |
-| 🧍 **Payer Selection** | Choose any group member or friend as the payer |
-| ✂️ **Split Options** | Equal split, custom amounts, or percentage-based splits |
-| 🤝 **Settle Up** | Settle balances with a friend or group member; record payments |
-| 📄 **PDF Export** | Generate and preview a PDF summary of any expense |
-| 👥 **Groups** | Create groups, invite via QR code or invite code, manage roles |
-| 🔗 **Friends** | Send/respond to friend requests; view per-friend expense history |
-| 📡 **Realtime Notifications** | Live friend request alerts via Supabase Realtime |
-| 📅 **Activity Feed** | Chronological log of all transactions and settlements |
-| 🧾 **Expense Notes** | Attach notes and comments to individual expenses |
-| 🖼 **Profile & Avatar** | Edit profile, upload photo to Supabase Storage |
-| 📱 **QR Friend-Adding** | Display your personal QR code; scan others to add friends instantly |
-| 🗓 **Date Picker** | Calendar-based date selection for expenses |
+| 💰 **Expense Management** | Add, edit, and delete expenses with full detail view and status labels |
+| 🧑‍💻 **Personal Expense Tracking** | Track private individual expenses separate from shared/group balances |
+| 🧍 **Payer Selection** | Choose any group member or friend as the payer for shared expenses |
+| ✂️ **Split Options** | Split equally, by custom amounts, or percentage-based allocations |
+| 🤝 **Settle Up Overhaul** | Redesigned settle flow with built-in calculator and overpayment warnings |
+| 💳 **Payment Methods** | Track payments/settlements using specific methods (Cash, UPI, Card, etc.) |
+| 📁 **Searchable Categories** | Real-time category searching with intelligent substring-fallback icons |
+| 📊 **Category Spending Limits** | Set monthly budgets in ₹ (Rupee) and view warnings in the Activity Feed |
+| 💬 **Expense Comments** | Dynamic comment threads with Swipe-to-Edit/Delete actions |
+| 🖼️ **Media Attachments** | Securely attach receipts and transaction images hosted on Cloudinary |
+| 📄 **Enhanced PDF Receipts** | Export and preview detailed PDF summaries with full metadata |
+| 👥 **Groups & Invites** | Create groups, manage admin/member roles, and share QR/invite codes |
+| 🔗 **Friends System** | Send, accept, or reject friend requests with live real-time notifications |
+| 📡 **Realtime Syncing** | Immediate UI updates via Supabase Realtime subscription bus |
+| 📅 **Activity Feed** | Chronological log of all expenses, settlements, and limit warnings |
+| 🎨 **Premium UI/UX** | Animated SliverAppBars, SmoothAnimatedFAB, and status bar color sync |
 
 ---
 
@@ -51,13 +54,17 @@ Backend         →   Supabase (PostgreSQL + Auth + Storage + Realtime)
 Auth            →   Supabase Auth (email/password + Google Sign-In)
 DI              →   get_it (service locator, `sl` singleton)
 Error Handling  →   fpdart Either<Failure, T>
-Image Handling  →   image_picker + cached_network_image
+Media Hosting   →   Cloudinary (via cloudinary_public API integration)
+Image Handling  →   image_picker + cached_network_image + file_picker
+Environment     →   flutter_dotenv (Externalized .env credentials)
+Calculations    →   math_expressions (for built-in calculator sheet)
+Charts/Visuals  →   fl_chart (personal expense visualizations)
 QR              →   qr_flutter (display) + mobile_scanner (scan)
 PDF             →   pdf + flutter_pdfview
 Calendar        →   table_calendar
 Skeletons       →   skeletonizer (loading placeholders)
 Local Storage   →   shared_preferences (first-run flag)
-Animations      →   lottie + custom staggered entry widgets
+Animations      →   lottie + flutter_animate + custom widgets
 Fonts           →   google_fonts
 ```
 
@@ -98,7 +105,7 @@ feature/
 ```
 split_ease/
 ├── lib/
-│   ├── main.dart                   # Entry point; initialises GetIt DI
+│   ├── main.dart                   # Entry point; initializes GetIt DI and dotenv
 │   ├── app.dart                    # MaterialApp, theme, root BlocProviders, routing
 │   ├── injection_container.dart    # All GetIt registrations (single file)
 │   ├── core/
@@ -107,8 +114,8 @@ split_ease/
 │   │   ├── error/                  # Failure, AppException
 │   │   ├── presentation/widgets/   # Shared UI components + animations
 │   │   ├── routing/                # AppRoutes (constants), RouteGenerator
-│   │   ├── secrets/                # AppSecrets — not committed, create locally
-│   │   ├── services/               # RealtimeService, ImagePickerService
+│   │   ├── secrets/                # AppSecrets — loads variables from .env
+│   │   ├── services/               # RealtimeService, ImagePickerService, CloudinaryService
 │   │   ├── theme/                  # AppTheme, AppColors, AppTextStyles
 │   │   └── usecases/               # Base UseCase<T, Params> interface
 │   └── features/
@@ -118,15 +125,17 @@ split_ease/
 │       ├── home/                   # Bottom-nav shell
 │       ├── friends/                # Friend list, requests, per-friend history
 │       ├── groups/                 # Group list, detail, settings, create, join
-│       ├── expenses/               # Add/edit/delete, payer, splits, settle up, PDF
-│       ├── activity/               # Activity feed
+│       ├── expenses/               # Add/edit/delete, splits, settle up, comments, media
+│       ├── analytics/              # Expense breakdown, monthly insights & charts
+│       ├── activity/               # Activity feed & limit alerts
 │       ├── profile/                # Edit profile
-│       └── account/                # Logout, feedback, QR display
+│       └── account/                # Logout, category limits, feedback, QR display
 ├── assets/
 │   ├── animation/                  # Lottie JSON files
-│   └── images/welcome/             # Welcome screen assets
+│   └── images/welcome/             # Onboarding screen assets
 ├── android/
 ├── ios/
+├── .env.example                    # Template for local environment variables
 ├── pubspec.yaml
 └── README.md
 ```
@@ -147,15 +156,29 @@ git clone https://github.com/JAVIYARAJ/split_ease.git
 cd split_ease
 ```
 
-### 2. Configure Supabase credentials
+### 2. Configure environment variables
 
-Create `lib/core/secrets/app_secrets.dart` — this file is not committed:
+Copy the `.env.example` template to `.env` in the project root:
 
-```dart
-class AppSecrets {
-  static const String supabaseUrl = 'YOUR_SUPABASE_URL';
-  static const String supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
-}
+```bash
+cp .env.example .env
+```
+
+Open `.env` and fill in your actual credentials:
+
+```ini
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your_supabase_anon_key_here
+
+# Google Sign-In OAuth Client IDs
+GOOGLE_WEB_CLIENT_ID=your_google_web_client_id.apps.googleusercontent.com
+GOOGLE_IOS_CLIENT_ID=your_google_ios_client_id.apps.googleusercontent.com
+
+# Cloudinary credentials (for expense receipts/attachments)
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_UPLOAD_PRESET=your_cloudinary_upload_preset
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 ```
 
 ### 3. Install dependencies
@@ -172,22 +195,27 @@ flutter run
 
 ---
 
-## 🗄 Supabase Backend
+## 🗄 Supabase Backend & Database Functions
+
+The backend relies on **Supabase** for database, auth, and real-time triggers, using robust **Postgres RPC (Remote Procedure Call) functions** to run transactional and relational business logic on the database side.
 
 ### Core tables
 
 | Table | Purpose |
 |---|---|
 | `profiles` | User profile linked to `auth.users` |
-| `expenses` | All expenses — amount, payer, group/friend scope |
-| `expense_participants` | Who is involved in each expense and their share |
-| `expense_comments` | Per-expense comment thread |
+| `expenses` | All expenses — amount, payer, scope (shared/personal), payment method |
+| `expense_participants` | Participant list and split amount/percentage breakdowns |
+| `expense_comments` | Inline comments threads per expense |
+| `expense_media` | Image/receipt URLs and attachment metadata |
+| `payment_methods` | System-supported payment methods (Cash, Card, UPI, etc.) |
+| `category_limits` | Monthly budget thresholds per expense category |
 | `groups` | Group metadata — name, icon, invite code |
-| `group_members` | Membership with role (admin / member) |
+| `group_members` | Group membership with role (admin / member) |
 | `friends` | Friend relationships between users |
-| `friend_requests` | Pending/accepted/rejected requests |
-| `settlements` | Recorded payments between two users |
-| `activities` | Denormalised activity feed rows |
+| `friend_requests` | Pending/accepted/rejected friend requests |
+| `settlements` | Recorded settlements and payment records |
+| `activities` | Denormalized activity feed rows (e.g. limit warning events) |
 
 ### Storage buckets
 
@@ -246,8 +274,8 @@ flutter test test/path/to/test_file.dart          # Run a single test file
 
 - [ ] Forgot password / email reset flow
 - [ ] Push notifications for new expenses in groups
-- [ ] Subscription tier with advanced analytics
-- [ ] Monthly spending summary and charts
+- [/] Subscription tier with advanced analytics (charts/breakdown implemented)
+- [x] Monthly spending summary and charts
 - [ ] Dark mode
 - [ ] Offline-first with local queue and sync on reconnect
 - [ ] Web companion app
