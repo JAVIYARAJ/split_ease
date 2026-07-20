@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 import 'package:split_ease/features/expenses/domain/entities/personal_expenses_entity.dart';
-import 'package:split_ease/features/expenses/domain/entities/personal_expense_chart_entity.dart';
 
 sealed class PersonalExpensesState extends Equatable {
   const PersonalExpensesState();
@@ -15,15 +14,11 @@ class PersonalExpensesLoading extends PersonalExpensesState {}
 
 class PersonalExpensesLoaded extends PersonalExpensesState {
   final PersonalExpensesEntity data;
-  final PersonalExpenseChartEntity chartData;
 
-  const PersonalExpensesLoaded({
-    required this.data,
-    required this.chartData,
-  });
+  const PersonalExpensesLoaded({required this.data});
 
   @override
-  List<Object?> get props => [data, chartData];
+  List<Object?> get props => [data];
 }
 
 class PersonalExpensesError extends PersonalExpensesState {

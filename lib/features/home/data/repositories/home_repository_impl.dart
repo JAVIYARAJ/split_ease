@@ -11,9 +11,9 @@ class HomeRepositoryImpl implements HomeRepository {
   HomeRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, HomeDashboardEntity>> getHomeDashboard() async {
+  Future<Either<Failure, HomeDashboardEntity>> getHomeDashboard({DateTime? startDate, DateTime? endDate}) async {
     try {
-      final dashboard = await remoteDataSource.getHomeDashboard();
+      final dashboard = await remoteDataSource.getHomeDashboard(startDate: startDate, endDate: endDate);
       return right(dashboard);
     } on ServerException catch (e) {
       return left(Failure(message: e.message));

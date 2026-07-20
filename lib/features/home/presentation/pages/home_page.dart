@@ -32,6 +32,16 @@ import '../../../../features/analytics/presentation/bloc/expense_breakdown_bloc.
 import '../../../../features/analytics/presentation/pages/expense_breakdown_page.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/routing/navigation_service.dart';
+import 'package:intl/intl.dart';
+
+enum HomeDashboardFilter {
+  thisWeek,
+  lastWeek,
+  thisMonth,
+  lastMonth,
+  thisYear,
+  custom,
+}
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -105,7 +115,10 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: AppColors.backgroundLightGrey,
       child: MultiBlocProvider(
         providers: [
-          BlocProvider(create: (_) => sl<HomeDashboardBloc>()..add(LoadHomeDashboard())),
+          BlocProvider(create: (_) {
+            final now = DateTime.now();
+            return sl<HomeDashboardBloc>()..add(LoadHomeDashboard(startDate: DateTime(now.year, now.month, 1), endDate: now));
+          }),
           BlocProvider(create: (_) => sl<FriendsBloc>()..add(LoadFriends())),
           BlocProvider(create: (_) => sl<GroupsBloc>()..add(LoadGroups())),
           BlocProvider(create: (_) => sl<ActivityBloc>()..add(LoadActivities())),
@@ -267,8 +280,120 @@ class _HomePageState extends State<HomePage> {
 
 // ── Home Dashboard UI ──
 
-class _HomeDashboardView extends StatelessWidget {
+class _HomeDashboardView extends StatefulWidget {
   const _HomeDashboardView();
+
+  @override
+  State<_HomeDashboardView> createState() => _HomeDashboardViewState();
+}
+
+class _HomeDashboardViewState extends State<_HomeDashboardView> {
+  HomeDashboardFilter _activeFilter = HomeDashboardFilter.thisMonth;
+  DateTime? _customStart;
+  DateTime? _customEnd;
+
+  LoadHomeDashboard _buildEvent() {
+    final dates = _resolveDates(_activeFilter);
+    return LoadHomeDashboard(
+      startDate: dates.$1,
+      endDate: dates.$2,
+    );
+  }
+
+  (DateTime?, DateTime?) _resolveDates(HomeDashboardFilter filter) {
+    final now = DateTime.now();
+    switch (filter) {
+      case HomeDashboardFilter.thisWeek:
+        final start = now.subtract(Duration(days: now.weekday - 1));
+        final end = start.add(const Duration(days: 6));
+        return (start, end);
+      case HomeDashboardFilter.lastWeek:
+        final startOfThisWeek = now.subtract(Duration(days: now.weekday - 1));
+        final end = startOfThisWeek.subtract(const Duration(days: 1));
+        return (end.subtract(const Duration(days: 6)), end);
+      case HomeDashboardFilter.thisMonth:
+        return (DateTime(now.year, now.month, 1), now);
+      case HomeDashboardFilter.lastMonth:
+        final start = DateTime(now.year, now.month - 1, 1);
+        final end = DateTime(now.year, now.month, 0);
+        return (start, end);
+      case HomeDashboardFilter.thisYear:
+        return (DateTime(now.year, 1, 1), now);
+      case HomeDashboardFilter.custom:
+        return (_customStart, _customEnd);
+    }
+  }
+
+  String _filterLabel(HomeDashboardFilter f) {
+    switch (f) {
+      case HomeDashboardFilter.thisWeek:  return 'This Week';
+      case HomeDashboardFilter.lastWeek:  return 'Last Week';
+      case HomeDashboardFilter.thisMonth: return 'This Month';
+      case HomeDashboardFilter.lastMonth: return 'Last Month';
+      case HomeDashboardFilter.thisYear:  return 'This Year';
+      case HomeDashboardFilter.custom:
+        if (_customStart != null && _customEnd != null) {
+          final fmt = DateFormat('MMM d');
+          return '${fmt.format(_customStart!)} – ${fmt.format(_customEnd!)}';
+        }
+        return 'Custom Range';
+    }
+  }
+
+  void _showFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _HomeFilterSheet(
+        activeFilter: _activeFilter,
+        customStart: _customStart,
+        customEnd: _customEnd,
+        onFilterSelected: (filter) async {
+          Navigator.pop(context);
+          if (filter == HomeDashboardFilter.custom) {
+            await _showDateRangePicker();
+          } else {
+            setState(() => _activeFilter = filter);
+            if (mounted) {
+              context.read<HomeDashboardBloc>().add(_buildEvent());
+            }
+          }
+        },
+      ),
+    );
+  }
+
+  Future<void> _showDateRangePicker() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 3),
+      lastDate: now,
+      initialDateRange: DateTimeRange(
+        start: DateTime(now.year, now.month, 1),
+        end: now,
+      ),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: ColorScheme.light(
+            primary: AppColors.primary,
+            onPrimary: Colors.white,
+            surface: AppColors.surfaceWhite,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null && mounted) {
+      setState(() {
+        _activeFilter = HomeDashboardFilter.custom;
+        _customStart = picked.start;
+        _customEnd = picked.end;
+      });
+      context.read<HomeDashboardBloc>().add(_buildEvent());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -277,7 +402,7 @@ class _HomeDashboardView extends StatelessWidget {
 
     return RefreshIndicator(
       onRefresh: () async {
-        context.read<HomeDashboardBloc>().add(LoadHomeDashboard());
+        context.read<HomeDashboardBloc>().add(_buildEvent());
         await Future.delayed(const Duration(milliseconds: 500));
       },
       color: AppColors.primary,
@@ -290,6 +415,7 @@ class _HomeDashboardView extends StatelessWidget {
             // 1. Welcome Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Expanded(
                   child: Column(
@@ -301,11 +427,45 @@ class _HomeDashboardView extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      Text(
-                        "Your Dashboard",
-                        style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -1.0),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "Your Dashboard",
+                          style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -1.0),
+                        ),
                       ),
                     ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                GestureDetector(
+                  onTap: _showFilterSheet,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.tune_rounded, size: 14, color: AppColors.primary),
+                        const SizedBox(width: 6),
+                        Text(
+                          _filterLabel(_activeFilter),
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: AppColors.primary),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -710,6 +870,151 @@ class _FriendRequestNotificationState extends State<_FriendRequestNotification>
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ── Filter Bottom Sheet ───────────────────────────────────────────────────────
+
+class _HomeFilterSheet extends StatelessWidget {
+  final HomeDashboardFilter activeFilter;
+  final DateTime? customStart;
+  final DateTime? customEnd;
+  final void Function(HomeDashboardFilter) onFilterSelected;
+
+  const _HomeFilterSheet({
+    required this.activeFilter,
+    required this.customStart,
+    required this.customEnd,
+    required this.onFilterSelected,
+  });
+
+  static const _options = [
+    (HomeDashboardFilter.thisWeek,  'This Week',    Icons.view_week_rounded),
+    (HomeDashboardFilter.lastWeek,  'Last Week',    Icons.history_rounded),
+    (HomeDashboardFilter.thisMonth, 'This Month',   Icons.calendar_month_rounded),
+    (HomeDashboardFilter.lastMonth, 'Last Month',   Icons.chevron_left_rounded),
+    (HomeDashboardFilter.thisYear,  'This Year',    Icons.calendar_today_rounded),
+    (HomeDashboardFilter.custom,    'Custom Range', Icons.date_range_rounded),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Drag handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            "Filter Dashboard",
+            style: GoogleFonts.outfit(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textBlack,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "Select a time range to filter your dashboard metrics",
+            style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey),
+          ),
+          const SizedBox(height: 20),
+          // 2-column grid
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 2.8,
+            children: _options.map((opt) {
+              final (filter, label, icon) = opt;
+              final isActive = activeFilter == filter;
+              return GestureDetector(
+                onTap: () => onFilterSelected(filter),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  decoration: BoxDecoration(
+                    color: isActive ? AppColors.primary : AppColors.surfaceWhite,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isActive ? AppColors.primary : AppColors.borderGreyLight,
+                      width: isActive ? 1.5 : 1,
+                    ),
+                    boxShadow: isActive
+                        ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 3))]
+                        : [],
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  child: Row(
+                    children: [
+                      Icon(icon, size: 16, color: isActive ? Colors.white : AppColors.iconGrey),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          label,
+                          style: GoogleFonts.outfit(
+                            fontSize: 13,
+                            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                            color: isActive ? Colors.white : AppColors.textBlack,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (isActive)
+                        const Icon(Icons.check_circle_rounded, size: 14, color: Colors.white),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          // Show selected custom range banner if applicable
+          if (activeFilter == HomeDashboardFilter.custom && customStart != null && customEnd != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, size: 16, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    "Selected: ${DateFormat('MMM d, yyyy').format(customStart!)} – ${DateFormat('MMM d, yyyy').format(customEnd!)}",
+                    style: GoogleFonts.outfit(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

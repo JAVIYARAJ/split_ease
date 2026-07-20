@@ -93,7 +93,6 @@ import 'package:split_ease/features/expenses/domain/usecases/get_expense_detail_
 import 'package:split_ease/features/expenses/domain/usecases/restore_expense_usecase.dart';
 import 'package:split_ease/features/expenses/domain/usecases/get_expense_participants_usecase.dart';
 import 'package:split_ease/features/expenses/domain/usecases/get_personal_expenses.dart';
-import 'package:split_ease/features/expenses/domain/usecases/get_personal_expense_chart.dart';
 import 'package:split_ease/features/expenses/domain/usecases/get_expense_metadata_usecase.dart';
 import 'package:split_ease/features/expenses/domain/usecases/attach_expense_media_usecase.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/personal_expenses/personal_expenses_bloc.dart';
@@ -216,7 +215,6 @@ void _expense() {
   sl.registerLazySingleton(() => GetCommonGroupsUseCase(sl()));
   sl.registerLazySingleton(() => GetExpenseMetadataUseCase(sl()));
   sl.registerLazySingleton(() => GetPersonalExpenses(sl()));
-  sl.registerLazySingleton(() => GetPersonalExpenseChart(sl()));
   sl.registerLazySingleton(() => AttachExpenseMediaUseCase(sl()));
 
   sl.registerFactory(() => ExpenseBloc(
@@ -255,7 +253,6 @@ void _expense() {
   sl.registerFactory(() => DateBloc());
   sl.registerFactory(() => PersonalExpensesBloc(
         getPersonalExpenses: sl(),
-        getPersonalExpenseChart: sl(),
       ));
 }
 

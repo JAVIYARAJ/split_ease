@@ -11,9 +11,15 @@ class AnalyticsRepositoryImpl implements AnalyticsRepository {
   AnalyticsRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, ExpenseBreakdownEntity>> getExpenseBreakdown() async {
+  Future<Either<Failure, ExpenseBreakdownEntity>> getExpenseBreakdown({
+    String? startDate,
+    String? endDate,
+  }) async {
     try {
-      final breakdown = await remoteDataSource.getExpenseBreakdown();
+      final breakdown = await remoteDataSource.getExpenseBreakdown(
+        startDate: startDate,
+        endDate: endDate,
+      );
       return right(breakdown);
     } on ServerException catch (e) {
       return left(Failure(message: e.message));

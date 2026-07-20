@@ -35,7 +35,10 @@ class HomeDashboardBloc extends Bloc<HomeDashboardEvent, HomeDashboardState> {
       LoadHomeDashboard event, Emitter<HomeDashboardState> emit) async {
     emit(state.copyWith(status: HomeDashboardStatus.loading));
 
-    final result = await getHomeDashboard(NoParams());
+    final result = await getHomeDashboard(GetHomeDashboardParams(
+      startDate: event.startDate,
+      endDate: event.endDate,
+    ));
 
     result.fold(
       (failure) => emit(state.copyWith(

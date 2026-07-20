@@ -244,9 +244,9 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                                     _buildHeaderAmount(entity, isDeleted),
                                     const SizedBox(height: 32),
                                     _buildQuickInfo(loadedState ?? ExpenseDetailLoaded(_getMockEntity(), "")),
-                                    if (loadedState != null && loadedState.expenseDetail.updatedBy != null) ...[
-                                      const SizedBox(height: 12),
-                                      _buildLastUpdatedInfo(loadedState),
+                                    if (loadedState != null) ...[
+                                      const SizedBox(height: 16),
+                                      _buildActivityLog(loadedState),
                                     ],
                                     const SizedBox(height: 24),
                                     _buildActionGrid(entity, isDeleted),
@@ -611,17 +611,64 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     );
   }
 
-  Widget _buildLastUpdatedInfo(ExpenseDetailLoaded state) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Icon(Icons.history_rounded, size: 14, color: AppColors.textGrey),
-        const SizedBox(width: 4),
-        Text(
-          "Last updated by ${state.updatedByFirstName} on ${state.formattedUpdatedAt}",
-          style: GoogleFonts.outfit(color: AppColors.textGrey, fontSize: 12, fontWeight: FontWeight.w400),
-        ),
-      ],
+  Widget _buildActivityLog(ExpenseDetailLoaded state) {
+    String formattedCreatedAt = "Unknown Date";
+    if (state.expenseDetail.createdAt.isNotEmpty) {
+      try {
+        final parsed = DateTime.parse(state.expenseDetail.createdAt);
+        formattedCreatedAt = DateFormat('MMM dd, yyyy • hh:mm a').format(parsed);
+      } catch (_) {}
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceWhite,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderGreyLight),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.add_circle_outline_rounded, size: 16, color: AppColors.primary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  "Created by ${state.creatorFirstName}",
+                  style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 13, fontWeight: FontWeight.w500),
+                ),
+              ),
+              Text(
+                formattedCreatedAt,
+                style: GoogleFonts.outfit(color: AppColors.textGrey, fontSize: 12, fontWeight: FontWeight.w400),
+              ),
+            ],
+          ),
+          if (state.expenseDetail.updatedBy != null) ...[
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 10),
+              child: Divider(height: 1, color: AppColors.borderGreyLight),
+            ),
+            Row(
+              children: [
+                const Icon(Icons.edit_note_rounded, size: 16, color: AppColors.iconGrey),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    "Updated by ${state.updatedByFirstName}",
+                    style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 13, fontWeight: FontWeight.w500),
+                  ),
+                ),
+                Text(
+                  state.formattedUpdatedAt ?? "",
+                  style: GoogleFonts.outfit(color: AppColors.textGrey, fontSize: 12, fontWeight: FontWeight.w400),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 

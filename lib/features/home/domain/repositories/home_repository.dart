@@ -3,5 +3,5 @@ import 'package:split_ease/core/error/failure.dart';
 import '../entities/home_dashboard_entity.dart';
 
 abstract class HomeRepository {
-  Future<Either<Failure, HomeDashboardEntity>> getHomeDashboard();
+  Future<Either<Failure, HomeDashboardEntity>> getHomeDashboard({DateTime? startDate, DateTime? endDate});
 }

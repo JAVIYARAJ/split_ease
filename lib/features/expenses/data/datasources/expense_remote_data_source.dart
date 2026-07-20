@@ -11,7 +11,6 @@ import 'package:split_ease/features/expenses/data/models/expense_category_model.
 import 'package:split_ease/features/expenses/data/models/expense_metadata_model.dart';
 import 'package:split_ease/features/expenses/data/models/personal_expenses_model.dart';
 import 'package:split_ease/features/expenses/data/models/expense_media_model.dart';
-import 'package:split_ease/features/expenses/data/models/personal_expense_chart_model.dart';
 
 abstract class ExpenseRemoteDataSource {
   Future<String> createExpense(CreateExpenseParams params);
@@ -32,10 +31,9 @@ abstract class ExpenseRemoteDataSource {
     String? paymentMethodId,
   });
   Future<ExpenseMetadataModel> getExpenseMetadata();
-  Future<PersonalExpensesModel> getPersonalExpenses();
-  Future<PersonalExpenseChartModel> getPersonalExpenseChart({
-    required DateTime startDate,
-    required DateTime endDate,
+  Future<PersonalExpensesModel> getPersonalExpenses({
+    DateTime? startDate,
+    DateTime? endDate,
     String? categoryId,
     String? paymentMethodId,
   });
@@ -246,30 +244,23 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
   }
 
   @override
-  Future<PersonalExpensesModel> getPersonalExpenses() async {
-    try {
-      final response = await client.rpc('get_personal_expense_rpc');
-      return PersonalExpensesModel.fromJson(response as Map<String, dynamic>);
-    } catch (e) {
-      throw ServerException(message: ErrorMessageUtils.generate(e));
-    }
-  }
-
-  @override
-  Future<PersonalExpenseChartModel> getPersonalExpenseChart({
-    required DateTime startDate,
-    required DateTime endDate,
+  Future<PersonalExpensesModel> getPersonalExpenses({
+    DateTime? startDate,
+    DateTime? endDate,
     String? categoryId,
     String? paymentMethodId,
   }) async {
     try {
-      final response = await client.rpc('get_personal_expense_chart_rpc', params: {
-        'p_start_date': startDate.toIso8601String().split('T')[0],
-        'p_end_date': endDate.toIso8601String().split('T')[0],
-        'p_category_id': categoryId,
-        'p_payment_method_id': paymentMethodId,
-      });
-      return PersonalExpenseChartModel.fromJson(response as Map<String, dynamic>);
+      final params = <String, dynamic>{};
+      if (startDate != null) params['p_start_date'] = startDate.toIso8601String().split('T')[0];
+      if (endDate != null) params['p_end_date'] = endDate.toIso8601String().split('T')[0];
+      if (categoryId != null) params['p_category_id'] = categoryId;
+      if (paymentMethodId != null) params['p_payment_method_id'] = paymentMethodId;
+      final response = await client.rpc(
+        'get_personal_expense_rpc',
+        params: params.isEmpty ? null : params,
+      );
+      return PersonalExpensesModel.fromJson(response as Map<String, dynamic>);
     } catch (e) {
       throw ServerException(message: ErrorMessageUtils.generate(e));
     }

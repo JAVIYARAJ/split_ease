@@ -55,8 +55,8 @@ class ExpenseDetailLoaded extends ExpenseDetailState {
     if (expenseDetail.updatedAt == null) return null;
     try {
       final parsed = DateTime.parse(expenseDetail.updatedAt!);
-      // For updated time, show more detail (HH:mm)
-      return DateFormat('MMM dd, yyyy HH:mm').format(parsed);
+      // For updated time, show more detail (hh:mm a)
+      return DateFormat('MMM dd, yyyy \u2022 hh:mm a').format(parsed);
     } catch (_) {
       return null;
     }
