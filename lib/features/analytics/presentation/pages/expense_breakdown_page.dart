@@ -99,9 +99,9 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundWhite,
+      backgroundColor: AppColors.backgroundLightGrey,
       appBar: AppBar(
-        backgroundColor: AppColors.backgroundWhite,
+        backgroundColor: AppColors.backgroundLightGrey,
         elevation: 0,
         centerTitle: true,
         title: Text(
@@ -182,7 +182,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                   SliverAppBar(
                     pinned: true,
                     automaticallyImplyLeading: false,
-                    backgroundColor: AppColors.backgroundWhite,
+                    backgroundColor: AppColors.backgroundLightGrey,
                     elevation: 0,
                     expandedHeight: 140,
                     collapsedHeight: 64,
@@ -194,7 +194,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
 
                         return ClipRect(
                           child: Container(
-                            color: AppColors.backgroundWhite,
+                            color: AppColors.backgroundLightGrey,
                             child: Stack(
                               children: [
                                 // "Total Expenses" label
@@ -280,18 +280,21 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                   ),
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 24, right: 24, top: 16, bottom: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildSummaryGrid(displayData.summary),
-                          const SizedBox(height: 32),
-                          Text(
-                            "Category Breakdown",
-                            style: GoogleFonts.outfit(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textBlack,
+                          const SizedBox(height: 22),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: Text(
+                              "Category Breakdown",
+                              style: GoogleFonts.outfit(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textBlack,
+                              ),
                             ),
                           ),
                         ],
@@ -313,61 +316,238 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
   }
 
   Widget _buildSummaryGrid(ExpenseBreakdownSummaryEntity summary) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    final total = summary.totalSpent;
+    final groupPct = total > 0 ? (summary.groupExpenseShare / total).clamp(0.0, 1.0) : 0.0;
+    final personalPct = total > 0 ? (summary.personalExpenseShare / total).clamp(0.0, 1.0) : 0.0;
+    final nonGroupPct = total > 0 ? (summary.nonGroupExpenseShare / total).clamp(0.0, 1.0) : 0.0;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.8), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(child: _buildSummaryCard(title: "Group Share", amount: summary.groupExpenseShare, color: AppColors.primary, icon: Icons.groups_rounded)),
-          const SizedBox(width: 12),
-          Expanded(child: _buildSummaryCard(title: "Personal", amount: summary.personalExpenseShare, color: AppColors.primaryTeal, icon: Icons.person_rounded)),
-          const SizedBox(width: 12),
-          Expanded(child: _buildSummaryCard(title: "Non-Group", amount: summary.nonGroupExpenseShare, color: AppColors.iconGrey, icon: Icons.person_outline_rounded)),
+          // Card Title & Icon
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Expense Distribution",
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textBlack,
+                ),
+              ),
+              Icon(Icons.pie_chart_outline_rounded, size: 18, color: AppColors.primary),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Multi-Segment Proportion Bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              height: 10,
+              width: double.infinity,
+              color: AppColors.backgroundLightGrey,
+              child: Row(
+                children: [
+                  if (groupPct > 0)
+                    Flexible(
+                      flex: (groupPct * 1000).toInt(),
+                      child: Container(color: AppColors.primary),
+                    ),
+                  if (personalPct > 0)
+                    Flexible(
+                      flex: (personalPct * 1000).toInt(),
+                      child: Container(color: const Color(0xFF00E5FF)),
+                    ),
+                  if (nonGroupPct > 0)
+                    Flexible(
+                      flex: (nonGroupPct * 1000).toInt(),
+                      child: Container(color: const Color(0xFF7C4DFF)),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Distribution Metrics Rows
+          _buildDistributionRow(
+            title: "Group Share",
+            amount: summary.groupExpenseShare,
+            percentage: groupPct * 100,
+            color: AppColors.primary,
+            icon: Icons.groups_rounded,
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 10),
+            child: Divider(height: 1, color: Color(0xFFF0F0F0)),
+          ),
+          _buildDistributionRow(
+            title: "Personal",
+            amount: summary.personalExpenseShare,
+            percentage: personalPct * 100,
+            color: const Color(0xFF00E5FF),
+            icon: Icons.person_rounded,
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 10),
+            child: Divider(height: 1, color: Color(0xFFF0F0F0)),
+          ),
+          _buildDistributionRow(
+            title: "Non-Group",
+            amount: summary.nonGroupExpenseShare,
+            percentage: nonGroupPct * 100,
+            color: const Color(0xFF7C4DFF),
+            icon: Icons.person_outline_rounded,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryCard({
+  Widget _buildDistributionRow({
     required String title,
     required double amount,
+    required double percentage,
     required Color color,
     required IconData icon,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.15)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
-            child: Icon(icon, color: color, size: 18),
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
           ),
-          const SizedBox(height: 12),
-          Text(title, maxLines: 2, overflow: TextOverflow.ellipsis, style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textGrey)),
-          const Spacer(),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(AppFormatter.formatCurrency(amount), style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textBlack)),
+          child: Icon(icon, color: color, size: 16),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Row(
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textBlack,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  "${percentage.toStringAsFixed(1)}%",
+                  style: GoogleFonts.outfit(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        Text(
+          AppFormatter.formatCurrency(amount),
+          style: GoogleFonts.outfit(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textBlack,
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildCategoryList(List<CategoryDetailEntity> categories) {
     if (categories.isEmpty) {
       return SliverToBoxAdapter(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 40),
-            child: Text("No category data available.", style: GoogleFonts.outfit(color: AppColors.textGrey)),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.8), width: 1.2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.pie_chart_outline_rounded,
+                      size: 36,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  "No Category Data Available",
+                  style: GoogleFonts.outfit(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textBlack,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  "No expense breakdown found for the selected period. Try picking a different date filter range.",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textGrey,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -384,9 +564,16 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
             margin: const EdgeInsets.only(bottom: 16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.surfaceWhite,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.8), width: 1.2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
             child: Row(
               children: [
