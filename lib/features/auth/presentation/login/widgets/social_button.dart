@@ -1,6 +1,7 @@
 // --- Social Button (Light Mode) ---
 import 'package:flutter/material.dart';
 
+import '../../../../../core/theme/app_color_tokens.dart';
 import '../../../../../core/theme/app_colors.dart';
 
 class SocialButton extends StatelessWidget {
@@ -17,17 +18,17 @@ class SocialButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.black,
-          side: const BorderSide(color: AppColors.borderGrey), // Grey border
+          foregroundColor: Theme.of(context).ext.textPrimary,
+          side: BorderSide(color: Theme.of(context).ext.border),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          backgroundColor: Colors.white, // White fill
+          backgroundColor: Theme.of(context).ext.surface,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             icon,
             const SizedBox(width: 8),
-            Text(text, style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600)),
+            Text(text, style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary)),
           ],
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
@@ -21,9 +22,9 @@ class PayerSelectionPage extends StatelessWidget {
     return BlocProvider(
       create: (context) => sl<PayerBloc>()..add(LoadPayerEvent(members: members, initialPayerId: currentPayerId)),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).ext.scaffoldBg,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).ext.scaffoldBg,
           elevation: 0,
           leading: TextButton(
             onPressed: () => Navigator.pop(context),
@@ -40,7 +41,7 @@ class PayerSelectionPage extends StatelessWidget {
           title: Text(
             "Choose payer",
             style: GoogleFonts.openSans(
-              color: AppColors.textBlack,
+              color: Theme.of(context).ext.textPrimary,
               fontWeight: FontWeight.w600,
               fontSize: 18,
             ),
@@ -78,7 +79,7 @@ class PayerSelectionPage extends StatelessWidget {
                             member.fullName ?? "Unknown",
                             style: GoogleFonts.openSans(
                               fontSize: 16,
-                              color: AppColors.textBlack,
+                              color: Theme.of(context).ext.textPrimary,
                               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                             ),
                           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
@@ -25,7 +26,7 @@ class FriendRequestTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFE8E8E8), width: 1),
       ),
@@ -122,7 +123,7 @@ class FriendRequestTile extends StatelessWidget {
                             style: GoogleFonts.outfit(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: Theme.of(context).ext.surface,
                             ),
                           ),
                         ),
@@ -203,7 +204,7 @@ class FriendRequestTile extends StatelessWidget {
                     height: 280,
                     child: Center(
                       child: CircularProgressIndicator(
-                        color: Colors.white,
+                        color: Theme.of(context).ext.surface,
                         value: progress.expectedTotalBytes != null
                             ? progress.cumulativeBytesLoaded /
                                 progress.expectedTotalBytes!

@@ -54,6 +54,8 @@ class IconUtils {
       case 'devices': return Icons.devices_rounded;
       case 'chair': return Icons.chair_rounded;
       case 'spa': return Icons.spa_rounded;
+      case 'qr_code': return Icons.qr_code_rounded;
+      case 'qr_code_scanner': return Icons.qr_code_scanner_rounded;
       default:
         return Icons.category_rounded;
     }

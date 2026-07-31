@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -112,7 +113,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return BaseScreen(
       useSafeArea: false,
-      backgroundColor: AppColors.backgroundLightGrey,
+      backgroundColor: Theme.of(context).ext.backgroundGrey,
       child: MultiBlocProvider(
         providers: [
           BlocProvider(create: (_) {
@@ -148,7 +149,7 @@ class _HomePageState extends State<HomePage> {
                       margin: const EdgeInsets.only(left: 24, right: 24, bottom: 20),
                       height: 70,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: Theme.of(context).ext.surface.withValues(alpha: 0.85),
                         borderRadius: BorderRadius.circular(35),
                         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 10))],
                       ),
@@ -252,7 +253,7 @@ class _HomePageState extends State<HomePage> {
                 child: Icon(
                   isActive ? activeIcon : inactiveIcon,
                   key: ValueKey(isActive),
-                  color: isActive ? AppColors.primary : AppColors.iconGrey,
+                  color: isActive ? AppColors.primary : Theme.of(context).ext.textTertiary,
                   size: 24,
                 ),
               ),
@@ -261,7 +262,7 @@ class _HomePageState extends State<HomePage> {
                 duration: const Duration(milliseconds: 200),
                 style: GoogleFonts.openSans(
                   fontSize: 11,
-                  color: isActive ? AppColors.primary : AppColors.iconGrey,
+                  color: isActive ? AppColors.primary : Theme.of(context).ext.textTertiary,
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
                 ),
                 child: Text(
@@ -376,10 +377,8 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
       ),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: ColorScheme.light(
+          colorScheme: Theme.of(context).colorScheme.copyWith(
             primary: AppColors.primary,
-            onPrimary: Colors.white,
-            surface: AppColors.surfaceWhite,
           ),
         ),
         child: child!,
@@ -423,7 +422,7 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                     children: [
                       Text(
                         "Hey $name,",
-                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textGrey),
+                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textSecondary),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -432,7 +431,7 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                         alignment: Alignment.centerLeft,
                         child: Text(
                           "Your Dashboard",
-                          style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -1.0),
+                          style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: Theme.of(context).ext.textPrimary, letterSpacing: -1.0),
                         ),
                       ),
                     ],
@@ -480,7 +479,7 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                   return Center(
                     child: Padding(
                       padding: const EdgeInsets.all(32),
-                      child: Text(state.errorMessage, style: GoogleFonts.outfit(color: AppColors.textGrey)),
+                      child: Text(state.errorMessage, style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary)),
                     ),
                   );
                 }
@@ -548,8 +547,8 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text("Expense Breakdown", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack)),
-                                  Text("See your spending breakdown", style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
+                                  Text("Expense Breakdown", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary)),
+                                  Text("See your spending breakdown", style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary)),
                                 ],
                               ),
                             ),
@@ -568,28 +567,31 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                       child: Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF3E8FF), // Light purple
+                          color: Theme.of(context).ext.isDark ? const Color(0xFF2A1B3D) : const Color(0xFFF3E8FF),
                           borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: const Color(0xFFE9D5FF)),
+                          border: Border.all(color: Theme.of(context).ext.isDark ? const Color(0xFF4C2882) : const Color(0xFFE9D5FF)),
                         ),
                         child: Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(12),
-                              decoration: const BoxDecoration(color: Color(0xFFE9D5FF), shape: BoxShape.circle),
-                              child: const Icon(Icons.person_rounded, color: Color(0xFF9333EA), size: 24),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).ext.isDark ? const Color(0xFF4C2882) : const Color(0xFFE9D5FF),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.person_rounded, color: Theme.of(context).ext.isDark ? const Color(0xFFC084FC) : const Color(0xFF9333EA), size: 24),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text("Personal Expenses", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack)),
-                                  Text("Track your non-shared expenses", style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
+                                  Text("Personal Expenses", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary)),
+                                  Text("Track your non-shared expenses", style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary)),
                                 ],
                               ),
                             ),
-                            const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Color(0xFF9333EA)),
+                            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Theme.of(context).ext.isDark ? const Color(0xFFC084FC) : const Color(0xFF9333EA)),
                           ],
                         ),
                       ),
@@ -608,9 +610,9 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isPrimary ? AppColors.primary : Colors.white,
+        color: isPrimary ? AppColors.primary : Theme.of(context).ext.surface,
         borderRadius: BorderRadius.circular(28),
-        border: isPrimary ? null : Border.all(color: AppColors.borderGrey.withValues(alpha: 0.5)),
+        border: isPrimary ? null : Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
             color: isPrimary ? AppColors.primary.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.03),
@@ -627,7 +629,7 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
             style: GoogleFonts.outfit(
               fontSize: 11, 
               fontWeight: FontWeight.w800, 
-              color: isPrimary ? Colors.white.withValues(alpha: 0.8) : AppColors.iconGrey, 
+              color: isPrimary ? Colors.white.withValues(alpha: 0.8) : Theme.of(context).ext.textSecondary, 
               letterSpacing: 1.2
             )
           ),
@@ -643,7 +645,7 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                 style: GoogleFonts.outfit(
                   fontSize: 28, 
                   fontWeight: FontWeight.w900, 
-                  color: isPrimary ? Colors.white : AppColors.textBlack, 
+                  color: isPrimary ? Colors.white : Theme.of(context).ext.textPrimary, 
                   height: 1.1
                 )
               ),
@@ -653,7 +655,7 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: isPrimary ? Colors.white.withValues(alpha: 0.2) : AppColors.backgroundLightGrey,
+              color: isPrimary ? Colors.white.withValues(alpha: 0.2) : Theme.of(context).ext.backgroundGrey,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
@@ -662,7 +664,7 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                 Icon(
                   Icons.receipt_long_rounded, 
                   size: 12, 
-                  color: isPrimary ? Colors.white : AppColors.textGrey
+                  color: isPrimary ? Colors.white : Theme.of(context).ext.textSecondary
                 ),
                 const SizedBox(width: 4),
                 Text(
@@ -670,7 +672,7 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                   style: GoogleFonts.outfit(
                     fontSize: 10, 
                     fontWeight: FontWeight.w700, 
-                    color: isPrimary ? Colors.white : AppColors.textGrey
+                    color: isPrimary ? Colors.white : Theme.of(context).ext.textSecondary
                   )
                 ),
               ],
@@ -695,14 +697,14 @@ class _DashboardSkeleton extends StatelessWidget {
           Container(
             width: double.infinity,
             height: 160,
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28)),
+            decoration: BoxDecoration(color: Theme.of(context).ext.surface, borderRadius: BorderRadius.circular(28)),
           ),
           const SizedBox(height: 32),
           Container(width: 120, height: 16, color: Colors.white),
           const SizedBox(height: 16),
-          Container(width: double.infinity, height: 80, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20))),
+          Container(width: double.infinity, height: 80, decoration: BoxDecoration(color: Theme.of(context).ext.surface, borderRadius: BorderRadius.circular(20))),
           const SizedBox(height: 12),
-          Container(width: double.infinity, height: 80, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20))),
+          Container(width: double.infinity, height: 80, decoration: BoxDecoration(color: Theme.of(context).ext.surface, borderRadius: BorderRadius.circular(20))),
         ],
       ),
     );
@@ -800,7 +802,7 @@ class _FriendRequestNotificationState extends State<_FriendRequestNotification>
                   child: Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).ext.surface,
                       borderRadius: BorderRadius.circular(16),
                       border:
                           Border.all(color: const Color(0xFFE8E8E8), width: 1),
@@ -902,8 +904,8 @@ class _HomeFilterSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
@@ -917,7 +919,7 @@ class _HomeFilterSheet extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: Theme.of(context).ext.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -928,13 +930,13 @@ class _HomeFilterSheet extends StatelessWidget {
             style: GoogleFonts.outfit(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: AppColors.textBlack,
+              color: Theme.of(context).ext.textPrimary,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             "Select a time range to filter your dashboard metrics",
-            style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey),
+            style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary),
           ),
           const SizedBox(height: 20),
           // 2-column grid
@@ -953,10 +955,10 @@ class _HomeFilterSheet extends StatelessWidget {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   decoration: BoxDecoration(
-                    color: isActive ? AppColors.primary : AppColors.surfaceWhite,
+                    color: isActive ? AppColors.primary : Theme.of(context).ext.backgroundGrey,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: isActive ? AppColors.primary : AppColors.borderGreyLight,
+                      color: isActive ? AppColors.primary : Theme.of(context).ext.border.withValues(alpha: 0.5),
                       width: isActive ? 1.5 : 1,
                     ),
                     boxShadow: isActive
@@ -966,7 +968,7 @@ class _HomeFilterSheet extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   child: Row(
                     children: [
-                      Icon(icon, size: 16, color: isActive ? Colors.white : AppColors.iconGrey),
+                      Icon(icon, size: 16, color: isActive ? Colors.white : Theme.of(context).ext.textSecondary),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -974,7 +976,7 @@ class _HomeFilterSheet extends StatelessWidget {
                           style: GoogleFonts.outfit(
                             fontSize: 13,
                             fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                            color: isActive ? Colors.white : AppColors.textBlack,
+                            color: isActive ? Colors.white : Theme.of(context).ext.textPrimary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

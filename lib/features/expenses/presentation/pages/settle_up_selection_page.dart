@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
+import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
-import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
 import 'package:split_ease/features/groups/domain/entities/group_member_balance_entity.dart';
 
 class SettleUpSelectionPage extends StatelessWidget {
@@ -19,20 +20,20 @@ class SettleUpSelectionPage extends StatelessWidget {
     final String? groupId = args?['groupId'];
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLightGrey,
+      backgroundColor: Theme.of(context).ext.backgroundGrey,
       appBar: AppBar(
-        backgroundColor: AppColors.backgroundLightGrey,
+        backgroundColor: Theme.of(context).ext.backgroundGrey,
         elevation: 0,
         leadingWidth: 80,
         leading: AppBackButton(
           onPressed: () => Navigator.pop(context),
-          color: AppColors.textBlack,
-          backgroundColor: Colors.white,
+          color: Theme.of(context).ext.textPrimary,
+          backgroundColor: Theme.of(context).ext.scaffoldBg,
         ),
         title: Text(
           "Settle up",
           style: GoogleFonts.outfit(
-            color: AppColors.textBlack,
+            color: Theme.of(context).ext.textPrimary,
             fontWeight: FontWeight.w700,
             fontSize: 16,
           ),
@@ -54,7 +55,7 @@ class SettleUpSelectionPage extends StatelessWidget {
                 style: GoogleFonts.outfit(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textGrey,
+                  color: Theme.of(context).ext.textSecondary,
                 ),
               ),
             ),
@@ -65,10 +66,10 @@ class SettleUpSelectionPage extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).ext.surface,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: AppColors.borderGreyLight,
+                      color: Theme.of(context).ext.borderLight,
                       width: 0.5,
                     ),
                     boxShadow: [
@@ -84,10 +85,10 @@ class SettleUpSelectionPage extends StatelessWidget {
                       for (int i = 0; i < balances.length; i++) ...[
                         _buildBalanceItem(context, balances[i], groupId),
                         if (i < balances.length - 1)
-                          const Divider(
+                          Divider(
                             height: 1,
                             thickness: 0.5,
-                            color: AppColors.borderGreyLight,
+                            color: Theme.of(context).ext.borderLight,
                             indent: 64,
                           ),
                       ],
@@ -114,7 +115,7 @@ class SettleUpSelectionPage extends StatelessWidget {
                         style: GoogleFonts.outfit(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textGrey,
+                          color: Theme.of(context).ext.textSecondary,
                         ),
                       ),
                     ],
@@ -164,7 +165,7 @@ class SettleUpSelectionPage extends StatelessWidget {
                     style: GoogleFonts.outfit(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textBlack,
+                      color: Theme.of(context).ext.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -172,7 +173,7 @@ class SettleUpSelectionPage extends StatelessWidget {
                     isOwed ? "owes you" : "you owe",
                     style: GoogleFonts.outfit(
                       fontSize: 12,
-                      color: AppColors.textGrey,
+                      color: Theme.of(context).ext.textSecondary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -188,10 +189,10 @@ class SettleUpSelectionPage extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               size: 18,
-              color: AppColors.iconGrey,
+              color: Theme.of(context).ext.textTertiary,
             ),
           ],
         ),

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -46,6 +47,7 @@ class ExpenseMediaList extends StatelessWidget {
               showDialog(
                 context: context,
                 builder: (dialogContext) => Dialog(
+                  backgroundColor: Theme.of(context).ext.surface,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   child: Padding(
                     padding: const EdgeInsets.all(24.0),
@@ -72,13 +74,13 @@ class ExpenseMediaList extends StatelessWidget {
                         const SizedBox(height: 16),
                         Text(
                           media.fileName,
-                          style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textBlack),
+                          style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).ext.textPrimary),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 8),
                         Text(
                           "Type: ${media.fileName.split('.').last.toUpperCase()} Document",
-                          style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textGrey),
+                          style: GoogleFonts.outfit(fontSize: 14, color: Theme.of(context).ext.textSecondary),
                         ),
                         if (!isPreviewable) ...[
                           const SizedBox(height: 16),
@@ -250,9 +252,9 @@ class ExpenseMediaList extends StatelessWidget {
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: (['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(media.fileName.toLowerCase().split('.').last) || media.mediaType == 'image') && media.fileName.toLowerCase().split('.').last != 'csv' ? AppColors.surfaceWhite : AppColors.primaryTeal.withValues(alpha: 0.05),
+                    color: (['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(media.fileName.toLowerCase().split('.').last) || media.mediaType == 'image') && media.fileName.toLowerCase().split('.').last != 'csv' ? Theme.of(context).ext.surface : AppColors.primaryTeal.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: (['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(media.fileName.toLowerCase().split('.').last) || media.mediaType == 'image') && media.fileName.toLowerCase().split('.').last != 'csv' ? AppColors.borderGreyLight : AppColors.primaryTeal.withValues(alpha: 0.2), width: 1.5),
+                    border: Border.all(color: (['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(media.fileName.toLowerCase().split('.').last) || media.mediaType == 'image') && media.fileName.toLowerCase().split('.').last != 'csv' ? Theme.of(context).ext.border : AppColors.primaryTeal.withValues(alpha: 0.2), width: 1.5),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.04),
@@ -279,7 +281,7 @@ class ExpenseMediaList extends StatelessWidget {
                                       child: CircularProgressIndicator(color: AppColors.primaryTeal, strokeWidth: 2),
                                     ),
                                   ),
-                                  errorWidget: (context, url, error) => const Icon(Icons.broken_image_rounded, color: AppColors.textGrey),
+                                  errorWidget: (context, url, error) => Icon(Icons.broken_image_rounded, color: Theme.of(context).ext.textSecondary),
                                 ),
                               ),
                               Positioned(
@@ -318,7 +320,7 @@ class ExpenseMediaList extends StatelessWidget {
                                   style: GoogleFonts.outfit(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w500,
-                                    color: AppColors.textBlack,
+                                    color: Theme.of(context).ext.textPrimary,
                                   ),
                                   maxLines: 2,
                                   textAlign: TextAlign.center,
@@ -347,12 +349,13 @@ class ExpenseMediaList extends StatelessWidget {
                           context: context,
                           builder: (dialogContext) {
                             return AlertDialog(
-                              title: Text("Delete Attachment", style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
-                              content: Text("Are you sure you want to permanently delete this attachment?", style: GoogleFonts.outfit()),
+                              backgroundColor: Theme.of(context).ext.surface,
+                              title: Text("Delete Attachment", style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary)),
+                              content: Text("Are you sure you want to permanently delete this attachment?", style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary)),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(dialogContext),
-                                  child: Text("Cancel", style: GoogleFonts.outfit(color: AppColors.textGrey)),
+                                  child: Text("Cancel", style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary)),
                                 ),
                                 ElevatedButton(
                                   style: ElevatedButton.styleFrom(

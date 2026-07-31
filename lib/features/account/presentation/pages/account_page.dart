@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/config/feature_flags.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
+import 'package:split_ease/core/theme/app_colors_x.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/account/presentation/bloc/account_bloc.dart';
 import '../../../../../core/common/cubit/app_user_cubit.dart';
+import '../../../../../core/common/cubit/theme_cubit.dart';
 
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import 'package:split_ease/core/presentation/widgets/profile_picture_dialog.dart';
@@ -49,7 +52,7 @@ class AccountPage extends StatelessWidget {
           }
 
           return Scaffold(
-            backgroundColor: Colors.white,
+            backgroundColor: context.colors.backgroundGrey,
             body: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
@@ -64,7 +67,7 @@ class AccountPage extends StatelessWidget {
                         _buildProfileHero(context, userName, userEmail, userAvatar, userState),
                         const SizedBox(height: 24),
                         if (FeatureFlags.isSubscriptionEnabled) ...[
-                          _buildProBanner(),
+                          _buildProBanner(context),
                           const SizedBox(height: 24),
                         ],
                         _buildQuickActions(context, userState),
@@ -88,7 +91,7 @@ class AccountPage extends StatelessWidget {
   Widget _buildAppBar(BuildContext context) {
     return SliverAppBar(
       pinned: true,
-      backgroundColor: Colors.white,
+      backgroundColor: context.colors.backgroundGrey,
       elevation: 0,
       scrolledUnderElevation: 0,
       toolbarHeight: 64,
@@ -102,11 +105,20 @@ class AccountPage extends StatelessWidget {
           children: [
             Text(
               "Profile",
-              style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -1.0),
+              style: GoogleFonts.outfit(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                color: context.colors.textPrimary,
+                letterSpacing: -1.0,
+              ),
             ),
             Text(
               "Account & Application Settings",
-              style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textGrey),
+              style: GoogleFonts.outfit(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: context.colors.textSecondary,
+              ),
             ),
           ],
         ),
@@ -121,11 +133,8 @@ class AccountPage extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.primary,
-            const Color(0xFF005b52),
-          ],
+        gradient: const LinearGradient(
+          colors: [AppColors.primary, Color(0xFF005b52)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -166,7 +175,7 @@ class AccountPage extends StatelessWidget {
                       url: avatar,
                       radius: 45,
                       iconSize: 40,
-                      backgroundColor: Colors.white,
+                      backgroundColor: Theme.of(context).ext.scaffoldBg,
                       iconColor: AppColors.primary.withValues(alpha: 0.5),
                     ),
                     Positioned(
@@ -174,8 +183,8 @@ class AccountPage extends StatelessWidget {
                       right: 0,
                       child: Container(
                         padding: const EdgeInsets.all(6),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).ext.surface,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
@@ -195,7 +204,7 @@ class AccountPage extends StatelessWidget {
             style: GoogleFonts.outfit(
               fontSize: 24,
               fontWeight: FontWeight.w800,
-              color: Colors.white,
+              color: Theme.of(context).ext.surface,
               letterSpacing: -0.5,
             ),
           ),
@@ -216,21 +225,14 @@ class AccountPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          Container(
-            height: 1,
-            color: Colors.white.withValues(alpha: 0.12),
-          ),
+          Container(height: 1, color: Colors.white.withValues(alpha: 0.12)),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildStatItem("Friends", friendsCount.toString(), Icons.people_outline_rounded),
-                Container(
-                  height: 32,
-                  width: 1,
-                  color: Colors.white.withValues(alpha: 0.12),
-                ),
+                Container(height: 32, width: 1, color: Colors.white.withValues(alpha: 0.12)),
                 _buildStatItem("Groups", groupsCount.toString(), Icons.layers_outlined),
               ],
             ),
@@ -248,30 +250,16 @@ class AccountPage extends StatelessWidget {
           children: [
             Icon(icon, size: 16, color: Colors.white.withValues(alpha: 0.7)),
             const SizedBox(width: 6),
-            Text(
-              value,
-              style: GoogleFonts.outfit(
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-              ),
-            ),
+            Text(value, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white)),
           ],
         ),
         const SizedBox(height: 2),
-        Text(
-          label,
-          style: GoogleFonts.outfit(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: Colors.white.withValues(alpha: 0.6),
-          ),
-        ),
+        Text(label, style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white.withValues(alpha: 0.6))),
       ],
     );
   }
 
-  Widget _buildProBanner() {
+  Widget _buildProBanner(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -292,27 +280,23 @@ class AccountPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "UPGRADE TO PRO",
-                  style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.white.withValues(alpha: 0.6), letterSpacing: 1.5),
-                ),
+                Text("UPGRADE TO PRO",
+                    style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.white.withValues(alpha: 0.6), letterSpacing: 1.5)),
                 const SizedBox(height: 8),
-                Text(
-                  "Get Advanced Stats",
-                  style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white),
-                ),
+                Text("Get Advanced Stats",
+                    style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
               ],
             ),
           ),
           ElevatedButton(
             onPressed: () {},
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
+              backgroundColor: Theme.of(context).ext.scaffoldBg,
               foregroundColor: AppColors.primary,
-              shape: CircleBorder(),
-              padding: EdgeInsets.all(16),
+              shape: const CircleBorder(),
+              padding: const EdgeInsets.all(16),
             ),
-            child: Icon(Icons.arrow_forward_rounded),
+            child: const Icon(Icons.arrow_forward_rounded),
           ),
         ],
       ),
@@ -324,6 +308,7 @@ class AccountPage extends StatelessWidget {
       children: [
         Expanded(
           child: _buildActionCard(
+            context: context,
             icon: Icons.qr_code_rounded,
             title: "My QR",
             subtitle: "Scan & share code",
@@ -343,6 +328,7 @@ class AccountPage extends StatelessWidget {
         const SizedBox(width: 16),
         Expanded(
           child: _buildActionCard(
+            context: context,
             icon: Icons.edit_note_rounded,
             title: "Edit Profile",
             subtitle: "Update name & photo",
@@ -360,6 +346,7 @@ class AccountPage extends StatelessWidget {
   }
 
   Widget _buildActionCard({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String subtitle,
@@ -371,12 +358,12 @@ class AccountPage extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: color.withValues(alpha: 0.15), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: color.withValues(alpha: 0.05),
+              color: context.colors.shadow,
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
@@ -390,7 +377,7 @@ class AccountPage extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
+                  color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(icon, color: color, size: 24),
@@ -399,22 +386,14 @@ class AccountPage extends StatelessWidget {
             const SizedBox(height: 14),
             Text(
               title,
-              style: GoogleFonts.outfit(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textBlack,
-              ),
+              style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w800, color: context.colors.textPrimary),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
             Text(
               subtitle,
-              style: GoogleFonts.outfit(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textGrey.withValues(alpha: 0.8),
-              ),
+              style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w500, color: context.colors.textSecondary),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -427,8 +406,9 @@ class AccountPage extends StatelessWidget {
   Widget _buildSettingsList(BuildContext context) {
     return Column(
       children: [
-        _buildSectionHeader("PREFERENCES"),
+        _buildSectionHeader(context, "PREFERENCES"),
         _buildSettingItem(
+          context: context,
           icon: Icons.notifications_none_rounded,
           title: "Notifications",
           onTap: () {},
@@ -436,15 +416,19 @@ class AccountPage extends StatelessWidget {
           iconBgColor: const Color(0xFF2196F3).withValues(alpha: 0.1),
         ),
         _buildSettingItem(
+          context: context,
           icon: Icons.pie_chart_outline_rounded,
           title: "Expense Category Limits",
           onTap: () => NavigationService.pushNamed(AppRoutes.categoryLimits),
           iconColor: AppColors.primary,
           iconBgColor: AppColors.primary.withValues(alpha: 0.1),
         ),
+        // ── Dark Mode Toggle ─────────────────────────────────────────────
+        _buildDarkModeToggle(context),
         const SizedBox(height: 24),
-        _buildSectionHeader("SUPPORT"),
+        _buildSectionHeader(context, "SUPPORT"),
         _buildSettingItem(
+          context: context,
           icon: Icons.star_outline_rounded,
           title: "Rate SplitEase",
           onTap: () => FeedbackSheet.show(context),
@@ -452,6 +436,7 @@ class AccountPage extends StatelessWidget {
           iconBgColor: const Color(0xFFFF9800).withValues(alpha: 0.1),
         ),
         _buildSettingItem(
+          context: context,
           icon: Icons.mail_outline_rounded,
           title: "Contact Support",
           onTap: () {},
@@ -459,6 +444,7 @@ class AccountPage extends StatelessWidget {
           iconBgColor: const Color(0xFF9C27B0).withValues(alpha: 0.1),
         ),
         _buildSettingItem(
+          context: context,
           icon: Icons.info_outline_rounded,
           title: "About",
           onTap: () {},
@@ -469,20 +455,137 @@ class AccountPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildDarkModeToggle(BuildContext context) {
+    return BlocBuilder<ThemeCubit, ThemeMode>(
+      builder: (context, themeMode) {
+        final isDark = themeMode == ThemeMode.dark;
+        const color = Color(0xFF5B6EF5);
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Container(
+            decoration: BoxDecoration(
+              color: context.colors.surface,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: context.colors.border.withValues(alpha: 0.3)),
+              boxShadow: [
+                BoxShadow(
+                  color: context.colors.shadow,
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  context.read<ThemeCubit>().toggleDark();
+                },
+                borderRadius: BorderRadius.circular(24),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Icon(
+                          isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                          color: color,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Dark Mode",
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: context.colors.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              isDark ? "Dark theme enabled" : "Light theme enabled",
+                              style: GoogleFonts.outfit(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: context.colors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Animated toggle switch
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeInOut,
+                        width: 50,
+                        height: 28,
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: isDark ? color : context.colors.border,
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        child: AnimatedAlign(
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeInOut,
+                          alignment: isDark ? Alignment.centerRight : Alignment.centerLeft,
+                          child: Container(
+                            width: 22,
+                            height: 22,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).ext.surface,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isDark ? Icons.nightlight_round : Icons.wb_sunny_rounded,
+                              size: 13,
+                              color: isDark ? color : Colors.orange,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSectionHeader(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 12),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(
           title,
-          style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w900, color: AppColors.textGrey, letterSpacing: 1.5),
+          style: GoogleFonts.outfit(
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            color: context.colors.textSecondary,
+            letterSpacing: 1.5,
+          ),
         ),
       ),
     );
   }
 
   Widget _buildSettingItem({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required VoidCallback onTap,
@@ -493,12 +596,12 @@ class AccountPage extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.3)),
+          border: Border.all(color: context.colors.border.withValues(alpha: 0.3)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
+              color: context.colors.shadow,
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
@@ -532,15 +635,11 @@ class AccountPage extends StatelessWidget {
                       style: GoogleFonts.outfit(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textBlack,
+                        color: context.colors.textPrimary,
                       ),
                     ),
                   ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: AppColors.iconGrey.withValues(alpha: 0.8),
-                    size: 22,
-                  ),
+                  Icon(Icons.chevron_right_rounded, color: context.colors.textTertiary, size: 22),
                 ],
               ),
             ),
@@ -570,7 +669,11 @@ class AccountPage extends StatelessWidget {
         const SizedBox(height: 16),
         Text(
           "SplitEase v1.0.0 (BETA)",
-          style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey.withValues(alpha: 0.5), fontWeight: FontWeight.w600),
+          style: GoogleFonts.outfit(
+            fontSize: 12,
+            color: context.colors.textTertiary,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );
@@ -587,6 +690,7 @@ class AccountPage extends StatelessWidget {
         return ScaleTransition(
           scale: CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
           child: Dialog(
+            backgroundColor: context.colors.surface,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
             child: Padding(
               padding: const EdgeInsets.all(32),
@@ -595,20 +699,35 @@ class AccountPage extends StatelessWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(color: AppColors.errorRed.withValues(alpha: 0.1), shape: BoxShape.circle),
+                    decoration: BoxDecoration(
+                      color: AppColors.errorRed.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
                     child: const Icon(Icons.logout_rounded, color: AppColors.errorRed, size: 32),
                   ),
                   const SizedBox(height: 24),
-                  Text("End Session?", style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.textBlack)),
+                  Text(
+                    "End Session?",
+                    style: GoogleFonts.outfit(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: context.colors.textPrimary,
+                    ),
+                  ),
                   const SizedBox(height: 8),
-                  Text("Are you sure you want to log out?", textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 15, color: AppColors.textGrey)),
+                  Text(
+                    "Are you sure you want to log out?",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.outfit(fontSize: 15, color: context.colors.textSecondary),
+                  ),
                   const SizedBox(height: 32),
                   Row(
                     children: [
                       Expanded(
                         child: TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: Text("Stay", style: GoogleFonts.outfit(fontWeight: FontWeight.w700, color: AppColors.textGrey)),
+                          child: Text("Stay",
+                              style: GoogleFonts.outfit(fontWeight: FontWeight.w700, color: context.colors.textSecondary)),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -618,7 +737,13 @@ class AccountPage extends StatelessWidget {
                             Navigator.of(context).pop();
                             context.read<AccountBloc>().add(AccountLogoutEvent());
                           },
-                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.errorRed, foregroundColor: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), padding: const EdgeInsets.symmetric(vertical: 14)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.errorRed,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
                           child: Text("Sign Out", style: GoogleFonts.outfit(fontWeight: FontWeight.w700)),
                         ),
                       ),

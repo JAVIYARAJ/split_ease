@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -18,12 +19,12 @@ class ExpensePdfPreviewPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundLightGrey,
+      backgroundColor: Theme.of(context).ext.backgroundGrey,
       appBar: AppBar(
         title: Text(
           "Receipt Preview",
           style: GoogleFonts.outfit(
-            color: AppColors.textBlack,
+            color: Theme.of(context).ext.textPrimary,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
@@ -31,7 +32,7 @@ class ExpensePdfPreviewPage extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.textBlack),
+        iconTheme: IconThemeData(color: Theme.of(context).ext.textPrimary),
         actions: [
           IconButton(
             icon: const Icon(Icons.share_rounded, color: AppColors.primary),

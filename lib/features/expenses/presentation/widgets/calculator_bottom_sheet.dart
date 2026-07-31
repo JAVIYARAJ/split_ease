@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:math_expressions/math_expressions.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
@@ -81,7 +82,7 @@ class _CalculatorBottomSheetState extends State<CalculatorBottomSheet> {
       child: Padding(
         padding: const EdgeInsets.all(4.0),
         child: Material(
-          color: bgColor ?? Colors.white,
+          color: bgColor ?? Theme.of(context).ext.surface,
           borderRadius: BorderRadius.circular(16),
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
@@ -90,7 +91,7 @@ class _CalculatorBottomSheetState extends State<CalculatorBottomSheet> {
               height: 64,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.3)),
+                border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
@@ -98,7 +99,7 @@ class _CalculatorBottomSheetState extends State<CalculatorBottomSheet> {
                 style: GoogleFonts.outfit(
                   fontSize: 24,
                   fontWeight: FontWeight.w600,
-                  color: textColor ?? AppColors.textBlack,
+                  color: textColor ?? Theme.of(context).ext.textPrimary,
                 ),
               ),
             ),
@@ -117,9 +118,9 @@ class _CalculatorBottomSheetState extends State<CalculatorBottomSheet> {
         right: 16,
         bottom: MediaQuery.of(context).padding.bottom + 16,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundLightGrey,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).ext.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -129,7 +130,7 @@ class _CalculatorBottomSheetState extends State<CalculatorBottomSheet> {
             width: 48,
             height: 5,
             decoration: BoxDecoration(
-              color: AppColors.borderGrey.withValues(alpha: 0.5),
+              color: Theme.of(context).ext.border.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(10),
             ),
           ),
@@ -140,9 +141,9 @@ class _CalculatorBottomSheetState extends State<CalculatorBottomSheet> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).ext.inputFill,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.3)),
+              border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -152,7 +153,7 @@ class _CalculatorBottomSheetState extends State<CalculatorBottomSheet> {
                   style: GoogleFonts.outfit(
                     fontSize: 32,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textBlack,
+                    color: Theme.of(context).ext.textPrimary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -164,7 +165,7 @@ class _CalculatorBottomSheetState extends State<CalculatorBottomSheet> {
                     style: GoogleFonts.outfit(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
-                      color: _result == 'Error' ? Colors.red : AppColors.textGrey,
+                      color: _result == 'Error' ? Colors.red : Theme.of(context).ext.textTertiary,
                     ),
                   ),
                 ]
@@ -211,7 +212,7 @@ class _CalculatorBottomSheetState extends State<CalculatorBottomSheet> {
               _buildButton('.'),
               _buildButton('0'),
               _buildButton('=', textColor: Colors.white, bgColor: AppColors.primaryTeal),
-              _buildButton('Done', textColor: Colors.white, bgColor: AppColors.textBlack),
+              _buildButton('Done', textColor: Colors.white, bgColor: AppColors.primary),
             ],
           ),
         ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -42,8 +43,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       backgroundColor: Colors.transparent,
       builder: (_) {
         return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          decoration: BoxDecoration(
+            color: Theme.of(context).ext.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: SafeArea(
@@ -62,14 +63,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 const SizedBox(height: 32),
                 Text(
                   "Update Photo",
-                  style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+                  style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary),
                 ),
                 const SizedBox(height: 24),
                 _buildPickerOption(
                   icon: Icons.camera_alt_rounded,
                   title: "Take a Photo",
                   subtitle: "Open camera to capture",
-                  color: Colors.black,
+                  color: Theme.of(context).ext.textPrimary,
                   onTap: () {
                     Navigator.pop(context);
                     bloc.add(const PickProfileImage(ImageSource.camera));
@@ -79,7 +80,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   icon: Icons.photo_library_rounded,
                   title: "Choose from Gallery",
                   subtitle: "Upload from your library",
-                  color: Colors.black,
+                  color: Theme.of(context).ext.textPrimary,
                   onTap: () {
                     Navigator.pop(context);
                     bloc.add(const PickProfileImage(ImageSource.gallery));
@@ -113,8 +114,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
         child: Icon(icon, color: color, size: 24),
       ),
-      title: Text(title, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack)),
-      subtitle: Text(subtitle, style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
+      title: Text(title, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary)),
+      subtitle: Text(subtitle, style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary)),
     );
   }
 
@@ -134,7 +135,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         builder: (context, state) {
           final bloc = context.read<ProfileBloc>();
           return Scaffold(
-            backgroundColor: Colors.white,
+            backgroundColor: Theme.of(context).ext.scaffoldBg,
             body: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
@@ -190,7 +191,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget _buildAppBar(BuildContext context) {
     return SliverAppBar(
       pinned: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).ext.scaffoldBg,
       elevation: 0,
       scrolledUnderElevation: 0,
       toolbarHeight: 64,
@@ -202,11 +203,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
         children: [
           Text(
             "Account Settings",
-            style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -0.5),
+            style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: Theme.of(context).ext.textPrimary, letterSpacing: -0.5),
           ),
           Text(
             "Personalize your appearance",
-            style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textGrey),
+            style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500, color: Theme.of(context).ext.textSecondary),
           ),
         ],
       ),
@@ -227,24 +228,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
       children: [
         Text(
           label.toUpperCase(),
-          style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w900, color: AppColors.textBlack.withValues(alpha: 0.4), letterSpacing: 1.5),
+          style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w900, color: Theme.of(context).ext.textTertiary, letterSpacing: 1.5),
         ),
         const SizedBox(height: 12),
         TextFormField(
           controller: controller,
           initialValue: initialValue,
           readOnly: readOnly,
-          style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: readOnly ? AppColors.textGrey : AppColors.textBlack),
+          style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: readOnly ? Theme.of(context).ext.textTertiary : Theme.of(context).ext.textPrimary),
           decoration: InputDecoration(
             filled: true,
-            fillColor: readOnly ? AppColors.backgroundLightGrey.withValues(alpha: 0.5) : AppColors.backgroundLightGrey,
-            prefixIcon: Icon(icon, color: AppColors.textGrey, size: 20),
-            suffixIcon: readOnly ? const Icon(Icons.lock_rounded, color: AppColors.textGrey, size: 16) : null,
+            fillColor: Theme.of(context).ext.inputFill,
+            prefixIcon: Icon(icon, color: Theme.of(context).ext.textSecondary, size: 20),
+            suffixIcon: readOnly ? Icon(Icons.lock_rounded, color: Theme.of(context).ext.textSecondary, size: 16) : null,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Colors.black, width: 1.5)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
             hintText: "Enter $label",
-            hintStyle: GoogleFonts.outfit(color: AppColors.textGrey.withValues(alpha: 0.4)),
+            hintStyle: GoogleFonts.outfit(color: Theme.of(context).ext.textTertiary),
           ),
         ),
         if (helperText != null) ...[
@@ -253,7 +254,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             padding: const EdgeInsets.only(left: 4.0),
             child: Text(
               helperText,
-              style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey),
+              style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).ext.textSecondary),
             ),
           ),
         ]
@@ -277,11 +278,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
             height: 60,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.black,
+              color: AppColors.primary,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),

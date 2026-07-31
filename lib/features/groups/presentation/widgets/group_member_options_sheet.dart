@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
@@ -39,8 +40,8 @@ class GroupMemberOptionsSheet extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -52,7 +53,7 @@ class GroupMemberOptionsSheet extends StatelessWidget {
               margin: const EdgeInsets.only(top: 12, bottom: 20),
               width: 40,
               height: 4,
-              decoration: BoxDecoration(color: AppColors.borderGrey.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(2)),
+              decoration: BoxDecoration(color: Theme.of(context).ext.border.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(2)),
             ),
           ),
 
@@ -62,16 +63,16 @@ class GroupMemberOptionsSheet extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               decoration: BoxDecoration(
-                color: AppColors.backgroundLightGrey,
+                color: Theme.of(context).ext.backgroundGrey,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.5)),
+                border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.5)),
               ),
               child: Row(
                 children: [
                   Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
+                      border: Border.all(color: Theme.of(context).ext.border, width: 2),
                       boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))],
                     ),
                     child: AppAvatar(url: member.avtar, radius: 28),
@@ -83,13 +84,13 @@ class GroupMemberOptionsSheet extends StatelessWidget {
                       children: [
                         Text(
                           member.fullName ?? "Unknown",
-                          style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+                          style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary),
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 2),
                         Text(
                           member.email ?? "-",
-                          style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                          style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary, fontWeight: FontWeight.w500),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
@@ -132,7 +133,7 @@ class GroupMemberOptionsSheet extends StatelessWidget {
 
           if (isCurrentUser) ...[
             // Current User Options: Leave Group
-            _buildOptionTile(
+            _buildOptionTile(context, 
               icon: Icons.logout_rounded,
               title: "Leave group",
               subtitle: GroupSettingsLogicHelper.getLeaveGroupWarning(isCreator: isCreator, hasDebt: hasDebt),
@@ -143,7 +144,7 @@ class GroupMemberOptionsSheet extends StatelessWidget {
           ] else ...[
             // Other Member Options
             if (GroupPermissionService.hasPermission(currentUserRole, GroupPermission.removeMember, isOwner: isCreator))
-              _buildOptionTile(
+              _buildOptionTile(context, 
                 icon: Icons.person_remove_outlined,
                 title: "Remove from group",
                 subtitle: GroupSettingsLogicHelper.getRemovalWarning(
@@ -200,7 +201,7 @@ class GroupMemberOptionsSheet extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionHeader("Role Management"),
+          _buildSectionHeader(context, "Role Management"),
           const SizedBox(height: 16),
           if (isTargetOwner) ...[
              // Special display for Owners: No direct role switching
@@ -220,7 +221,7 @@ class GroupMemberOptionsSheet extends StatelessWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: Theme.of(context).ext.surface, shape: BoxShape.circle),
                     child: const Icon(Icons.verified_user_rounded, color: AppColors.primary, size: 24),
                   ),
                   const SizedBox(width: 16),
@@ -228,10 +229,10 @@ class GroupMemberOptionsSheet extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Primary Owner", style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 16, color: AppColors.textBlack)),
+                        Text("Primary Owner", style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 16, color: Theme.of(context).ext.textPrimary)),
                         const SizedBox(height: 2),
                         Text("This role is protected. Use 'Ownership Transfer' to change.", 
-                          style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w500)),
+                          style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).ext.textSecondary, fontWeight: FontWeight.w500)),
                       ],
                     ),
                   ),
@@ -243,8 +244,7 @@ class GroupMemberOptionsSheet extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _buildRoleCard(
-                    context,
+                  child: _buildRoleCard(context,
                     role: GroupPermissionService.roleMember,
                     label: "User",
                     description: "Add expenses & invite",
@@ -255,8 +255,7 @@ class GroupMemberOptionsSheet extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildRoleCard(
-                    context,
+                  child: _buildRoleCard(context,
                     role: GroupPermissionService.roleAdmin,
                     label: "Admin",
                     description: "Manage group & roles",
@@ -273,8 +272,7 @@ class GroupMemberOptionsSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildRoleCard(
-    BuildContext context, {
+  Widget _buildRoleCard(BuildContext context, {
     required String role,
     required String label,
     required String description,
@@ -291,10 +289,10 @@ class GroupMemberOptionsSheet extends StatelessWidget {
         duration: const Duration(milliseconds: 250),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? activeColor.withValues(alpha: 0.08) : Colors.white,
+          color: isSelected ? activeColor.withValues(alpha: 0.08) : Theme.of(context).ext.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? activeColor : AppColors.borderGrey.withValues(alpha: 0.3),
+            color: isSelected ? activeColor : Theme.of(context).ext.border.withValues(alpha: 0.3),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: isSelected ? [] : [
@@ -310,10 +308,10 @@ class GroupMemberOptionsSheet extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: isSelected ? activeColor : AppColors.backgroundLightGrey,
+                    color: isSelected ? activeColor : Theme.of(context).ext.backgroundGrey,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, color: isSelected ? Colors.white : AppColors.textGrey, size: 18),
+                  child: Icon(icon, color: isSelected ? Colors.white : Theme.of(context).ext.textTertiary, size: 18),
                 ),
                 if (isSelected) 
                   const Icon(Icons.check_circle, color: AppColors.primaryTeal, size: 20),
@@ -325,7 +323,7 @@ class GroupMemberOptionsSheet extends StatelessWidget {
               style: GoogleFonts.outfit(
                 fontWeight: FontWeight.w700,
                 fontSize: 16,
-                color: isSelected ? activeColor : AppColors.textBlack,
+                color: isSelected ? activeColor : Theme.of(context).ext.textPrimary,
               ),
             ),
             const SizedBox(height: 4),
@@ -333,7 +331,7 @@ class GroupMemberOptionsSheet extends StatelessWidget {
               description,
               style: GoogleFonts.outfit(
                 fontSize: 12,
-                color: AppColors.textGrey,
+                color: Theme.of(context).ext.textSecondary,
                 fontWeight: FontWeight.w500,
                 height: 1.2,
               ),
@@ -344,19 +342,19 @@ class GroupMemberOptionsSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
     return Text(
       title.toUpperCase(),
       style: GoogleFonts.outfit(
         fontSize: 12,
         fontWeight: FontWeight.w700,
-        color: AppColors.textGrey,
+        color: Theme.of(context).ext.textSecondary,
         letterSpacing: 1.0,
       ),
     );
   }
 
-  Widget _buildOptionTile({
+  Widget _buildOptionTile(BuildContext context, {
     required IconData icon,
     required String title,
     String? subtitle,
@@ -364,16 +362,16 @@ class GroupMemberOptionsSheet extends StatelessWidget {
     bool isDestructive = false,
     bool isDisabled = false,
   }) {
-    final Color color = isDestructive ? AppColors.errorRed : AppColors.textBlack;
+    final Color color = isDestructive ? AppColors.errorRed : Theme.of(context).ext.textPrimary;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).ext.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isDestructive && !isDisabled ? AppColors.errorRed.withValues(alpha: 0.1) : AppColors.borderGrey.withValues(alpha: 0.4),
+            color: isDestructive && !isDisabled ? AppColors.errorRed.withValues(alpha: 0.1) : Theme.of(context).ext.border.withValues(alpha: 0.4),
           ),
           boxShadow: [if (!isDisabled) BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))],
         ),
@@ -415,7 +413,7 @@ class GroupMemberOptionsSheet extends StatelessWidget {
                             subtitle,
                             style: GoogleFonts.outfit(
                               fontSize: 13,
-                              color: AppColors.textGrey.withValues(alpha: isDisabled ? 0.6 : 0.8),
+                              color: Theme.of(context).ext.textTertiary,
                               height: 1.5,
                               fontWeight: FontWeight.w500,
                             ),
@@ -427,8 +425,8 @@ class GroupMemberOptionsSheet extends StatelessWidget {
                   if (!isDisabled)
                     Container(
                       padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(color: AppColors.backgroundLightGrey, shape: BoxShape.circle),
-                      child: Icon(Icons.arrow_forward_ios_rounded, color: AppColors.textGrey.withValues(alpha: 0.5), size: 12),
+                      decoration: BoxDecoration(color: Theme.of(context).ext.backgroundGrey, shape: BoxShape.circle),
+                      child: Icon(Icons.arrow_forward_ios_rounded, color: Theme.of(context).ext.textTertiary, size: 12),
                     ),
                 ],
               ),

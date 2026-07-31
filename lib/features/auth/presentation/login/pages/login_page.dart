@@ -10,6 +10,7 @@ import 'package:split_ease/features/auth/presentation/widgets/auth_background.da
 import 'package:split_ease/features/auth/presentation/widgets/google_icon.dart';
 
 import 'package:split_ease/core/utils/auth_utils.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/widgets/auth_field.dart';
 import '../widgets/primary_button.dart';
@@ -51,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
               final bool isResendLoading = state.status == LoginStatus.resendLoading;
 
               return AlertDialog(
-                backgroundColor: Colors.white,
+                backgroundColor: Theme.of(context).ext.surface,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
                 contentPadding: const EdgeInsets.all(24),
                 content: Column(
@@ -73,7 +74,7 @@ class _LoginPageState extends State<LoginPage> {
                     Text(
                       isSent ? "Verification Sent!" : "Verify Your Identity",
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.textBlack),
+                      style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: Theme.of(context).ext.textPrimary),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -81,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
                           ? "A new verification link has been sent to your email. Please check your inbox."
                           : "It looks like you haven't confirmed your email address yet. Please check your inbox to activate your account.",
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(fontSize: 15, color: AppColors.textGrey, height: 1.5),
+                      style: GoogleFonts.outfit(fontSize: 15, color: Theme.of(context).ext.textSecondary, height: 1.5),
                     ),
                     const SizedBox(height: 32),
                     AppPrimaryButton(
@@ -102,7 +103,7 @@ class _LoginPageState extends State<LoginPage> {
                               style: GoogleFonts.outfit(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w800,
-                                color: isSent ? AppColors.textGrey : AppColors.primary,
+                                color: isSent ? Theme.of(context).ext.textTertiary : AppColors.primary,
                               ),
                             ),
                     ),
@@ -111,7 +112,7 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: () => Navigator.pop(dialogContext),
                       child: Text(
                         "Close",
-                        style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textGrey),
+                        style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textTertiary),
                       ),
                     ),
                   ],
@@ -175,7 +176,7 @@ class _LoginPageState extends State<LoginPage> {
                 style: GoogleFonts.outfit(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textBlack,
+                  color: Theme.of(context).ext.textPrimary,
                   height: 1.2,
                 ),
               ),
@@ -185,7 +186,7 @@ class _LoginPageState extends State<LoginPage> {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
                   fontSize: 15,
-                  color: AppColors.textGrey,
+                  color: Theme.of(context).ext.textSecondary,
                   height: 1.5,
                 ),
               ),
@@ -267,7 +268,7 @@ class _LoginPageState extends State<LoginPage> {
               if (FeatureFlags.isSocialAuthEnabled) ...[
                 Row(
                   children: [
-                    const Expanded(child: Divider()),
+                    Expanded(child: Divider(color: Theme.of(context).ext.border.withValues(alpha: 0.5))),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
@@ -276,11 +277,11 @@ class _LoginPageState extends State<LoginPage> {
                           fontSize: 11,
                           letterSpacing: 1.0,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.iconGrey,
+                          color: Theme.of(context).ext.textTertiary,
                         ),
                       ),
                     ),
-                    const Expanded(child: Divider()),
+                    Expanded(child: Divider(color: Theme.of(context).ext.border.withValues(alpha: 0.5))),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -315,7 +316,7 @@ class _LoginPageState extends State<LoginPage> {
                     "First time here? ",
                     style: GoogleFonts.outfit(
                       fontSize: 15,
-                      color: AppColors.textGrey,
+                      color: Theme.of(context).ext.textSecondary,
                     ),
                   ),
                   GestureDetector(

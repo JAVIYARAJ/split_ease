@@ -1,4 +1,6 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -40,10 +42,10 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
               primary: AppColors.primary,
               onPrimary: Colors.white,
-              surface: AppColors.surfaceWhite,
+              surface: Theme.of(context).ext.surface,
             ),
           ),
           child: child!,
@@ -99,9 +101,9 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundLightGrey,
+      backgroundColor: Theme.of(context).ext.backgroundGrey,
       appBar: AppBar(
-        backgroundColor: AppColors.backgroundLightGrey,
+        backgroundColor: Theme.of(context).ext.backgroundGrey,
         elevation: 0,
         centerTitle: true,
         title: Text(
@@ -109,7 +111,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
           style: GoogleFonts.outfit(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: AppColors.textBlack,
+            color: Theme.of(context).ext.textPrimary,
           ),
         ),
         leading: AppBackButton(
@@ -128,7 +130,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                 children: [
                   Icon(Icons.error_outline, color: AppColors.errorRed, size: 48),
                   const SizedBox(height: 16),
-                  Text(state.errorMessage, style: GoogleFonts.outfit(color: AppColors.textGrey)),
+                  Text(state.errorMessage, style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary)),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => context
@@ -161,6 +163,17 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                 expenseCount: 2,
               ),
             ),
+            paymentMethodBreakdown: List.generate(
+              4,
+              (index) => PaymentMethodDetailEntity(
+                id: "$index",
+                name: "Loading Payment",
+                icon: "payments",
+                color: "#CCCCCC",
+                transactionCount: 2,
+                percentage: 25,
+              ),
+            ),
           );
 
           final displayData = isLoading ? dummyBreakdown : state.breakdown;
@@ -182,7 +195,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                   SliverAppBar(
                     pinned: true,
                     automaticallyImplyLeading: false,
-                    backgroundColor: AppColors.backgroundLightGrey,
+                    backgroundColor: Theme.of(context).ext.backgroundGrey,
                     elevation: 0,
                     expandedHeight: 140,
                     collapsedHeight: 64,
@@ -194,7 +207,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
 
                         return ClipRect(
                           child: Container(
-                            color: AppColors.backgroundLightGrey,
+                            color: Theme.of(context).ext.backgroundGrey,
                             child: Stack(
                               children: [
                                 // "Total Expenses" label
@@ -206,7 +219,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                                     style: GoogleFonts.outfit(
                                       fontSize: 12 + (2 * percent),
                                       fontWeight: FontWeight.w600,
-                                      color: AppColors.textGrey,
+                                      color: Theme.of(context).ext.textSecondary,
                                     ),
                                   ),
                                 ),
@@ -226,7 +239,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                                         style: GoogleFonts.outfit(
                                           fontSize: 48,
                                           fontWeight: FontWeight.w800,
-                                          color: AppColors.textBlack,
+                                          color: Theme.of(context).ext.textPrimary,
                                           letterSpacing: -1,
                                         ),
                                       ),
@@ -285,6 +298,12 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildSummaryGrid(displayData.summary),
+                          if (displayData.paymentMethodBreakdown.isNotEmpty) ...[
+                            const SizedBox(height: 22),
+                            PaymentMethodBreakdownCard(
+                              paymentMethods: displayData.paymentMethodBreakdown,
+                            ),
+                          ],
                           const SizedBox(height: 22),
                           Padding(
                             padding: const EdgeInsets.only(bottom: 10),
@@ -293,7 +312,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                               style: GoogleFonts.outfit(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.textBlack,
+                                color: Theme.of(context).ext.textPrimary,
                               ),
                             ),
                           ),
@@ -324,9 +343,9 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.8), width: 1.2),
+        border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.8), width: 1.2),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -352,7 +371,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                 style: GoogleFonts.outfit(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textBlack,
+                  color: Theme.of(context).ext.textPrimary,
                 ),
               ),
               Icon(Icons.pie_chart_outline_rounded, size: 18, color: AppColors.primary),
@@ -366,7 +385,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
             child: Container(
               height: 10,
               width: double.infinity,
-              color: AppColors.backgroundLightGrey,
+              color: Theme.of(context).ext.backgroundGrey,
               child: Row(
                 children: [
                   if (groupPct > 0)
@@ -398,9 +417,9 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
             color: AppColors.primary,
             icon: Icons.groups_rounded,
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 10),
-            child: Divider(height: 1, color: Color(0xFFF0F0F0)),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Divider(height: 1, color: Theme.of(context).ext.borderLight),
           ),
           _buildDistributionRow(
             title: "Personal",
@@ -409,9 +428,9 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
             color: const Color(0xFF00E5FF),
             icon: Icons.person_rounded,
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 10),
-            child: Divider(height: 1, color: Color(0xFFF0F0F0)),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Divider(height: 1, color: Theme.of(context).ext.borderLight),
           ),
           _buildDistributionRow(
             title: "Non-Group",
@@ -451,7 +470,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                 style: GoogleFonts.outfit(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textBlack,
+                  color: Theme.of(context).ext.textPrimary,
                 ),
               ),
               const SizedBox(width: 8),
@@ -478,7 +497,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
           style: GoogleFonts.outfit(
             fontSize: 15,
             fontWeight: FontWeight.w700,
-            color: AppColors.textBlack,
+            color: Theme.of(context).ext.textPrimary,
           ),
         ),
       ],
@@ -493,9 +512,9 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).ext.surface,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.8), width: 1.2),
+              border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.8), width: 1.2),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.03),
@@ -532,7 +551,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                   style: GoogleFonts.outfit(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textBlack,
+                    color: Theme.of(context).ext.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -542,7 +561,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                   style: GoogleFonts.outfit(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textGrey,
+                    color: Theme.of(context).ext.textSecondary,
                     height: 1.4,
                   ),
                 ),
@@ -564,9 +583,9 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
             margin: const EdgeInsets.only(bottom: 16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).ext.surface,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.8), width: 1.2),
+              border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.8), width: 1.2),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.04),
@@ -587,7 +606,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(category.name, style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textBlack)),
+                      Text(category.name, style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary)),
                       const SizedBox(height: 6),
                       Row(
                         children: [
@@ -603,7 +622,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Text("${category.categoryPercentage.toStringAsFixed(1)}%", style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.iconGrey)),
+                          Text("${category.categoryPercentage.toStringAsFixed(1)}%", style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textTertiary)),
                         ],
                       ),
                       if (category.limitAmount != null)
@@ -632,8 +651,8 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(AppFormatter.formatCurrency(category.amount), style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textBlack)),
-                    Text("${category.expenseCount} Trx", style: GoogleFonts.outfit(fontSize: 12, color: AppColors.iconGrey)),
+                    Text(AppFormatter.formatCurrency(category.amount), style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w800, color: Theme.of(context).ext.textPrimary)),
+                    Text("${category.expenseCount} Trx", style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).ext.textTertiary)),
                   ],
                 ),
               ],
@@ -654,6 +673,295 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
     } catch (e) {
       return AppColors.primary;
     }
+  }
+}
+
+// ── Payment Method Breakdown Component with ValueNotifier ─────────────────────
+
+class PaymentMethodBreakdownCard extends StatefulWidget {
+  final List<PaymentMethodDetailEntity> paymentMethods;
+
+  const PaymentMethodBreakdownCard({
+    super.key,
+    required this.paymentMethods,
+  });
+
+  @override
+  State<PaymentMethodBreakdownCard> createState() => _PaymentMethodBreakdownCardState();
+}
+
+class _PaymentMethodBreakdownCardState extends State<PaymentMethodBreakdownCard> {
+  final ValueNotifier<int> _touchedIndexNotifier = ValueNotifier<int>(-1);
+
+  @override
+  void dispose() {
+    _touchedIndexNotifier.dispose();
+    super.dispose();
+  }
+
+  Color _parseColor(String hexString) {
+    try {
+      final buffer = StringBuffer();
+      if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
+      buffer.write(hexString.replaceFirst('#', ''));
+      return Color(int.parse(buffer.toString(), radix: 16));
+    } catch (e) {
+      return AppColors.primary;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.paymentMethods.isEmpty) return const SizedBox.shrink();
+
+    final totalTransactions = widget.paymentMethods.fold<int>(
+      0,
+      (sum, item) => sum + item.transactionCount,
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).ext.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Theme.of(context).ext.border.withValues(alpha: 0.8),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Payment Methods",
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).ext.textPrimary,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.donut_large_rounded,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Donut Pie Chart + Legend listening to ValueNotifier
+          ValueListenableBuilder<int>(
+            valueListenable: _touchedIndexNotifier,
+            builder: (context, touchedIndex, _) {
+              return Column(
+                children: [
+                  // Donut Pie Chart + Center Text
+                  Center(
+                    child: SizedBox(
+                      height: 190,
+                      width: 190,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          PieChart(
+                            PieChartData(
+                              pieTouchData: PieTouchData(
+                                touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                                  if (!event.isInterestedForInteractions ||
+                                      pieTouchResponse == null ||
+                                      pieTouchResponse.touchedSection == null) {
+                                    _touchedIndexNotifier.value = -1;
+                                    return;
+                                  }
+                                  _touchedIndexNotifier.value = pieTouchResponse
+                                      .touchedSection!.touchedSectionIndex;
+                                },
+                              ),
+                              borderData: FlBorderData(show: false),
+                              sectionsSpace: 3,
+                              centerSpaceRadius: 46,
+                              sections: widget.paymentMethods.asMap().entries.map((entry) {
+                                final index = entry.key;
+                                final item = entry.value;
+                                final isTouched = index == touchedIndex;
+                                final radius = isTouched ? 52.0 : 44.0;
+                                final color = _parseColor(item.color);
+
+                                return PieChartSectionData(
+                                  color: color,
+                                  value: item.percentage > 0
+                                      ? item.percentage
+                                      : (item.transactionCount > 0
+                                          ? item.transactionCount.toDouble()
+                                          : 1.0),
+                                  title: '${item.percentage.toStringAsFixed(0)}%',
+                                  radius: radius,
+                                  titleStyle: GoogleFonts.outfit(
+                                    fontSize: isTouched ? 14 : 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: Theme.of(context).ext.surface,
+                                    shadows: const [
+                                      Shadow(
+                                        color: Colors.black38,
+                                        blurRadius: 4,
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                          // Center statistics in Donut Chart
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                "$totalTransactions",
+                                style: GoogleFonts.outfit(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  color: Theme.of(context).ext.textPrimary,
+                                ),
+                              ),
+                              Text(
+                                "Transactions",
+                                style: GoogleFonts.outfit(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: Theme.of(context).ext.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Payment Methods Legend Grid / List
+                  Column(
+                    children: widget.paymentMethods.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final item = entry.value;
+                      final color = _parseColor(item.color);
+                      final iconData = IconUtils.getIconFromString(item.icon);
+                      final isTouched = index == touchedIndex;
+
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isTouched
+                              ? color.withValues(alpha: 0.1)
+                              : Theme.of(context).ext.backgroundGrey,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: isTouched
+                                ? color
+                                : Theme.of(context).ext.border.withValues(alpha: 0.5),
+                            width: isTouched ? 1.5 : 1.0,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            // Icon inside squircle
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                iconData,
+                                color: color,
+                                size: 18,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+
+                            // Payment Method Name & Trx count
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.name,
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: Theme.of(context).ext.textPrimary,
+                                    ),
+                                  ),
+                                  Text(
+                                    "${item.transactionCount} transaction${item.transactionCount == 1 ? '' : 's'}",
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w500,
+                                      color: Theme.of(context).ext.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Percentage Badge Pill
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: color.withValues(alpha: 0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                "${item.percentage.toStringAsFixed(1)}%",
+                                style: GoogleFonts.outfit(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  color: color,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -684,8 +992,8 @@ class _FilterBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
@@ -698,18 +1006,18 @@ class _FilterBottomSheet extends StatelessWidget {
             child: Container(
               width: 40,
               height: 4,
-              decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+              decoration: BoxDecoration(color: Theme.of(context).ext.border, borderRadius: BorderRadius.circular(2)),
             ),
           ),
           const SizedBox(height: 20),
           Text(
             "Filter by Period",
-            style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+            style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary),
           ),
           const SizedBox(height: 4),
           Text(
             "Select a time range to analyse your expenses",
-            style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey),
+            style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary),
           ),
           const SizedBox(height: 20),
           // 2-column grid of options
@@ -728,10 +1036,10 @@ class _FilterBottomSheet extends StatelessWidget {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   decoration: BoxDecoration(
-                    color: isActive ? AppColors.primary : AppColors.surfaceWhite,
+                    color: isActive ? AppColors.primary : Theme.of(context).ext.backgroundGrey,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: isActive ? AppColors.primary : AppColors.borderGreyLight,
+                      color: isActive ? AppColors.primary : Theme.of(context).ext.border.withValues(alpha: 0.5),
                       width: isActive ? 1.5 : 1,
                     ),
                     boxShadow: isActive
@@ -741,7 +1049,7 @@ class _FilterBottomSheet extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   child: Row(
                     children: [
-                      Icon(icon, size: 16, color: isActive ? Colors.white : AppColors.iconGrey),
+                      Icon(icon, size: 16, color: isActive ? Colors.white : Theme.of(context).ext.textSecondary),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -749,7 +1057,7 @@ class _FilterBottomSheet extends StatelessWidget {
                           style: GoogleFonts.outfit(
                             fontSize: 13,
                             fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                            color: isActive ? Colors.white : AppColors.textBlack,
+                            color: isActive ? Colors.white : Theme.of(context).ext.textPrimary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

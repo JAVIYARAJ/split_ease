@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
@@ -30,17 +31,17 @@ class CategorySelectionPage extends StatelessWidget {
         return CategorySelectionCubit()..init(sortedCategories, selectedCategory, lastUsedCategoryId);
       },
       child: Scaffold(
-        backgroundColor: AppColors.backgroundLightGrey,
+        backgroundColor: Theme.of(context).ext.scaffoldBg,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textBlack),
+            icon: Icon(Icons.arrow_back_ios_new_rounded, color: Theme.of(context).ext.textPrimary),
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(
             "Select Category",
-            style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+            style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary),
           ),
           centerTitle: true,
         ),
@@ -51,7 +52,7 @@ class CategorySelectionPage extends StatelessWidget {
               child: Container(
                 height: 52,
                 decoration: BoxDecoration(
-                  color: AppColors.borderGrey.withValues(alpha: 0.15),
+                  color: Theme.of(context).ext.inputFill,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -59,16 +60,16 @@ class CategorySelectionPage extends StatelessWidget {
                   builder: (context, state) {
                     return Row(
                       children: [
-                        Icon(Icons.search_rounded, color: AppColors.textGrey.withValues(alpha: 0.7), size: 22),
+                        Icon(Icons.search_rounded, color: Theme.of(context).ext.textTertiary, size: 22),
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
                             controller: _searchController,
                             onChanged: (query) => context.read<CategorySelectionCubit>().searchCategories(query),
-                            style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.textBlack),
+                            style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w500, color: Theme.of(context).ext.textPrimary),
                             decoration: InputDecoration(
                               hintText: "Search categories...",
-                              hintStyle: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w400, color: AppColors.textGrey.withValues(alpha: 0.8)),
+                              hintStyle: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w400, color: Theme.of(context).ext.textTertiary),
                               border: InputBorder.none,
                               enabledBorder: InputBorder.none,
                               focusedBorder: InputBorder.none,
@@ -88,10 +89,10 @@ class CategorySelectionPage extends StatelessWidget {
                             child: Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
-                                color: AppColors.textGrey.withValues(alpha: 0.2),
+                                color: Theme.of(context).ext.border.withValues(alpha: 0.5),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.close_rounded, color: AppColors.textBlack, size: 14),
+                              child: Icon(Icons.close_rounded, color: Theme.of(context).ext.textPrimary, size: 14),
                             ),
                           ),
                       ],
@@ -107,7 +108,7 @@ class CategorySelectionPage extends StatelessWidget {
                     return Center(
                       child: Text(
                         "No categories found",
-                        style: GoogleFonts.outfit(fontSize: 16, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                        style: GoogleFonts.outfit(fontSize: 16, color: Theme.of(context).ext.textSecondary, fontWeight: FontWeight.w500),
                       ),
                     );
                   }
@@ -129,10 +130,10 @@ class CategorySelectionPage extends StatelessWidget {
                       return Container(
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).ext.surface,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: isSelected ? AppColors.primaryTeal : AppColors.borderGrey.withValues(alpha: 0.2),
+                            color: isSelected ? AppColors.primaryTeal : Theme.of(context).ext.border.withValues(alpha: 0.2),
                             width: isSelected ? 2 : 1,
                           ),
                           boxShadow: [
@@ -162,7 +163,7 @@ class CategorySelectionPage extends StatelessWidget {
                                     style: GoogleFonts.outfit(
                                       fontSize: 16,
                                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                                      color: AppColors.textBlack,
+                                      color: Theme.of(context).ext.textPrimary,
                                     ),
                                   ),
                                 ),
@@ -190,7 +191,7 @@ class CategorySelectionPage extends StatelessWidget {
                           ),
                           trailing: isSelected 
                               ? const Icon(Icons.check_circle_rounded, color: AppColors.primaryTeal)
-                              : const Icon(Icons.chevron_right_rounded, color: AppColors.textGrey, size: 20),
+                              : Icon(Icons.chevron_right_rounded, color: Theme.of(context).ext.textSecondary, size: 20),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           onTap: () {
                             Navigator.pop(context, category);

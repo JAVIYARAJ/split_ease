@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
@@ -54,8 +55,8 @@ class _AddExpenseSourceSheetState extends State<_AddExpenseSourceSheet> {
       builder: (context, view, child) {
         return Container(
           constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          decoration: BoxDecoration(
+            color: Theme.of(context).ext.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
@@ -66,7 +67,7 @@ class _AddExpenseSourceSheetState extends State<_AddExpenseSourceSheet> {
               Container(
                 width: 40,
                 height: 4,
-                decoration: BoxDecoration(color: AppColors.borderGreyLight, borderRadius: BorderRadius.circular(2)),
+                decoration: BoxDecoration(color: Theme.of(context).ext.borderLight, borderRadius: BorderRadius.circular(2)),
               ),
               const SizedBox(height: 12),
               // Title
@@ -77,9 +78,9 @@ class _AddExpenseSourceSheetState extends State<_AddExpenseSourceSheet> {
                     if (view != 'none')
                       GestureDetector(
                         onTap: () => _view.value = 'none',
-                        child: const Padding(
+                        child: Padding(
                           padding: EdgeInsets.only(right: 8.0),
-                          child: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textBlack),
+                          child: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Theme.of(context).ext.textPrimary),
                         ),
                       ),
                     Text(
@@ -88,7 +89,7 @@ class _AddExpenseSourceSheetState extends State<_AddExpenseSourceSheet> {
                           : view == 'friend'
                           ? "Select a Friend"
                           : "Add Expense",
-                      style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+                      style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary),
                     ),
                   ],
                 ),
@@ -167,9 +168,9 @@ class _OptionTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.backgroundLightGrey,
+          color: Theme.of(context).ext.backgroundGrey,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.borderGreyLight),
+          border: Border.all(color: Theme.of(context).ext.borderLight),
         ),
         child: Row(
           children: [
@@ -186,17 +187,17 @@ class _OptionTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                    style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                    style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).ext.textSecondary, fontWeight: FontWeight.w500),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.textGrey),
+            Icon(Icons.chevron_right_rounded, color: Theme.of(context).ext.textSecondary),
           ],
         ),
       ),
@@ -230,7 +231,7 @@ class _GroupList extends StatelessWidget {
             child: Center(
               child: Text(
                 "No groups yet. Create a group first!",
-                style: GoogleFonts.outfit(fontSize: 15, color: AppColors.textGrey),
+                style: GoogleFonts.outfit(fontSize: 15, color: Theme.of(context).ext.textSecondary),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -296,7 +297,7 @@ class _FriendList extends StatelessWidget {
             child: Center(
               child: Text(
                 "No friends yet. Connect with other to build your split ease group.",
-                style: GoogleFonts.outfit(fontSize: 15, color: AppColors.textGrey),
+                style: GoogleFonts.outfit(fontSize: 15, color: Theme.of(context).ext.textSecondary),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -356,9 +357,9 @@ class _RowTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.backgroundLightGrey,
+          color: Theme.of(context).ext.backgroundGrey,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.borderGreyLight),
+          border: Border.all(color: Theme.of(context).ext.borderLight),
         ),
         child: Row(
           children: [
@@ -368,7 +369,7 @@ class _RowTile extends StatelessWidget {
               Container(
                 width: 36,
                 height: 36,
-                decoration: BoxDecoration(color: AppColors.surfaceWhite, borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(color: Theme.of(context).ext.surface, borderRadius: BorderRadius.circular(12)),
                 child: Icon(icon ?? Icons.help_outline_rounded, color: AppColors.primaryTeal, size: 18),
               ),
             const SizedBox(width: 12),
@@ -378,13 +379,13 @@ class _RowTile extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                    style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary),
                   ),
-                  if (sublabel.isNotEmpty) Text(sublabel, style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
+                  if (sublabel.isNotEmpty) Text(sublabel, style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary)),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.textGrey),
+            Icon(Icons.chevron_right_rounded, color: Theme.of(context).ext.textSecondary),
           ],
         ),
       ),

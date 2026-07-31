@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/utils/auth_utils.dart';
@@ -51,7 +52,7 @@ class _RegisterSuccessPageState extends State<RegisterSuccessPage> with SingleTi
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).ext.scaffoldBg,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
@@ -109,7 +110,7 @@ class _RegisterSuccessPageState extends State<RegisterSuccessPage> with SingleTi
                         style: GoogleFonts.outfit(
                           fontSize: 34,
                           fontWeight: FontWeight.w900,
-                          color: AppColors.textBlack,
+                          color: Theme.of(context).ext.textPrimary,
                           letterSpacing: -1.0,
                         ),
                       ),
@@ -119,7 +120,7 @@ class _RegisterSuccessPageState extends State<RegisterSuccessPage> with SingleTi
                         textAlign: TextAlign.center,
                         style: GoogleFonts.outfit(
                           fontSize: 16,
-                          color: AppColors.textGrey,
+                          color: Theme.of(context).ext.textSecondary,
                           height: 1.5,
                         ),
                       ),
@@ -138,9 +139,9 @@ class _RegisterSuccessPageState extends State<RegisterSuccessPage> with SingleTi
                   child: Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.05),
+                      color: Theme.of(context).ext.surface,
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+                      border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.5)),
                     ),
                     child: Column(
                       children: [
@@ -148,7 +149,7 @@ class _RegisterSuccessPageState extends State<RegisterSuccessPage> with SingleTi
                           children: [
                             Container(
                               padding: const EdgeInsets.all(10),
-                              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                              decoration: BoxDecoration(color: Theme.of(context).ext.backgroundGrey, shape: BoxShape.circle),
                               child: const Icon(Icons.mark_email_unread_rounded, color: AppColors.primary, size: 24),
                             ),
                             const SizedBox(width: 16),
@@ -158,12 +159,12 @@ class _RegisterSuccessPageState extends State<RegisterSuccessPage> with SingleTi
                                 children: [
                                   Text(
                                     "Verify Your Email",
-                                    style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textBlack),
+                                    style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w800, color: Theme.of(context).ext.textPrimary),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     "We've sent a link to your inbox. Please verify to enjoy full app functionality.",
-                                    style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey, height: 1.3),
+                                    style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary, height: 1.3),
                                   ),
                                 ],
                               ),
@@ -174,7 +175,7 @@ class _RegisterSuccessPageState extends State<RegisterSuccessPage> with SingleTi
                         TextButton(
                           onPressed: () => AuthUtils.openMailApp(),
                           style: TextButton.styleFrom(
-                            backgroundColor: Colors.white,
+                            backgroundColor: Theme.of(context).ext.backgroundGrey,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                           ),
@@ -206,7 +207,7 @@ class _RegisterSuccessPageState extends State<RegisterSuccessPage> with SingleTi
                 opacity: _fadeAnimation,
                 child: Text(
                   "Log in once you've verified your email",
-                  style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textGrey.withValues(alpha: 0.6), fontWeight: FontWeight.w500),
+                  style: GoogleFonts.outfit(fontSize: 14, color: Theme.of(context).ext.textTertiary, fontWeight: FontWeight.w500),
                 ),
               ),
             ],

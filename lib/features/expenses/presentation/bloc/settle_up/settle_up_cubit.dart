@@ -110,6 +110,7 @@ class SettleUpCubit extends Cubit<SettleUpState> {
       groupId: state.groupId,
       note: state.note.isEmpty ? "Settlement" : state.note,
       paymentMethodId: state.selectedPaymentMethodId,
+      date: state.date,
     );
 
     final result = await settleUpUseCase(params);

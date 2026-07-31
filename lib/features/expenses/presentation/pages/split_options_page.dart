@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
@@ -89,9 +90,9 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).ext.scaffoldBg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).ext.scaffoldBg,
         elevation: 0,
         leading: TextButton(
           onPressed: () => Navigator.pop(context),
@@ -103,7 +104,7 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
         leadingWidth: 80,
         title: Text(
           "Split options",
-          style: GoogleFonts.openSans(color: AppColors.textBlack, fontWeight: FontWeight.w600, fontSize: 18),
+          style: GoogleFonts.openSans(color: Theme.of(context).ext.textPrimary, fontWeight: FontWeight.w600, fontSize: 18),
         ),
         centerTitle: true,
         actions: [
@@ -138,7 +139,7 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
               _buildHeader(state),
               _buildTabs(context, state),
               const SizedBox(height: 16),
-              const Divider(height: 1, color: AppColors.borderGrey),
+              Divider(height: 1, color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
               Expanded(child: _buildMembersList(context, state)),
               _buildFooter(context, state),
             ],
@@ -160,7 +161,7 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
         ),
         Text(
           _getSplitTitle(state.splitType),
-          style: GoogleFonts.openSans(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.textBlack),
+          style: GoogleFonts.openSans(fontWeight: FontWeight.bold, fontSize: 18, color: Theme.of(context).ext.textPrimary),
         ),
         SizedBox(
           height: 60,
@@ -168,7 +169,7 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
             child: Text(
               _getSplitDescription(state.splitType),
               textAlign: TextAlign.center,
-              style: GoogleFonts.openSans(fontSize: 14, color: AppColors.textGrey, height: 1.4),
+              style: GoogleFonts.openSans(fontSize: 14, color: Theme.of(context).ext.textSecondary, height: 1.4),
             ),
           ),
         ),
@@ -182,7 +183,7 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
       child: AppAvatar(
         url: member.avtar,
         radius: 25,
-        border: Border.all(color: Colors.white, width: 2),
+        border: Border.all(color: Theme.of(context).ext.border, width: 2),
       ),
     );
   }
@@ -191,7 +192,7 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Container(
-        decoration: BoxDecoration(color: AppColors.backgroundLightGrey, borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(color: Theme.of(context).ext.backgroundGrey, borderRadius: BorderRadius.circular(8)),
         padding: const EdgeInsets.all(4),
         child: Row(
           children: [
@@ -220,11 +221,11 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primaryTeal : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
-            boxShadow: isSelected ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 2, offset: const Offset(0, 1))] : null,
+            boxShadow: isSelected ? [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 2, offset: const Offset(0, 1))] : null,
           ),
           child: Text(
             text,
-            style: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.bold, color: isSelected ? Colors.white : AppColors.textGrey),
+            style: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.bold, color: isSelected ? Colors.white : Theme.of(context).ext.textTertiary),
           ),
         ),
       ),
@@ -246,9 +247,9 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primaryTeal : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
-            boxShadow: isSelected ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 2, offset: const Offset(0, 1))] : null,
+            boxShadow: isSelected ? [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 2, offset: const Offset(0, 1))] : null,
           ),
-          child: Icon(icon, color: isSelected ? Colors.white : AppColors.textGrey, size: 20),
+          child: Icon(icon, color: isSelected ? Colors.white : Theme.of(context).ext.textTertiary, size: 20),
         ),
       ),
     );
@@ -285,7 +286,7 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
               children: [
                 Text(
                   member.fullName ?? "Unknown",
-                  style: GoogleFonts.openSans(fontWeight: FontWeight.w600, fontSize: 16, color: AppColors.textBlack),
+                  style: GoogleFonts.openSans(fontWeight: FontWeight.w600, fontSize: 16, color: Theme.of(context).ext.textPrimary),
                 ),
                 if (state.splitType == SplitType.equal)
                   Text(
@@ -294,18 +295,18 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
                         : "Not involved",
                     style: GoogleFonts.openSans(
                       fontSize: 13, 
-                      color: isSelected ? AppColors.textGrey : AppColors.textGrey.withOpacity(0.5),
+                      color: isSelected ? Theme.of(context).ext.textSecondary : Theme.of(context).ext.textTertiary,
                     ),
                   )
                 else if (state.splitType == SplitType.shares)
                   Text(
                     "₹${state.getMemberAmount(member.userId!).toStringAsFixed(2)}",
-                    style: GoogleFonts.openSans(fontSize: 13, color: AppColors.textGrey),
+                    style: GoogleFonts.openSans(fontSize: 13, color: Theme.of(context).ext.textSecondary),
                   )
                 else if (state.splitType == SplitType.percentage)
                   Text(
                     "₹${state.getMemberAmount(member.userId!).toStringAsFixed(2)}",
-                    style: GoogleFonts.openSans(fontSize: 13, color: AppColors.textGrey),
+                    style: GoogleFonts.openSans(fontSize: 13, color: Theme.of(context).ext.textSecondary),
                   ),
               ],
             ),
@@ -343,8 +344,14 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
     }
     final controller = _controllers[userId];
 
-    return SizedBox(
-      width: 100,
+    return Container(
+      width: 110,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: Theme.of(context).ext.inputFill,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
+      ),
       child: TextField(
         controller: controller,
         textAlign: TextAlign.end,
@@ -353,10 +360,12 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
           hintText: state.splitType == SplitType.percentage ? "0" : "0.00",
           border: InputBorder.none,
           isDense: true,
-          hintStyle: GoogleFonts.openSans(color: AppColors.textGrey.withOpacity(0.5)),
+          contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          hintStyle: GoogleFonts.outfit(color: Theme.of(context).ext.textTertiary),
           suffixText: state.splitType == SplitType.percentage ? "%" : null,
+          suffixStyle: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary, fontWeight: FontWeight.bold),
         ),
-        style: GoogleFonts.openSans(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textBlack),
+        style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 16, color: Theme.of(context).ext.textPrimary),
         onChanged: (value) {
           final doubleVal = double.tryParse(value) ?? 0.0;
           if (state.splitType == SplitType.exact) {
@@ -377,10 +386,11 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
        final isAllSelected = state.splits.length == state.members.length;
        
        return Container(
-        padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0, bottom: 40.0), // Added bottom padding
-        decoration: const BoxDecoration(
-          color: AppColors.backgroundWhite,
-          border: Border(top: BorderSide(color: AppColors.borderGrey)),
+        width: double.infinity,
+        padding: EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0, bottom: MediaQuery.of(context).padding.bottom + 16.0),
+        decoration: BoxDecoration(
+          color: Theme.of(context).ext.surface,
+          border: Border(top: BorderSide(color: Theme.of(context).ext.border.withValues(alpha: 0.3))),
         ),
         child: Row(
           children: [
@@ -391,11 +401,11 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
                 children: [
                   Text(
                     "₹${amountPerPerson.toStringAsFixed(2)}/person",
-                    style: GoogleFonts.openSans(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textBlack),
+                    style: GoogleFonts.openSans(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).ext.textPrimary),
                   ),
                   Text(
                     "(${state.splits.length} people)",
-                    style: GoogleFonts.openSans(fontSize: 14, color: AppColors.textGrey),
+                    style: GoogleFonts.openSans(fontSize: 14, color: Theme.of(context).ext.textSecondary),
                   ),
                 ],
               ),
@@ -404,7 +414,7 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
               children: [
                 Text(
                   "All",
-                  style: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textBlack),
+                  style: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).ext.textPrimary),
                 ),
                 Checkbox(
                   value: isAllSelected,
@@ -423,7 +433,7 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
 
     String mainText = "";
     String subText = "";
-    Color subTextColor = AppColors.textGrey;
+    Color subTextColor = Theme.of(context).ext.textSecondary;
 
     if (state.splitType == SplitType.exact) {
       double currentTotal = state.currentTotalAmount;
@@ -435,7 +445,7 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
         subTextColor = AppColors.primaryTeal;
       } else if (remaining > 0) {
         subText = "₹${remaining.toStringAsFixed(2)} left";
-        subTextColor = AppColors.textBlack;
+        subTextColor = Theme.of(context).ext.textPrimary;
       } else {
         subText = "₹${(-remaining).toStringAsFixed(2)} over";
         subTextColor = Colors.red;
@@ -451,7 +461,7 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
          subTextColor = AppColors.primaryTeal;
       } else if (remaining > 0) {
         subText = "${remaining.toStringAsFixed(1)}% left";
-        subTextColor = AppColors.textBlack;
+        subTextColor = Theme.of(context).ext.textPrimary;
       } else {
         subText = "${(-remaining).toStringAsFixed(1)}% over";
         subTextColor = Colors.red;
@@ -462,10 +472,11 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
     }
 
     return Container(
-      padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0, bottom: 40.0), // Added bottom padding
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundWhite,
-        border: Border(top: BorderSide(color: AppColors.borderGrey)),
+      width: double.infinity,
+      padding: EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0, bottom: MediaQuery.of(context).padding.bottom + 16.0),
+      decoration: BoxDecoration(
+        color: Theme.of(context).ext.surface,
+        border: Border(top: BorderSide(color: Theme.of(context).ext.border.withValues(alpha: 0.4))),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -473,13 +484,15 @@ class _SplitOptionsViewState extends State<_SplitOptionsView> {
         children: [
           Text(
             mainText,
-            style: GoogleFonts.openSans(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textBlack),
+            style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 16, color: Theme.of(context).ext.textPrimary),
           ),
-          if (subText.isNotEmpty)
+          if (subText.isNotEmpty) ...[
+            const SizedBox(height: 4),
             Text(
               subText,
-              style: GoogleFonts.openSans(fontWeight: FontWeight.bold, fontSize: 14, color: subTextColor),
+              style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 14, color: subTextColor),
             ),
+          ],
         ],
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,6 +12,7 @@ import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/utils/icon_utils.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/settle_up/settle_up_cubit.dart';
 import 'package:split_ease/features/expenses/presentation/pages/expense_note_page.dart';
+import 'package:split_ease/features/expenses/presentation/widgets/calculator_bottom_sheet.dart';
 
 class RecordPaymentPage extends StatefulWidget {
   const RecordPaymentPage({super.key});
@@ -95,23 +97,23 @@ class _RecordPaymentPageState extends State<RecordPaymentPage>
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.backgroundLightGrey,
+        backgroundColor: Theme.of(context).ext.backgroundGrey,
         appBar: AppBar(
-          backgroundColor: AppColors.backgroundLightGrey,
+          backgroundColor: Theme.of(context).ext.backgroundGrey,
           elevation: 0,
           scrolledUnderElevation: 0,
           leading: TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
               "Cancel",
-              style: GoogleFonts.outfit(color: AppColors.textGrey, fontWeight: FontWeight.w600, fontSize: 16),
+              style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary, fontWeight: FontWeight.w600, fontSize: 16),
             ),
           ),
           leadingWidth: 80,
           title: Text(
             "Settle Up",
             style: GoogleFonts.outfit(
-              color: AppColors.textBlack,
+              color: Theme.of(context).ext.textPrimary,
               fontWeight: FontWeight.w800,
               fontSize: 18,
             ),
@@ -174,7 +176,6 @@ class _RecordPaymentPageState extends State<RecordPaymentPage>
 
             final formatter = NumberFormat('#,##0.##', 'en_IN');
             final double balance = state.targetBalance;
-            final double? enteredAmt = double.tryParse(state.amount);
 
             String getPaymentMethodName() {
               if (state.paymentMethods.isEmpty) return "CASH";
@@ -194,238 +195,258 @@ class _RecordPaymentPageState extends State<RecordPaymentPage>
               groupName = selectedGroup?.name ?? "Selected Group";
             }
 
+            final selectedMethod = state.paymentMethods.isNotEmpty
+                ? (state.paymentMethods.any((m) => m.id == state.selectedPaymentMethodId)
+                    ? state.paymentMethods.firstWhere((m) => m.id == state.selectedPaymentMethodId)
+                    : state.paymentMethods.first)
+                : null;
+            final IconData paymentMethodIcon = selectedMethod != null
+                ? IconUtils.getIconFromString(selectedMethod.icon)
+                : Icons.account_balance_wallet_rounded;
+
             return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 60),
               child: Column(
                 children: [
-                      const SizedBox(height: 20),
+                  const SizedBox(height: 16),
 
-                      // ── Direction Summary Card ──────────────────────────────
-                      _DirectionCard(
-                        payerAvatar: payerAvatar,
-                        payeeAvatar: payeeAvatar,
-                        payerName: payerName,
-                        payeeName: payeeName,
-                        directionLabel: directionLabel,
-                        balance: balance,
-                        formatter: formatter,
-                        paymentMethodName: getPaymentMethodName(),
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      // ── Amount Input ────────────────────────────────────────
-                      _AmountInput(
-                        initialAmount: balance,
-                        onChanged: (val) {
-                          context.read<SettleUpCubit>().onAmountChanged(val);
-                        },
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // ── Smart Overpayment Hint ──────────────────────────────
-                      FadeTransition(
-                        opacity: _hintFade,
-                        child: state.isOverpayment
-                            ? _OverpaymentHint(
-                                settlementAmount: state.settlementAmount,
-                                overpaymentAmount: state.overpaymentAmount,
-                                formatter: formatter,
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-
-                      const SizedBox(height: 28),
-
-                      // ── Settings Card ───────────────────────────────────────
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 0),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.3)),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 20, offset: const Offset(0, 8)),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            _buildConfigRow(
-                              icon: Icons.group_rounded,
-                              label: "In Group",
-                              value: groupName,
-                              isTop: true,
-                              showArrow: false,
-                              onTap: () {},
-                            ),
-                            _buildDivider(),
-                            _buildConfigRow(
-                              icon: Icons.calendar_today_rounded,
-                              label: "Date",
-                              value: DateFormat('MMM dd, yyyy').format(state.date),
-                              valueColor: AppColors.textBlack,
-                              onTap: () async {
-                                final DateTime? picked = await showDatePicker(
-                                  context: context,
-                                  initialDate: state.date,
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime.now(),
-                                  builder: (context, child) => Theme(
-                                    data: Theme.of(context).copyWith(
-                                      colorScheme: const ColorScheme.light(
-                                        primary: AppColors.primary,
-                                      ),
-                                    ),
-                                    child: child!,
-                                  ),
-                                );
-                                if (picked != null && mounted) {
-                                  context.read<SettleUpCubit>().onDateChanged(picked);
-                                }
-                              },
-                            ),
-                            _buildDivider(),
-                            Builder(
-                              builder: (context) {
-                                final selectedMethod = state.paymentMethods.isNotEmpty 
-                                    ? (state.paymentMethods.any((m) => m.id == state.selectedPaymentMethodId)
-                                        ? state.paymentMethods.firstWhere((m) => m.id == state.selectedPaymentMethodId)
-                                        : state.paymentMethods.first)
-                                    : null;
-                                    
-                                return _buildConfigRow(
-                                  icon: selectedMethod != null ? IconUtils.getIconFromString(selectedMethod.icon) : Icons.account_balance_wallet_rounded,
-                                  iconColor: selectedMethod != null ? Color(int.parse(selectedMethod.color.replaceFirst('#', '0xFF'))) : null,
-                                  label: "Payment method",
-                                  value: state.paymentMethods.isNotEmpty
-                                      ? getPaymentMethodName()
-                                      : "Loading...",
-                                  onTap: () {
-                                    if (state.paymentMethods.isEmpty) return;
-                                    showModalBottomSheet(
-                                      context: context,
-                                      backgroundColor: Colors.white,
-                                      shape: const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                                      ),
-                                      builder: (ctx) {
-                                        return SafeArea(
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(vertical: 20),
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Text(
-                                                  "Select Payment Method",
-                                                  style: GoogleFonts.outfit(
-                                                    fontSize: 18,
-                                                    fontWeight: FontWeight.w700,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 16),
-                                                Flexible(
-                                                  child: SingleChildScrollView(
-                                                    child: Column(
-                                                      mainAxisSize: MainAxisSize.min,
-                                                      children: state.paymentMethods.map((method) {
-                                                        final isSelected = state.selectedPaymentMethodId == method.id;
-                                                        final color = Color(int.parse(method.color.replaceFirst('#', '0xFF')));
-                                                        return ListTile(
-                                                          leading: Container(
-                                                            padding: const EdgeInsets.all(8),
-                                                            decoration: BoxDecoration(
-                                                              color: color.withValues(alpha: 0.1),
-                                                              shape: BoxShape.circle,
-                                                            ),
-                                                            child: Icon(IconUtils.getIconFromString(method.icon), color: color, size: 24),
-                                                          ),
-                                                          title: Text(
-                                                            method.name,
-                                                            style: GoogleFonts.outfit(
-                                                              fontSize: 16,
-                                                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                                              color: AppColors.textBlack,
-                                                            ),
-                                                          ),
-                                                          trailing: isSelected
-                                                              ? const Icon(Icons.check_circle_rounded, color: AppColors.primaryTeal)
-                                                              : null,
-                                                          onTap: () {
-                                                            context.read<SettleUpCubit>().onPaymentMethodChanged(method.id);
-                                                            Navigator.pop(ctx);
-                                                          },
-                                                        );
-                                                      }).toList(),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  },
-                                );
-                              }
-                            ),
-                            _buildDivider(),
-                            _buildConfigRow(
-                              icon: Icons.notes_rounded,
-                              label: "Notes",
-                              value: state.note.isEmpty ? "Add a note" : state.note,
-                              valueColor: state.note.isEmpty ? AppColors.textGrey : AppColors.textBlack,
-                              isBottom: true,
-                              onTap: () async {
-                                final result = await Navigator.push<String>(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ExpenseNotePage(initialNote: state.note),
-                                  ),
-                                );
-                                if (result != null && mounted) {
-                                  context.read<SettleUpCubit>().onNoteChanged(result);
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-
-
-                      const SizedBox(height: 20),
-
-                      // ── Disclaimer ──────────────────────────────────────────
-                      Text(
-                        state.isOverpayment
-                            ? "The extra ₹${formatter.format(state.overpaymentAmount)} will be recorded as an advance payment."
-                            : "This records a payment and settles the pending balance.",
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.outfit(
-                          fontSize: 13,
-                          color: state.isOverpayment
-                              ? AppColors.warningOrange
-                              : AppColors.textGrey,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                  // ── Direction Summary Card ──────────────────────────────
+                  _DirectionCard(
+                    payerAvatar: payerAvatar,
+                    payeeAvatar: payeeAvatar,
+                    payerName: payerName,
+                    payeeName: payeeName,
+                    directionLabel: directionLabel,
+                    balance: balance,
+                    formatter: formatter,
                   ),
-                );
+
+                  const SizedBox(height: 24),
+
+                  // ── Amount Input Card ───────────────────────────────────
+                  _AmountInput(
+                    initialAmount: balance,
+                    targetBalance: balance,
+                    onChanged: (val) {
+                      context.read<SettleUpCubit>().onAmountChanged(val);
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // ── Smart Overpayment Hint ──────────────────────────────
+                  FadeTransition(
+                    opacity: _hintFade,
+                    child: state.isOverpayment
+                        ? _OverpaymentHint(
+                            settlementAmount: state.settlementAmount,
+                            overpaymentAmount: state.overpaymentAmount,
+                            formatter: formatter,
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ── Settings Card ───────────────────────────────────────
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 0),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).ext.surface,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                          color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.02),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8)),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        _buildConfigRow(
+                          icon: Icons.group_rounded,
+                          label: "In Group",
+                          value: groupName,
+                          isTop: true,
+                          showArrow: false,
+                          onTap: () {},
+                        ),
+                        _buildDivider(),
+                        _buildConfigRow(
+                          icon: Icons.calendar_today_rounded,
+                          label: "Date",
+                          value:
+                              DateFormat('MMM dd, yyyy').format(state.date),
+                          valueColor: Theme.of(context).ext.textPrimary,
+                          onTap: () async {
+                            final DateTime? picked = await showDatePicker(
+                              context: context,
+                              initialDate: state.date,
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime.now(),
+                              builder: (context, child) => Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: Theme.of(context).colorScheme.copyWith(
+                                    primary: AppColors.primary,
+                                  ),
+                                ),
+                                child: child!,
+                              ),
+                            );
+                            if (picked != null && context.mounted) {
+                              context
+                                  .read<SettleUpCubit>()
+                                  .onDateChanged(picked);
+                            }
+                          },
+                        ),
+                        _buildDivider(),
+                        _buildConfigRow(
+                          icon: paymentMethodIcon,
+                          iconColor: selectedMethod != null
+                              ? Color(int.parse(
+                                  selectedMethod.color.replaceFirst('#', '0xFF')))
+                              : null,
+                          label: "Payment method",
+                          value: state.paymentMethods.isNotEmpty
+                              ? getPaymentMethodName()
+                              : "Loading...",
+                          onTap: () => _showPaymentMethodPicker(context, state),
+                        ),
+                        _buildDivider(),
+                        _buildConfigRow(
+                          icon: Icons.notes_rounded,
+                          label: "Notes",
+                          value: state.note.isEmpty ? "Add a note" : state.note,
+                          valueColor: state.note.isEmpty
+                              ? Theme.of(context).ext.textSecondary
+                              : Theme.of(context).ext.textPrimary,
+                          isBottom: true,
+                          onTap: () async {
+                            final result = await Navigator.push<String>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    ExpenseNotePage(initialNote: state.note),
+                              ),
+                            );
+                            if (result != null && context.mounted) {
+                              context
+                                  .read<SettleUpCubit>()
+                                  .onNoteChanged(result);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // ── Disclaimer ──────────────────────────────────────────
+                  Text(
+                    state.isOverpayment
+                        ? "The extra ₹${formatter.format(state.overpaymentAmount)} will be recorded as an advance payment."
+                        : "This records a payment and settles the pending balance.",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.outfit(
+                      fontSize: 13,
+                      color: state.isOverpayment
+                          ? AppColors.warningOrange
+                          : AppColors.textGrey,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            );
           },
         ),
       ),
     );
   }
 
+  void _showPaymentMethodPicker(BuildContext context, SettleUpState state) {
+    if (state.paymentMethods.isEmpty) return;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).ext.scaffoldBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Select Payment Method",
+                  style: GoogleFonts.outfit(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: state.paymentMethods.map((method) {
+                        final isSelected =
+                            state.selectedPaymentMethodId == method.id;
+                        final color = Color(int.parse(
+                            method.color.replaceFirst('#', '0xFF')));
+                        return ListTile(
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(IconUtils.getIconFromString(method.icon),
+                                color: color, size: 24),
+                          ),
+                          title: Text(
+                            method.name,
+                            style: GoogleFonts.outfit(
+                              fontSize: 16,
+                              fontWeight:
+                                  isSelected ? FontWeight.w700 : FontWeight.w500,
+                              color: Theme.of(context).ext.textPrimary,
+                            ),
+                          ),
+                          trailing: isSelected
+                              ? const Icon(Icons.check_circle_rounded,
+                                  color: AppColors.primaryTeal)
+                              : null,
+                          onTap: () {
+                            context
+                                .read<SettleUpCubit>()
+                                .onPaymentMethodChanged(method.id);
+                            Navigator.pop(ctx);
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildDivider() {
     return Padding(
       padding: const EdgeInsets.only(left: 60, right: 20),
-      child: Divider(height: 1, color: AppColors.borderGrey.withValues(alpha: 0.2)),
+      child: Divider(height: 1, color: Theme.of(context).ext.border.withValues(alpha: 0.2)),
     );
   }
 
@@ -457,7 +478,7 @@ class _RecordPaymentPageState extends State<RecordPaymentPage>
               child: Icon(icon, color: effectiveIconColor, size: 20),
             ),
             const SizedBox(width: 16),
-            Text(label, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack)),
+            Text(label, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary)),
             const SizedBox(width: 16),
             Expanded(
               child: Text(
@@ -469,7 +490,7 @@ class _RecordPaymentPageState extends State<RecordPaymentPage>
               ),
             ),
             if (showArrow)
-              const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.iconGrey, size: 14),
+              Icon(Icons.arrow_forward_ios_rounded, color: Theme.of(context).ext.textTertiary, size: 14),
           ],
         ),
       ),
@@ -478,7 +499,7 @@ class _RecordPaymentPageState extends State<RecordPaymentPage>
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Direction Card: shows payer → payee visually
+// Direction Card: shows transfer visualization with payer → payee
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _DirectionCard extends StatelessWidget {
@@ -489,7 +510,6 @@ class _DirectionCard extends StatelessWidget {
   final String directionLabel;
   final double balance;
   final NumberFormat formatter;
-  final String paymentMethodName;
 
   const _DirectionCard({
     required this.payerAvatar,
@@ -499,107 +519,146 @@ class _DirectionCard extends StatelessWidget {
     required this.directionLabel,
     required this.balance,
     required this.formatter,
-    required this.paymentMethodName,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Theme.of(context).ext.border.withValues(alpha: 0.3),
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
+            color: AppColors.primaryTeal.withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
         children: [
-          // Direction label
-          Text(
-            directionLabel,
-            style: GoogleFonts.outfit(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textGrey,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            "₹${formatter.format(balance)}",
-            style: GoogleFonts.outfit(
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              color: AppColors.primary,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Avatar row
+          // Direction Header & Balance Pill
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _UserNode(avatar: payerAvatar, name: payerName, role: "Payer"),
-              Expanded(
-                child: Column(
-                  children: [
-                    Row(
-                      children: List.generate(
-                        5,
-                        (i) => Expanded(
-                          child: Container(
-                            height: 2,
-                            margin: const EdgeInsets.symmetric(horizontal: 2),
-                            decoration: BoxDecoration(
-                              color: i.isEven
-                                  ? AppColors.primary
-                                  : AppColors.primary.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(2),
-                            ),
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryTeal.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.swap_horiz_rounded,
+                        size: 14,
+                        color: AppColors.primaryTeal,
+                      ),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          directionLabel,
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryTeal,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 12,
-                            color: AppColors.primary,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            paymentMethodName.toUpperCase(),
-                            style: GoogleFonts.outfit(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.primary,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-              _UserNode(avatar: payeeAvatar, name: payeeName, role: "Receives"),
+              if (balance > 0) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).ext.backgroundGrey,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Theme.of(context).ext.border.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: Text(
+                    "Balance: ₹${formatter.format(balance)}",
+                    style: GoogleFonts.outfit(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).ext.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          // Avatar Flow
+          Row(
+            children: [
+              _UserNode(
+                avatar: payerAvatar,
+                name: payerName,
+                role: "Payer",
+                isPayer: true,
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        height: 3,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.primaryTeal.withValues(alpha: 0.2),
+                              AppColors.primaryTeal,
+                              AppColors.primaryTeal.withValues(alpha: 0.2),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryTeal,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primaryTeal.withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 16,
+                          color: Theme.of(context).ext.surface,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              _UserNode(
+                avatar: payeeAvatar,
+                name: payeeName,
+                role: "Recipient",
+                isPayer: false,
+              ),
             ],
           ),
         ],
@@ -612,39 +671,68 @@ class _UserNode extends StatelessWidget {
   final String? avatar;
   final String name;
   final String role;
+  final bool isPayer;
 
   const _UserNode({
     required this.avatar,
     required this.name,
     required this.role,
+    required this.isPayer,
   });
 
   @override
   Widget build(BuildContext context) {
+    final borderColor = isPayer ? AppColors.primaryTeal : AppColors.primary;
+    final badgeBg = isPayer
+        ? AppColors.primaryTeal.withValues(alpha: 0.1)
+        : AppColors.primary.withValues(alpha: 0.1);
+    final badgeText = isPayer ? AppColors.primaryTeal : AppColors.primary;
+
     return SizedBox(
       width: 80,
       child: Column(
         children: [
-          AppAvatar(url: avatar, radius: 26),
-          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: borderColor, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: borderColor.withValues(alpha: 0.12),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: AppAvatar(url: avatar, radius: 24),
+          ),
+          const SizedBox(height: 6),
           Text(
             name,
             style: GoogleFonts.outfit(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: AppColors.textBlack,
+              color: Theme.of(context).ext.textPrimary,
             ),
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 2),
-          Text(
-            role,
-            style: GoogleFonts.outfit(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textGrey,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: badgeBg,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              role,
+              style: GoogleFonts.outfit(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: badgeText,
+              ),
             ),
           ),
         ],
@@ -654,14 +742,19 @@ class _UserNode extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Amount Input: large inline editable amount
+// Amount Input Card: Large editable amount in a styled hero container
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _AmountInput extends StatefulWidget {
   final double initialAmount;
+  final double targetBalance;
   final ValueChanged<String> onChanged;
 
-  const _AmountInput({required this.initialAmount, required this.onChanged});
+  const _AmountInput({
+    required this.initialAmount,
+    required this.targetBalance,
+    required this.onChanged,
+  });
 
   @override
   State<_AmountInput> createState() => _AmountInputState();
@@ -691,9 +784,6 @@ class _AmountInputState extends State<_AmountInput> {
   @override
   void didUpdateWidget(_AmountInput oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // The BlocBuilder rebuilds after cubit.initialize() returns the real balance.
-    // Since Flutter reuses the State object, initState never runs again.
-    // We catch the first real (non-zero) value here and populate the controller.
     if (!_hasReceivedRealAmount && widget.initialAmount != 0) {
       _hasReceivedRealAmount = true;
       final value = widget.initialAmount
@@ -711,26 +801,168 @@ class _AmountInputState extends State<_AmountInput> {
     super.dispose();
   }
 
+  void _setAmount(double amount) {
+    final formatted = amount
+        .toStringAsFixed(2)
+        .replaceAll(RegExp(r'\.00$'), '');
+    _controller.text = formatted;
+    _controller.selection = TextSelection.collapsed(offset: formatted.length);
+    widget.onChanged(formatted);
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: TextField(
-        controller: _controller,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        textAlign: TextAlign.center,
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
-        ],
-        style: GoogleFonts.outfit(fontSize: 64, fontWeight: FontWeight.w900, color: AppColors.textBlack, height: 1.0),
-        decoration: InputDecoration(
-          hintText: "₹0",
-          hintStyle: GoogleFonts.outfit(fontSize: 64, fontWeight: FontWeight.w900, color: AppColors.textGrey.withValues(alpha: 0.3), height: 1.0),
-          border: InputBorder.none,
-          isDense: true,
+    final double? currentEntered = double.tryParse(_controller.text);
+    final bool showFullSettleChip =
+        widget.targetBalance > 0 &&
+        (currentEntered == null || (currentEntered - widget.targetBalance).abs() > 0.01);
+
+    final formatter = NumberFormat('#,##0.##', 'en_IN');
+
+    final text = _controller.text;
+    final double fontSize = text.length > 8
+        ? 30.0
+        : text.length > 6
+            ? 36.0
+            : text.length > 3
+                ? 42.0
+                : 52.0;
+
+    return Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: Theme.of(context).ext.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppColors.primaryTeal.withValues(alpha: 0.3),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primaryTeal.withValues(alpha: 0.05),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              TextField(
+                controller: _controller,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                textAlign: TextAlign.center,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(
+                    RegExp(r'^\d*\.?\d{0,2}'),
+                  ),
+                ],
+                style: GoogleFonts.outfit(
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.w900,
+                  color: Theme.of(context).ext.textPrimary,
+                  height: 1.1,
+                ),
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.only(
+                      left: 48, right: 48, top: 4, bottom: 4),
+                  hintText: "₹0",
+                  hintStyle: GoogleFonts.outfit(
+                    fontSize: fontSize,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textGrey.withValues(alpha: 0.3),
+                    height: 1.1,
+                  ),
+                  border: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  isDense: true,
+                ),
+                onChanged: (val) {
+                  setState(() {});
+                  widget.onChanged(val);
+                },
+              ),
+              Positioned(
+                right: 0,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryTeal.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.calculate_rounded,
+                      color: AppColors.primaryTeal,
+                      size: 22,
+                    ),
+                  ),
+                  onPressed: () async {
+                    FocusScope.of(context).unfocus();
+                    final result = await showModalBottomSheet<String>(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => CalculatorBottomSheet(
+                        initialValue: _controller.text,
+                      ),
+                    );
+                    if (result != null && result.isNotEmpty && mounted) {
+                      _setAmount(double.tryParse(result) ?? 0.0);
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
-        onChanged: widget.onChanged,
-      ),
+        if (showFullSettleChip) ...[
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: () => _setAmount(widget.targetBalance),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 6,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.primaryTeal.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: AppColors.primaryTeal.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.check_circle_outline_rounded,
+                    size: 14,
+                    color: AppColors.primaryTeal,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    "Settle Full Balance: ₹${formatter.format(widget.targetBalance)}",
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primaryTeal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -787,7 +1019,7 @@ class _OverpaymentHint extends StatelessWidget {
               text: TextSpan(
                 style: GoogleFonts.outfit(
                   fontSize: 13,
-                  color: AppColors.textBlack,
+                  color: Theme.of(context).ext.textPrimary,
                   fontWeight: FontWeight.w500,
                 ),
                 children: [

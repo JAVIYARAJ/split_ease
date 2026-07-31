@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
@@ -57,7 +58,7 @@ class _FeedbackSheetState extends State<FeedbackSheet> {
         child: Icon(
           isSelected ? Icons.star_rounded : Icons.star_outline_rounded,
           size: 44,
-          color: isSelected ? Colors.amber : AppColors.borderGrey.withValues(alpha: 0.5),
+          color: isSelected ? Colors.amber : Theme.of(context).ext.border.withValues(alpha: 0.5),
         ),
       ),
     );
@@ -81,8 +82,8 @@ class _FeedbackSheetState extends State<FeedbackSheet> {
         return AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          decoration: BoxDecoration(
+            color: Theme.of(context).ext.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           padding: EdgeInsets.only(
@@ -140,7 +141,7 @@ class _FeedbackSheetState extends State<FeedbackSheet> {
             style: GoogleFonts.openSans(
               fontSize: 24,
               fontWeight: FontWeight.w800,
-              color: AppColors.textBlack,
+              color: Theme.of(context).ext.textPrimary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -149,7 +150,7 @@ class _FeedbackSheetState extends State<FeedbackSheet> {
             "Your feedback helps us improve Splitwise.",
             style: GoogleFonts.openSans(
               fontSize: 15,
-              color: AppColors.textGrey,
+              color: Theme.of(context).ext.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -174,7 +175,7 @@ class _FeedbackSheetState extends State<FeedbackSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.borderGrey.withValues(alpha: 0.5),
+              color: Theme.of(context).ext.border.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -186,7 +187,7 @@ class _FeedbackSheetState extends State<FeedbackSheet> {
           style: GoogleFonts.openSans(
             fontSize: 22,
             fontWeight: FontWeight.w800,
-            color: AppColors.textBlack,
+            color: Theme.of(context).ext.textPrimary,
           ),
           textAlign: TextAlign.center,
         ),
@@ -195,7 +196,7 @@ class _FeedbackSheetState extends State<FeedbackSheet> {
           "We'd love to hear your thoughts so we can improve.",
           style: GoogleFonts.openSans(
             fontSize: 14,
-            color: AppColors.textGrey,
+            color: Theme.of(context).ext.textSecondary,
           ),
           textAlign: TextAlign.center,
         ),
@@ -212,10 +213,10 @@ class _FeedbackSheetState extends State<FeedbackSheet> {
         // Feedback Text Field
         Container(
           decoration: BoxDecoration(
-            color: AppColors.backgroundLightGrey,
+            color: Theme.of(context).ext.backgroundGrey,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: AppColors.borderGrey.withValues(alpha: 0.3),
+              color: Theme.of(context).ext.border.withValues(alpha: 0.3),
             ),
           ),
           child: TextField(
@@ -225,12 +226,12 @@ class _FeedbackSheetState extends State<FeedbackSheet> {
             maxLength: 500,
             style: GoogleFonts.openSans(
               fontSize: 15,
-              color: AppColors.textBlack,
+              color: Theme.of(context).ext.textPrimary,
             ),
             decoration: InputDecoration(
               hintText: "Tell us what you love or what could be better...",
               hintStyle: GoogleFonts.openSans(
-                color: AppColors.textGrey.withValues(alpha: 0.7),
+                color: Theme.of(context).ext.textTertiary,
               ),
               contentPadding: const EdgeInsets.all(16),
               border: InputBorder.none,

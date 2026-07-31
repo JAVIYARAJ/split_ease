@@ -2,6 +2,7 @@
 // --- Light Theme Auth Field ---
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 
 import '../theme/app_colors.dart';
 
@@ -45,7 +46,7 @@ class _AuthFieldState extends State<AuthField> {
             style: GoogleFonts.outfit(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: AppColors.textBlack.withValues(alpha: 0.8),
+              color: Theme.of(context).ext.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -59,26 +60,26 @@ class _AuthFieldState extends State<AuthField> {
           style: GoogleFonts.outfit(
             fontSize: 15,
             fontWeight: FontWeight.w500,
-            color: AppColors.textBlack,
+            color: Theme.of(context).ext.textPrimary,
           ),
           cursorColor: AppColors.primary,
           decoration: InputDecoration(
             hintText: widget.hint,
             hintStyle: GoogleFonts.outfit(
               fontSize: 14,
-              color: AppColors.textGrey,
+              color: Theme.of(context).ext.textTertiary,
               fontWeight: FontWeight.w400,
             ),
             filled: true,
-            fillColor: Colors.grey.withValues(alpha: 0.03),
+            fillColor: Theme.of(context).ext.inputFill,
             contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.borderGreyLight),
+              borderSide: BorderSide(color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.borderGreyLight),
+              borderSide: BorderSide(color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -93,19 +94,19 @@ class _AuthFieldState extends State<AuthField> {
               borderSide: const BorderSide(color: AppColors.errorRed, width: 1.5),
             ),
             prefixIcon: widget.icon != null
-                ? Icon(widget.icon, color: Colors.grey, size: 20)
+                ? Icon(widget.icon, color: Theme.of(context).ext.textTertiary, size: 20)
                 : null,
-            prefixIconColor: MaterialStateColor.resolveWith((states) =>
-                states.contains(MaterialState.focused)
+            prefixIconColor: WidgetStateColor.resolveWith((states) =>
+                states.contains(WidgetState.focused)
                     ? AppColors.primary
-                    : Colors.grey),
+                    : Theme.of(context).ext.textTertiary),
             suffixIcon: widget.isPassword
                 ? IconButton(
                     icon: Icon(
                       widget.isObscured
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
-                      color: Colors.grey,
+                      color: Theme.of(context).ext.textTertiary,
                       size: 20,
                     ),
                     onPressed: widget.onToggleVisibility,

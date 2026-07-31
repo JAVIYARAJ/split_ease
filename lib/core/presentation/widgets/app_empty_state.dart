@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 
@@ -42,7 +43,7 @@ class AppEmptyState extends StatelessWidget {
               style: GoogleFonts.outfit(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textBlack,
+                color: Theme.of(context).ext.textPrimary,
                 letterSpacing: -0.5,
               ),
             ),
@@ -53,7 +54,7 @@ class AppEmptyState extends StatelessWidget {
               style: GoogleFonts.outfit(
                 fontSize: 14,
                 height: 1.5,
-                color: AppColors.textGrey,
+                color: Theme.of(context).ext.textSecondary,
               ),
             ),
             if (actionButton != null) ...[

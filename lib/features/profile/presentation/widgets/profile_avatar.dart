@@ -1,6 +1,7 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -26,9 +27,9 @@ class ProfileAvatar extends StatelessWidget {
             file: pickedImage,
             radius: 60,
             iconSize: 60,
-            backgroundColor: AppColors.backgroundLightGrey,
+            backgroundColor: Theme.of(context).ext.backgroundGrey,
             iconColor: AppColors.iconGrey,
-            border: Border.all(color: AppColors.borderGrey, width: 2),
+            border: Border.all(color: Theme.of(context).ext.border, width: 2),
           ),
           Positioned(
             bottom: 4,
@@ -37,13 +38,13 @@ class ProfileAvatar extends StatelessWidget {
               onTap: onPickTrigger,
               child: Container(
                 padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: AppColors.primary,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.camera_alt,
-                  color: Colors.white,
+                  color: Theme.of(context).ext.surface,
                   size: 20,
                 ),
               ),

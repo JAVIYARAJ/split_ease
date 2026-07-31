@@ -4,6 +4,7 @@ class ExpenseBreakdownModel extends ExpenseBreakdownEntity {
   const ExpenseBreakdownModel({
     required super.summary,
     required super.categoryBreakdown,
+    super.paymentMethodBreakdown = const [],
   });
 
   factory ExpenseBreakdownModel.fromJson(Map<String, dynamic> json) {
@@ -15,9 +16,15 @@ class ExpenseBreakdownModel extends ExpenseBreakdownEntity {
             .toList() ??
         [];
 
+    final paymentMethodBreakdown = (json['payment_method_breakdown'] as List<dynamic>?)
+            ?.map((e) => PaymentMethodDetailModel.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [];
+
     return ExpenseBreakdownModel(
       summary: summary,
       categoryBreakdown: categoryBreakdown,
+      paymentMethodBreakdown: paymentMethodBreakdown,
     );
   }
 }
@@ -70,6 +77,28 @@ class CategoryDetailModel extends CategoryDetailEntity {
       limitAmount: json['limit_amount'] != null ? (json['limit_amount'] as num).toDouble() : null,
       isOverLimit: json['is_over_limit'] as bool?,
       spentThisMonth: json['spent_this_month'] != null ? (json['spent_this_month'] as num).toDouble() : null,
+    );
+  }
+}
+
+class PaymentMethodDetailModel extends PaymentMethodDetailEntity {
+  const PaymentMethodDetailModel({
+    required super.id,
+    required super.name,
+    required super.icon,
+    required super.color,
+    required super.transactionCount,
+    required super.percentage,
+  });
+
+  factory PaymentMethodDetailModel.fromJson(Map<String, dynamic> json) {
+    return PaymentMethodDetailModel(
+      id: json['id'] ?? '',
+      name: json['name'] ?? 'Unknown',
+      icon: json['icon'] ?? 'payments',
+      color: json['color'] ?? '#4CAF50',
+      transactionCount: json['transaction_count'] ?? 0,
+      percentage: (json['percentage'] ?? 0).toDouble(),
     );
   }
 }

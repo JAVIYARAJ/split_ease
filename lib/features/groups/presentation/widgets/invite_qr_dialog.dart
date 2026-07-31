@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:screenshot/screenshot.dart';
@@ -60,7 +61,7 @@ class _InviteQrDialogState extends State<InviteQrDialog> {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).ext.surface,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 10))],
         ),
@@ -73,15 +74,15 @@ class _InviteQrDialogState extends State<InviteQrDialog> {
                 const SizedBox(width: 24), // Spacer for centering
                 Text(
                   "Scan to Join",
-                  style: GoogleFonts.openSans(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textBlack),
+                  style: GoogleFonts.openSans(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).ext.textPrimary),
                 ),
                 InkWell(
                   onTap: () => NavigationService.pop(),
                   borderRadius: BorderRadius.circular(20),
                   child: Container(
                     padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(color: Colors.grey.shade100, shape: BoxShape.circle),
-                    child: const Icon(Icons.close, size: 20, color: AppColors.textGrey),
+                    decoration: BoxDecoration(color: Theme.of(context).ext.inputFill, shape: BoxShape.circle),
+                    child: Icon(Icons.close, size: 20, color: Theme.of(context).ext.textSecondary),
                   ),
                 ),
               ],
@@ -89,7 +90,7 @@ class _InviteQrDialogState extends State<InviteQrDialog> {
             const SizedBox(height: 8),
             Text(
               "Share this QR code with friends to add them to '${widget.groupName}'",
-              style: GoogleFonts.openSans(fontSize: 14, color: AppColors.textGrey),
+              style: GoogleFonts.openSans(fontSize: 14, color: Theme.of(context).ext.textSecondary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
@@ -98,7 +99,7 @@ class _InviteQrDialogState extends State<InviteQrDialog> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).ext.surface,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.1), blurRadius: 24, offset: const Offset(0, 8))],
                   border: Border.all(color: AppColors.primary.withValues(alpha: 0.2), width: 1),
@@ -111,18 +112,17 @@ class _InviteQrDialogState extends State<InviteQrDialog> {
                       version: QrVersions.auto,
                       size: 200.0,
                       backgroundColor: Colors.white,
-                      // foregroundColor: AppColors.textBlack, // Deprecated, handled by dataModuleStyle
-                      eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: AppColors.primary),
-                      dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: AppColors.textBlack),
+                      eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Colors.black),
+                      dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Colors.black),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       widget.inviteCode,
-                      style: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textBlack, letterSpacing: 2.0),
+                      style: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).ext.textPrimary, letterSpacing: 2.0),
                     ),
                     Text(
                       "Scan to join group", // Helper text in image
-                      style: GoogleFonts.openSans(fontSize: 10, color: AppColors.textGrey),
+                      style: GoogleFonts.openSans(fontSize: 10, color: Theme.of(context).ext.textSecondary),
                     ),
                     const SizedBox(height: 8),
                     Text(

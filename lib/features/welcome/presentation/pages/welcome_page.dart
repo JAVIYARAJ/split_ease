@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:split_ease/features/welcome/presentation/cubit/welcome_cubit.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/routing/navigation_service.dart';
@@ -70,9 +71,11 @@ class _WelcomePageState extends State<WelcomePage> {
         }
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle.dark,
+        value: Theme.of(context).brightness == Brightness.dark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
         child: Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).ext.scaffoldBg,
           body: Stack(
             children: [
               PageView.builder(
@@ -122,7 +125,7 @@ class _WelcomePageState extends State<WelcomePage> {
                                         maxLines: 1,
                                         style: GoogleFonts.outfit(
                                           fontSize: 16,
-                                          color: AppColors.textGrey,
+                                          color: Theme.of(context).ext.textTertiary,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
@@ -216,7 +219,7 @@ class _WelcomePageState extends State<WelcomePage> {
       height: 6,
       width: isActive ? 32 : 6,
       decoration: BoxDecoration(
-        color: isActive ? AppColors.primary : AppColors.borderGrey,
+        color: isActive ? AppColors.primary : Theme.of(context).ext.border,
         borderRadius: BorderRadius.circular(3),
       ),
     );
@@ -280,7 +283,7 @@ class _OnboardingSlide extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).ext.surface,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
@@ -318,7 +321,7 @@ class _OnboardingSlide extends StatelessWidget {
             style: GoogleFonts.outfit(
               fontSize: 32,
               fontWeight: FontWeight.w800,
-              color: AppColors.textBlack,
+              color: Theme.of(context).ext.textPrimary,
               height: 1.1,
             ),
           ),
@@ -328,7 +331,7 @@ class _OnboardingSlide extends StatelessWidget {
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
               fontSize: 16,
-              color: AppColors.textGrey,
+              color: Theme.of(context).ext.textSecondary,
               height: 1.5,
               fontWeight: FontWeight.w400,
             ),

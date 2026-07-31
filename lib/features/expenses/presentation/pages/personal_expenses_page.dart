@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -171,10 +172,10 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
       ),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: ColorScheme.light(
+          colorScheme: Theme.of(context).colorScheme.copyWith(
             primary: AppColors.primary,
             onPrimary: Colors.white,
-            surface: AppColors.surfaceWhite,
+            surface: Theme.of(context).ext.surface,
           ),
         ),
         child: child!,
@@ -207,9 +208,9 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundWhite,
+      backgroundColor: Theme.of(context).ext.scaffoldBg,
       appBar: AppBar(
-        backgroundColor: AppColors.backgroundWhite,
+        backgroundColor: Theme.of(context).ext.scaffoldBg,
         elevation: 0,
         centerTitle: true,
         title: Text(
@@ -217,7 +218,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
           style: GoogleFonts.outfit(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: AppColors.textBlack,
+            color: Theme.of(context).ext.textPrimary,
           ),
         ),
         leading: AppBackButton(
@@ -250,7 +251,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                 children: [
                   Icon(Icons.error_outline, color: AppColors.errorRed, size: 48),
                   const SizedBox(height: 16),
-                  Text(state.message, style: GoogleFonts.outfit(color: AppColors.textGrey)),
+                  Text(state.message, style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary)),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => context.read<PersonalExpensesBloc>().add(LoadPersonalExpenses()),
@@ -314,7 +315,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                   SliverAppBar(
                     pinned: true,
                     automaticallyImplyLeading: false,
-                    backgroundColor: AppColors.backgroundWhite,
+                    backgroundColor: Theme.of(context).ext.scaffoldBg,
                     elevation: 0,
                     expandedHeight: 110,
                     collapsedHeight: 64,
@@ -326,7 +327,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                         
                         return ClipRect(
                           child: Container(
-                            color: AppColors.backgroundWhite,
+                            color: Theme.of(context).ext.scaffoldBg,
                             child: Stack(
                               children: [
                                 Positioned(
@@ -337,7 +338,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                                     style: GoogleFonts.outfit(
                                       fontSize: 12 + (2 * percent),
                                       fontWeight: FontWeight.w600,
-                                      color: AppColors.textGrey,
+                                      color: Theme.of(context).ext.textSecondary,
                                     ),
                                   ),
                                 ),
@@ -356,7 +357,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                                         style: GoogleFonts.outfit(
                                           fontSize: 44,
                                           fontWeight: FontWeight.w800,
-                                          color: AppColors.textBlack,
+                                          color: Theme.of(context).ext.textPrimary,
                                           letterSpacing: -1,
                                         ),
                                       ),
@@ -422,7 +423,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                             style: GoogleFonts.outfit(
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.textBlack,
+                              color: Theme.of(context).ext.textPrimary,
                             ),
                           ),
                         ),
@@ -450,9 +451,9 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).ext.surface,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.8), width: 1.2),
+              border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.8), width: 1.2),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.03),
@@ -489,7 +490,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                   style: GoogleFonts.outfit(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textBlack,
+                    color: Theme.of(context).ext.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -499,7 +500,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                   style: GoogleFonts.outfit(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textGrey,
+                    color: Theme.of(context).ext.textSecondary,
                     height: 1.4,
                   ),
                 ),
@@ -528,9 +529,9 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
             return Container(
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: AppColors.surfaceWhite,
+                color: Theme.of(context).ext.surface,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(color: Theme.of(context).ext.borderLight),
               ),
               child: InkWell(
                 borderRadius: BorderRadius.circular(20),
@@ -568,7 +569,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                               style: GoogleFonts.outfit(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.textBlack,
+                                color: Theme.of(context).ext.textPrimary,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -576,7 +577,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                             const SizedBox(height: 4),
                             Text(
                               formattedDate,
-                              style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.iconGrey),
+                              style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w500, color: Theme.of(context).ext.textTertiary),
                             ),
                           ],
                         ),
@@ -587,7 +588,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.textBlack,
+                          color: Theme.of(context).ext.textPrimary,
                         ),
                       ),
                     ],
@@ -626,10 +627,11 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
     final maxY = maxAmount > 0 ? maxAmount * 1.25 : 100.0;
 
     return Container(
+      margin: EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.15)),
+        border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.15)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -657,7 +659,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.textBlack,
+                          color: Theme.of(context).ext.textPrimary,
                         ),
                       );
                     },
@@ -668,7 +670,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                     style: GoogleFonts.outfit(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.iconGrey,
+                      color: Theme.of(context).ext.textTertiary,
                     ),
                   ),
                 ],
@@ -728,7 +730,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                                       style: GoogleFonts.outfit(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
-                                        color: AppColors.textGrey,
+                                        color: Theme.of(context).ext.textSecondary,
                                         height: 1.1,
                                       ),
                                     ),
@@ -749,11 +751,11 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                                 child: Container(
                                   padding: const EdgeInsets.all(4),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: Theme.of(context).ext.surface,
                                     shape: BoxShape.circle,
-                                    border: Border.all(color: AppColors.borderGrey),
+                                    border: Border.all(color: Theme.of(context).ext.border),
                                   ),
-                                  child: const Icon(Icons.close_rounded, size: 12, color: AppColors.iconGrey),
+                                  child: Icon(Icons.close_rounded, size: 12, color: Theme.of(context).ext.textTertiary),
                                 ),
                               ),
                             ],
@@ -854,9 +856,9 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
       height: 34,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: AppColors.backgroundLightGrey,
+        color: Theme.of(context).ext.backgroundGrey,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.3)),
+        border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
       ),
       child: Stack(
         children: [
@@ -869,7 +871,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
               width: 33,
               height: 28,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).ext.surface,
                 borderRadius: BorderRadius.circular(9),
                 boxShadow: [
                   BoxShadow(
@@ -965,7 +967,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                     style: GoogleFonts.outfit(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textGrey,
+                      color: Theme.of(context).ext.textSecondary,
                       height: 1.1,
                     ),
                   ),
@@ -974,7 +976,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                     style: GoogleFonts.outfit(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textBlack,
+                      color: Theme.of(context).ext.textPrimary,
                       height: 1.1,
                     ),
                     maxLines: 1,
@@ -1036,7 +1038,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
               return BarTooltipItem(
                 AppFormatter.formatCurrency(rod.toY),
                 GoogleFonts.outfit(
-                  color: Colors.white,
+                  color: Theme.of(context).ext.surface,
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
                 ),
@@ -1050,7 +1052,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
           horizontalInterval: maxY / 3 > 0 ? maxY / 3 : 1,
           getDrawingHorizontalLine: (value) {
             return FlLine(
-              color: AppColors.borderGrey.withValues(alpha: 0.25),
+              color: Theme.of(context).ext.border.withValues(alpha: 0.25),
               strokeWidth: 1,
               dashArray: [4, 4],
             );
@@ -1183,7 +1185,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
                 return LineTooltipItem(
                   AppFormatter.formatCurrency(spot.y),
                   GoogleFonts.outfit(
-                    color: Colors.white,
+                    color: Theme.of(context).ext.surface,
                     fontWeight: FontWeight.w700,
                     fontSize: 12,
                   ),
@@ -1198,7 +1200,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
           horizontalInterval: maxY / 3 > 0 ? maxY / 3 : 1,
           getDrawingHorizontalLine: (value) {
             return FlLine(
-              color: AppColors.borderGrey.withValues(alpha: 0.25),
+              color: Theme.of(context).ext.border.withValues(alpha: 0.25),
               strokeWidth: 1,
               dashArray: [4, 4],
             );
@@ -1359,8 +1361,8 @@ class _PersonalExpenseFilterSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
@@ -1374,7 +1376,7 @@ class _PersonalExpenseFilterSheet extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: Theme.of(context).ext.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -1385,13 +1387,13 @@ class _PersonalExpenseFilterSheet extends StatelessWidget {
             style: GoogleFonts.outfit(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: AppColors.textBlack,
+              color: Theme.of(context).ext.textPrimary,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             "Select a time range to filter your expenses",
-            style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey),
+            style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary),
           ),
           const SizedBox(height: 20),
           // 2-column grid
@@ -1410,10 +1412,10 @@ class _PersonalExpenseFilterSheet extends StatelessWidget {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   decoration: BoxDecoration(
-                    color: isActive ? AppColors.primary : AppColors.surfaceWhite,
+                    color: isActive ? AppColors.primary : Theme.of(context).ext.backgroundGrey,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: isActive ? AppColors.primary : AppColors.borderGreyLight,
+                      color: isActive ? AppColors.primary : Theme.of(context).ext.border.withValues(alpha: 0.5),
                       width: isActive ? 1.5 : 1,
                     ),
                     boxShadow: isActive
@@ -1423,7 +1425,7 @@ class _PersonalExpenseFilterSheet extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   child: Row(
                     children: [
-                      Icon(icon, size: 16, color: isActive ? Colors.white : AppColors.iconGrey),
+                      Icon(icon, size: 16, color: isActive ? Colors.white : Theme.of(context).ext.textSecondary),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -1431,7 +1433,7 @@ class _PersonalExpenseFilterSheet extends StatelessWidget {
                           style: GoogleFonts.outfit(
                             fontSize: 13,
                             fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                            color: isActive ? Colors.white : AppColors.textBlack,
+                            color: isActive ? Colors.white : Theme.of(context).ext.textPrimary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

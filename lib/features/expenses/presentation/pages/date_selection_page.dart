@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
@@ -33,9 +34,9 @@ class _DateSelectionViewState extends State<_DateSelectionView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).ext.scaffoldBg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).ext.scaffoldBg,
         elevation: 0,
         leading: TextButton(
           onPressed: () => Navigator.pop(context),
@@ -52,7 +53,7 @@ class _DateSelectionViewState extends State<_DateSelectionView> {
         title: Text(
           "Choose date",
           style: GoogleFonts.openSans(
-            color: AppColors.textBlack,
+            color: Theme.of(context).ext.textPrimary,
             fontWeight: FontWeight.w600,
             fontSize: 18,
           ),
@@ -97,7 +98,7 @@ class _DateSelectionViewState extends State<_DateSelectionView> {
                   titleTextStyle: GoogleFonts.openSans(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textBlack,
+                    color: Theme.of(context).ext.textPrimary,
                   ),
                 ),
                 rowHeight: 52,
@@ -113,8 +114,8 @@ class _DateSelectionViewState extends State<_DateSelectionView> {
                   ),
                   todayTextStyle: GoogleFonts.openSans(
                       color: AppColors.primaryTeal, fontWeight: FontWeight.bold),
-                  defaultTextStyle: GoogleFonts.openSans(color: AppColors.textBlack),
-                  weekendTextStyle: GoogleFonts.openSans(color: AppColors.textBlack),
+                  defaultTextStyle: GoogleFonts.openSans(color: Theme.of(context).ext.textPrimary),
+                  weekendTextStyle: GoogleFonts.openSans(color: Theme.of(context).ext.textPrimary),
                 ),
               ),
                const Spacer(),
@@ -123,11 +124,11 @@ class _DateSelectionViewState extends State<_DateSelectionView> {
                  child: Row(
                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                    children: [
-                     Text("Repeat", style: GoogleFonts.openSans(fontSize: 16, color: AppColors.textBlack)),
+                     Text("Repeat", style: GoogleFonts.openSans(fontSize: 16, color: Theme.of(context).ext.textPrimary)),
                      Row(
                        children: [
-                         Text("Just this once", style: GoogleFonts.openSans(fontSize: 16, color: AppColors.textGrey)),
-                         const Icon(Icons.chevron_right, color: AppColors.iconGrey),
+                         Text("Just this once", style: GoogleFonts.openSans(fontSize: 16, color: Theme.of(context).ext.textSecondary)),
+                         Icon(Icons.chevron_right, color: Theme.of(context).ext.textTertiary),
                        ],
                      )
                    ],

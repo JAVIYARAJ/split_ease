@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/features/groups/domain/entities/group_type.dart';
 import '../../../../../core/presentation/widgets/app_image_view.dart';
@@ -15,7 +16,7 @@ class GroupListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Determine overall status colors and text
-    Color statusColor = AppColors.textGrey;
+    Color statusColor = Theme.of(context).ext.textTertiary;
     String subtitleText = "";
     bool showBalance = true;
 
@@ -34,9 +35,9 @@ class GroupListItem extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderGreyLight),
+        border: Border.all(color: Theme.of(context).ext.borderLight),
       ),
       child: Material(
         color: Colors.transparent,
@@ -59,8 +60,8 @@ class GroupListItem extends StatelessWidget {
                         height: 52,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(14),
-                          color: AppColors.backgroundLightGrey,
-                          border: Border.all(color: AppColors.borderGreyLight, width: 0.5),
+                          color: Theme.of(context).ext.backgroundGrey,
+                          border: Border.all(color: Theme.of(context).ext.borderLight, width: 0.5),
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(14),
@@ -72,10 +73,10 @@ class GroupListItem extends StatelessWidget {
                                   fit: BoxFit.cover,
                                 )
                               : Container(
-                                  color: AppColors.backgroundLightGrey,
+                                  color: Theme.of(context).ext.backgroundGrey,
                                   child: Icon(
                                     _getIconData(group.groupType),
-                                    color: AppColors.textGrey,
+                                    color: Theme.of(context).ext.textSecondary,
                                     size: 26,
                                   ),
                                 ),
@@ -96,7 +97,7 @@ class GroupListItem extends StatelessWidget {
                               style: GoogleFonts.outfit(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.textBlack,
+                                color: Theme.of(context).ext.textPrimary,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -106,7 +107,7 @@ class GroupListItem extends StatelessWidget {
                               subtitleText,
                               style: GoogleFonts.outfit(
                                 fontSize: 13,
-                                color: showBalance ? statusColor : AppColors.textGrey,
+                                color: showBalance ? statusColor : Theme.of(context).ext.textTertiary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -140,14 +141,14 @@ class GroupListItem extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         for (int i = 0; i < group.balancePreview!.length; i++)
-                          _buildNestedBalanceRow(
+                          _buildNestedBalanceRow(context,
                             name: group.balancePreview![i].fullName ?? 'Unknown',
                             balance: group.balancePreview![i].balance ?? 0.0,
                             formatter: formatter,
                             isLast: i == group.balancePreview!.length - 1 && (group.totalActiveBalances ?? 0) <= group.balancePreview!.length,
                           ),
                         if (group.totalActiveBalances != null && group.totalActiveBalances! > group.balancePreview!.length)
-                          _buildPlusMoreBalancesRow(
+                          _buildPlusMoreBalancesRow(context,
                             count: group.totalActiveBalances! - group.balancePreview!.length,
                           ),
                       ],
@@ -161,7 +162,7 @@ class GroupListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildNestedBalanceRow({
+  Widget _buildNestedBalanceRow(BuildContext context, {
     required String name,
     required double balance,
     required NumberFormat formatter,
@@ -182,99 +183,100 @@ class GroupListItem extends StatelessWidget {
           // The tree branching line
           CustomPaint(
             size: const Size(20, double.infinity),
-            painter: _TreeBranchPainter(isLast: isLast),
-          ),
-          const SizedBox(width: 8),
-          
-          // Data
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4.0),
-              child: RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: "$name $textStatus ",
-                      style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        color: AppColors.textGrey,
-                        fontWeight: FontWeight.w500,
+                            painter: _TreeBranchPainter(isLast: isLast, lineColor: Theme.of(context).ext.border.withValues(alpha: 0.5)),
+                          ),
+                          const SizedBox(width: 8),
+                          
+                          // Data
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4.0),
+                              child: RichText(
+                                text: TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: "$name $textStatus ",
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 14,
+                                        color: Theme.of(context).ext.textSecondary,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: "₹${formatter.format(balance.abs())}",
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 14,
+                                        color: color,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    TextSpan(
-                      text: "₹${formatter.format(balance.abs())}",
-                      style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        color: color,
-                        fontWeight: FontWeight.w600,
+                    );
+                  }
+
+                  Widget _buildPlusMoreBalancesRow(BuildContext context, {required int count}) {
+                    return IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          CustomPaint(
+                            size: const Size(20, double.infinity),
+                            painter: _TreeBranchPainter(isLast: true, lineColor: Theme.of(context).ext.border.withValues(alpha: 0.5)),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4.0),
+                              child: Text(
+                                "Plus $count more balances",
+                                style: GoogleFonts.outfit(
+                                  fontSize: 14,
+                                  color: Theme.of(context).ext.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+                    );
+                  }
 
-  Widget _buildPlusMoreBalancesRow({required int count}) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          CustomPaint(
-            size: const Size(20, double.infinity),
-            painter: _TreeBranchPainter(isLast: true),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4.0),
-              child: Text(
-                "Plus $count more balances",
-                style: GoogleFonts.outfit(
-                  fontSize: 14,
-                  color: AppColors.textGrey,
-                  fontWeight: FontWeight.w500,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+                  IconData _getIconData(String? type) {
+                    if (type == GroupType.home.name) {
+                      return Icons.home_rounded;
+                    } else if (type == GroupType.couple.name) {
+                      return Icons.favorite_rounded;
+                    } else if (type == GroupType.trip.name) {
+                      return Icons.flight_takeoff_rounded;
+                    } else {
+                      return Icons.list_alt_rounded;
+                    }
+                  }
+                }
 
-  IconData _getIconData(String? type) {
-    if (type == GroupType.home.name) {
-      return Icons.home_rounded;
-    } else if (type == GroupType.couple.name) {
-      return Icons.favorite_rounded;
-    } else if (type == GroupType.trip.name) {
-      return Icons.flight_takeoff_rounded;
-    } else {
-      return Icons.list_alt_rounded;
-    }
-  }
-}
+                class _TreeBranchPainter extends CustomPainter {
+                  final bool isLast;
+                  final Color lineColor;
 
-class _TreeBranchPainter extends CustomPainter {
-  final bool isLast;
+                  _TreeBranchPainter({required this.isLast, required this.lineColor});
 
-  _TreeBranchPainter({required this.isLast});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.grey.shade300
-      ..strokeWidth = 1.0
-      ..style = PaintingStyle.stroke;
+                  @override
+                  void paint(Canvas canvas, Size size) {
+                    final paint = Paint()
+                      ..color = lineColor
+                      ..strokeWidth = 1.0
+                      ..style = PaintingStyle.stroke;
 
     // Line running down from top
     final double verticalLineEnd = isLast ? size.height / 2 : size.height;

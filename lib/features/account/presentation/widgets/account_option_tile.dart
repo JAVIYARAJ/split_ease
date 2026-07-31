@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/theme/app_colors.dart';
 
@@ -43,7 +44,7 @@ class AccountOptionTile extends StatelessWidget {
           style: GoogleFonts.openSans(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: AppColors.textBlack,
+            color: Theme.of(context).ext.textPrimary,
           ),
         ),
         trailing: const Icon(

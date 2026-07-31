@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -11,7 +12,6 @@ import 'package:split_ease/injection_container.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
 import '../../domain/entities/group_member_entity.dart';
-import '../widgets/invite_qr_dialog.dart';
 import '../../domain/services/group_permission_service.dart';
 import '../widgets/group_member_options_sheet.dart';
 import '../../domain/entities/group_member_balance_entity.dart';
@@ -63,7 +63,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                   _onBack(context);
                 },
                 child: Scaffold(
-                  backgroundColor: AppColors.backgroundLightGrey, // Modern grey background
+                  backgroundColor: Theme.of(context).ext.backgroundGrey, // Modern grey background
                   body: BlocConsumer<GroupSettingsBloc, GroupSettingsState>(
                     listener: (context, state) {
                       if (state is GroupSettingsError) {
@@ -168,11 +168,11 @@ class _GroupSettingsContent extends StatelessWidget {
             // General Settings Section
             if (GroupPermissionService.hasPermission(logic.userRole, GroupPermission.addMembers) || 
                 GroupPermissionService.hasPermission(logic.userRole, GroupPermission.inviteMembers)) ...[
-              _buildSectionHeader('General'),
-              _buildInsetGroup(
+              _buildSectionHeader(context, 'General'),
+              _buildInsetGroup(context,
                 children: [
                   if (GroupPermissionService.hasPermission(logic.userRole, GroupPermission.addMembers)) ...[
-                    _buildSettingsTile(
+                    _buildSettingsTile(context,
                       icon: Icons.person_add_rounded,
                       title: 'Add people to group',
                       onTap: () {
@@ -189,12 +189,12 @@ class _GroupSettingsContent extends StatelessWidget {
                       iconColor: AppColors.primary,
                     ),
                     if (GroupPermissionService.hasPermission(logic.userRole, GroupPermission.inviteMembers))
-                       _buildDivider(),
+                       _buildDivider(context),
                   ],
                   
                   // Invite QR - Permission Check
                   if (GroupPermissionService.hasPermission(logic.userRole, GroupPermission.inviteMembers)) ...[
-                    _buildSettingsTile(
+                    _buildSettingsTile(context,
                       icon: Icons.qr_code_rounded,
                       title: 'Invite by QR',
                       onTap: () {
@@ -222,8 +222,8 @@ class _GroupSettingsContent extends StatelessWidget {
             ],
             
             // Members Section
-            _buildSectionHeader('Members'),
-            _buildInsetGroup(
+            _buildSectionHeader(context, 'Members'),
+            _buildInsetGroup(context,
               children: _buildMembersList(context, group, logic.userRole, logic.isCreator, logic),
             ),
 
@@ -232,11 +232,11 @@ class _GroupSettingsContent extends StatelessWidget {
             // Danger Zone Section
             if (GroupPermissionService.hasPermission(logic.userRole, GroupPermission.exitGroup) || 
                 GroupPermissionService.hasPermission(logic.userRole, GroupPermission.deleteGroup)) ...[
-              _buildSectionHeader('Danger Zone', color: AppColors.errorRed),
-              _buildInsetGroup(
+              _buildSectionHeader(context, 'Danger Zone', color: AppColors.errorRed),
+              _buildInsetGroup(context,
                 children: [
                   if (GroupPermissionService.hasPermission(logic.userRole, GroupPermission.exitGroup)) ...[
-                     _buildSettingsTile(
+                     _buildSettingsTile(context,
                        icon: Icons.exit_to_app_rounded,
                        title: 'Leave Group',
                        isDisabled: logic.blockLeave,
@@ -254,11 +254,11 @@ class _GroupSettingsContent extends StatelessWidget {
                        iconColor: const Color(0xFFFB8C00),
                      ),
                      if (GroupPermissionService.hasPermission(logic.userRole, GroupPermission.deleteGroup))
-                       _buildDivider(),
+                       _buildDivider(context),
                   ],
 
                   if (GroupPermissionService.hasPermission(logic.userRole, GroupPermission.deleteGroup))
-                    _buildSettingsTile(
+                    _buildSettingsTile(context,
                       icon: Icons.delete_outline_rounded,
                       title: 'Delete Group',
                       titleColor: AppColors.errorRed,
@@ -301,12 +301,12 @@ class _GroupSettingsContent extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 "Delete Group?",
-                style: GoogleFonts.openSans(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textBlack),
+                style: GoogleFonts.openSans(fontSize: 18, fontWeight: FontWeight.w800, color: Theme.of(context).ext.textPrimary),
               ),
               const SizedBox(height: 8),
               Text(
                 "Are you sure you want to delete \"${group.name}\"? This will permanently remove all expenses, settlements, and member history. This action cannot be undone.",
-                style: GoogleFonts.openSans(fontSize: 13, color: AppColors.textGrey, height: 1.4),
+                style: GoogleFonts.openSans(fontSize: 13, color: Theme.of(context).ext.textSecondary, height: 1.4),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -317,10 +317,10 @@ class _GroupSettingsContent extends StatelessWidget {
                       onPressed: () => Navigator.pop(ctx),
                       style: OutlinedButton.styleFrom(
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        side: const BorderSide(color: AppColors.borderGrey),
+                        side: BorderSide(color: Theme.of(context).ext.border),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
-                      child: Text("Cancel", style: GoogleFonts.openSans(fontWeight: FontWeight.w700, color: AppColors.textBlack)),
+                      child: Text("Cancel", style: GoogleFonts.openSans(fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -354,14 +354,14 @@ class _GroupSettingsContent extends StatelessWidget {
     return SliverAppBar(
       expandedHeight: 250, // Increased height
       pinned: true,
-      backgroundColor: AppColors.backgroundLightGrey,
+      backgroundColor: Theme.of(context).ext.backgroundGrey,
       elevation: 0,
       scrolledUnderElevation: 0,
       leading: IconButton(
         icon: Container(
           padding: const EdgeInsets.all(8),
-          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-          child: const Icon(Icons.arrow_back_ios_new, size: 18, color: AppColors.textBlack),
+          decoration: BoxDecoration(color: Theme.of(context).ext.surface, shape: BoxShape.circle),
+          child: Icon(Icons.arrow_back_ios_new, size: 18, color: Theme.of(context).ext.textPrimary),
         ),
         onPressed: onBack,
       ),
@@ -381,7 +381,7 @@ class _GroupSettingsContent extends StatelessWidget {
                 });
               },
               style: TextButton.styleFrom(
-                 backgroundColor: Colors.white,
+                 backgroundColor: Theme.of(context).ext.scaffoldBg,
                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
@@ -405,7 +405,7 @@ class _GroupSettingsContent extends StatelessWidget {
                 height: 90,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
-                  color: Colors.white,
+                  color: Theme.of(context).ext.surface,
                   border: Border.all(color: Colors.white, width: 4),
                   boxShadow: [
                     BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
@@ -420,7 +420,7 @@ class _GroupSettingsContent extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Text(
                 group.name ?? 'Group Name',
-                style: GoogleFonts.openSans(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.textBlack),
+                style: GoogleFonts.openSans(fontSize: 24, fontWeight: FontWeight.w800, color: Theme.of(context).ext.textPrimary),
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -429,15 +429,15 @@ class _GroupSettingsContent extends StatelessWidget {
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+              decoration: BoxDecoration(color: Theme.of(context).ext.surface, borderRadius: BorderRadius.circular(20)),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.people_alt_rounded, size: 14, color: AppColors.textGrey),
+                  Icon(Icons.people_alt_rounded, size: 14, color: Theme.of(context).ext.textSecondary),
                   const SizedBox(width: 6),
                   Text(
                     '${group.members?.length ?? 0} members',
-                    style: GoogleFonts.openSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textGrey),
+                    style: GoogleFonts.openSans(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textSecondary),
                   ),
                 ],
               ),
@@ -449,7 +449,7 @@ class _GroupSettingsContent extends StatelessWidget {
                 style: GoogleFonts.openSans(
                   fontSize: 12, 
                   fontWeight: FontWeight.w500, 
-                  color: AppColors.textGrey.withValues(alpha: 0.7),
+                  color: Theme.of(context).ext.textTertiary,
                 ),
               ),
             ],
@@ -459,21 +459,21 @@ class _GroupSettingsContent extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title, {Color? color}) {
+  Widget _buildSectionHeader(BuildContext context, String title, {Color? color}) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(28, 0, 24, 8),
       child: Text(
         title.toUpperCase(),
-        style: GoogleFonts.openSans(fontSize: 13, fontWeight: FontWeight.w700, color: color ?? AppColors.textGrey, letterSpacing: 0.8),
+        style: GoogleFonts.openSans(fontSize: 13, fontWeight: FontWeight.w700, color: color ?? Theme.of(context).ext.textTertiary, letterSpacing: 0.8),
       ),
     );
   }
   
-  Widget _buildInsetGroup({required List<Widget> children}) {
+  Widget _buildInsetGroup(BuildContext context, {required List<Widget> children}) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -522,12 +522,12 @@ class _GroupSettingsContent extends StatelessWidget {
 
       return Column(children: [
         _buildMemberTile(context, member, balance, isCurrentUser, isFirst, isLast, currentUserRole, isCreator), 
-        if (!isLast) _buildDivider()
+        if (!isLast) _buildDivider(context)
       ]);
     });
   }
 
-  Widget _buildSettingsTile({
+  Widget _buildSettingsTile(BuildContext context, {
     required IconData icon,
     required String title,
     required VoidCallback onTap,
@@ -537,9 +537,9 @@ class _GroupSettingsContent extends StatelessWidget {
     String? subtitle,
     bool isDisabled = false,
   }) {
-    final activeTitleColor = isDisabled ? AppColors.textGrey.withValues(alpha: 0.4) : (titleColor ?? AppColors.textBlack);
-    final activeIconColor = isDisabled ? AppColors.iconGrey.withValues(alpha: 0.4) : (iconColor ?? AppColors.primary);
-    final activeIconBgColor = isDisabled ? AppColors.backgroundLightGrey : (iconBgColor ?? AppColors.primary.withValues(alpha: 0.1));
+    final activeTitleColor = isDisabled ? Theme.of(context).ext.textTertiary : (titleColor ?? Theme.of(context).ext.textPrimary);
+    final activeIconColor = isDisabled ? Theme.of(context).ext.textTertiary : (iconColor ?? AppColors.primary);
+    final activeIconBgColor = isDisabled ? Theme.of(context).ext.backgroundGrey : (iconBgColor ?? AppColors.primary.withValues(alpha: 0.1));
 
     return Material(
       color: Colors.transparent,
@@ -577,7 +577,7 @@ class _GroupSettingsContent extends StatelessWidget {
                         subtitle,
                         style: GoogleFonts.openSans(
                           fontSize: 12, 
-                          color: AppColors.textGrey.withValues(alpha: 0.6),
+                          color: Theme.of(context).ext.textTertiary,
                           height: 1.3,
                         ),
                       ),
@@ -586,7 +586,7 @@ class _GroupSettingsContent extends StatelessWidget {
                 ),
               ),
               if (!isDisabled)
-                Icon(Icons.arrow_forward_ios_rounded, color: AppColors.borderGrey.withValues(alpha: 0.5), size: 16),
+                Icon(Icons.arrow_forward_ios_rounded, color: Theme.of(context).ext.border.withValues(alpha: 0.5), size: 16),
             ],
           ),
         ),
@@ -616,7 +616,7 @@ class _GroupSettingsContent extends StatelessWidget {
               AppAvatar(
                 url: member.avtar,
                 radius: 24,
-                backgroundColor: AppColors.backgroundLightGrey,
+                backgroundColor: Theme.of(context).ext.backgroundGrey,
                 iconColor: Colors.grey.shade400,
               ),
               const SizedBox(width: 16),
@@ -629,13 +629,13 @@ class _GroupSettingsContent extends StatelessWidget {
                         Flexible(
                           child: Text(
                             member.fullName ?? "Unknown",
-                            style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+                            style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         if (isCurrentUser) ...[
                              const SizedBox(width: 6),
-                             Text("(you)", style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w500)),
+                             Text("(you)", style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).ext.textSecondary, fontWeight: FontWeight.w500)),
                         ],
                         if (member.role?.toLowerCase() == 'owner' || member.role?.toLowerCase() == 'admin') ...[
                           const SizedBox(width: 8),
@@ -660,7 +660,7 @@ class _GroupSettingsContent extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       member.email ?? "-",
-                      style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                      style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary, fontWeight: FontWeight.w500),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -733,11 +733,11 @@ class _GroupSettingsContent extends StatelessWidget {
     );
   }
 
-  Widget _buildDivider() {
+  Widget _buildDivider(BuildContext context) {
     return Divider(
       height: 1,
       thickness: 1,
-      color: AppColors.borderGrey.withValues(alpha: 0.2),
+      color: Theme.of(context).ext.border.withValues(alpha: 0.2),
       indent: 84, // Align with text start
       endIndent: 0,
     );
@@ -761,13 +761,13 @@ class _GroupSettingsShimmer extends StatelessWidget {
           SliverAppBar(
             expandedHeight: 250,
             pinned: true,
-            backgroundColor: AppColors.backgroundLightGrey,
+            backgroundColor: Theme.of(context).ext.backgroundGrey,
             elevation: 0,
             leading: IconButton(
               icon: Container(
                 padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                child: const Icon(Icons.arrow_back_ios_new, size: 18, color: AppColors.textBlack),
+                decoration: BoxDecoration(color: Theme.of(context).ext.surface, shape: BoxShape.circle),
+                child: Icon(Icons.arrow_back_ios_new, size: 18, color: Theme.of(context).ext.textPrimary),
               ),
               onPressed: () => Navigator.pop(context),
             ),
@@ -799,13 +799,13 @@ class _GroupSettingsShimmer extends StatelessWidget {
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).ext.surface,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
                   children: [
                     _buildFakeSettingsTile(),
-                    Divider(height: 1, thickness: 1, color: AppColors.borderGrey.withValues(alpha: 0.2), indent: 84, endIndent: 0),
+                    Divider(height: 1, thickness: 1, color: Theme.of(context).ext.border.withValues(alpha: 0.2), indent: 84, endIndent: 0),
                     _buildFakeSettingsTile(),
                   ],
                 ),
@@ -820,14 +820,14 @@ class _GroupSettingsShimmer extends StatelessWidget {
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).ext.surface,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
                   children: [
                     for (int i = 0; i < 3; i++) ...[
                       _buildFakeMemberTile(),
-                      if (i < 2) Divider(height: 1, thickness: 1, color: AppColors.borderGrey.withValues(alpha: 0.2), indent: 84, endIndent: 0),
+                      if (i < 2) Divider(height: 1, thickness: 1, color: Theme.of(context).ext.border.withValues(alpha: 0.2), indent: 84, endIndent: 0),
                     ],
                   ],
                 ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/presentation/widgets/base_screen.dart';
@@ -42,22 +43,22 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
             },
             child: BaseScreen(
               appBar: AppBar(
-                backgroundColor: Colors.white,
+                backgroundColor: Theme.of(context).ext.scaffoldBg,
                 surfaceTintColor: Colors.transparent,
                 elevation: 0,
                 scrolledUnderElevation: 0,
                 centerTitle: false,
-                iconTheme: const IconThemeData(color: AppColors.textBlack),
+                iconTheme: IconThemeData(color: Theme.of(context).ext.textPrimary),
                 title: Text(
                   'Friend Requests',
                   style: GoogleFonts.outfit(
-                    color: AppColors.textBlack,
+                    color: Theme.of(context).ext.textPrimary,
                     fontWeight: FontWeight.w700,
                     fontSize: 20,
                   ),
                 ),
               ),
-              backgroundColor: Colors.white,
+              backgroundColor: Theme.of(context).ext.scaffoldBg,
               child: _buildBody(state),
             ),
           );
@@ -82,7 +83,7 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
               fontSize: 15,
-              color: AppColors.textGrey,
+              color: Theme.of(context).ext.textSecondary,
             ),
           ),
         ),

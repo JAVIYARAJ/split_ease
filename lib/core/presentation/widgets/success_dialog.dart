@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 
@@ -57,7 +58,7 @@ class _SuccessDialogState extends State<SuccessDialog> with SingleTickerProvider
           Container(
             padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).ext.surface,
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
@@ -76,7 +77,7 @@ class _SuccessDialogState extends State<SuccessDialog> with SingleTickerProvider
                   style: GoogleFonts.openSans(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textBlack,
+                    color: Theme.of(context).ext.textPrimary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -87,7 +88,7 @@ class _SuccessDialogState extends State<SuccessDialog> with SingleTickerProvider
                   style: GoogleFonts.openSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textGrey,
+                    color: Theme.of(context).ext.textSecondary,
                     height: 1.5,
                   ),
                   textAlign: TextAlign.center,
@@ -115,7 +116,7 @@ class _SuccessDialogState extends State<SuccessDialog> with SingleTickerProvider
                           style: GoogleFonts.openSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                            color: Theme.of(context).ext.surface,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -137,8 +138,8 @@ class _SuccessDialogState extends State<SuccessDialog> with SingleTickerProvider
                 width: 100,
                 height: 100,
                 padding: const EdgeInsets.all(4), // Border width
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).ext.surface,
                   shape: BoxShape.circle,
                 ),
                 child: Container(
@@ -150,9 +151,9 @@ class _SuccessDialogState extends State<SuccessDialog> with SingleTickerProvider
                     ),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.check_rounded,
-                    color: Colors.white,
+                    color: Theme.of(context).ext.surface,
                     size: 60,
                   ),
                 ),

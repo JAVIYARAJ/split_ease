@@ -62,6 +62,7 @@ import 'package:split_ease/features/splash/domain/repository/splash_repository.d
 import 'package:split_ease/features/splash/domain/usecases/user_active_session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/common/cubit/app_user_cubit.dart';
+import 'core/common/cubit/theme_cubit.dart';
 import 'core/secrets/app_secrets.dart';
 import 'core/services/image_picker_service.dart';
 import 'core/services/realtime_service.dart';
@@ -165,6 +166,7 @@ Future<void> _core() async {
 
   // Core Cubits
   sl.registerLazySingleton(() => AppUserCubit());
+  sl.registerLazySingleton(() => ThemeCubit(sl<SharedPreferences>()));
 }
 
 

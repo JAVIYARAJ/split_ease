@@ -37,7 +37,7 @@ class FriendsRemoteDataSourceImpl implements FriendsRemoteDataSource {
   @override
   Future<List<FriendModel>> getMyFriends() async {
     try {
-      final response = await client.rpc('get_my_friends_rpc_v2');
+      final response = await client.rpc('get_my_friends_rpc');
       return (response as List).map((e) => FriendModel.fromJson(e)).toList();
     }catch(error){
       throw ServerException(message: ErrorMessageUtils.generate(error));

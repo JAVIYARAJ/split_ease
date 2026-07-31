@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/config/app_configs.dart';
@@ -46,18 +47,18 @@ class _ExpenseNotePageState extends State<ExpenseNotePage> {
     final double progress = (_charCount / widget.maxCharacters).clamp(0.0, 1.0);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).ext.scaffoldBg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).ext.scaffoldBg,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close_rounded, color: AppColors.textBlack, size: 26),
+          icon: Icon(Icons.close_rounded, color: Theme.of(context).ext.textPrimary, size: 26),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           "Notes",
-          style: GoogleFonts.outfit(color: AppColors.textBlack, fontWeight: FontWeight.w700, fontSize: 18),
+          style: GoogleFonts.outfit(color: Theme.of(context).ext.textPrimary, fontWeight: FontWeight.w700, fontSize: 18),
         ),
         centerTitle: true,
         actions: [
@@ -83,10 +84,10 @@ class _ExpenseNotePageState extends State<ExpenseNotePage> {
           // Character count progress header
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
             decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(bottom: BorderSide(color: AppColors.borderGrey.withValues(alpha: 0.1), width: 1)),
+              color: Theme.of(context).ext.surface,
+              border: Border(bottom: BorderSide(color: Theme.of(context).ext.border.withValues(alpha: 0.2), width: 1)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,12 +96,11 @@ class _ExpenseNotePageState extends State<ExpenseNotePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "Expanse notes",
+                      "Expense notes",
                       style: GoogleFonts.outfit(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textGrey.withValues(alpha: 0.6),
-                        letterSpacing: 1.2,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).ext.textPrimary,
                       ),
                     ),
                     Text(
@@ -118,8 +118,8 @@ class _ExpenseNotePageState extends State<ExpenseNotePage> {
                   borderRadius: BorderRadius.circular(10),
                   child: LinearProgressIndicator(
                     value: progress,
-                    minHeight: 10,
-                    backgroundColor: AppColors.borderGrey.withValues(alpha: 0.05),
+                    minHeight: 8,
+                    backgroundColor: Theme.of(context).ext.border.withValues(alpha: 0.15),
                     valueColor: AlwaysStoppedAnimation<Color>(
                       isOverLimit ? AppColors.errorRed : AppColors.primaryTeal,
                     ),
@@ -129,11 +129,19 @@ class _ExpenseNotePageState extends State<ExpenseNotePage> {
             ),
           ),
 
-          // Note Field Area - Pure White for "Good Space" feel
+          // Note Field Area
           Expanded(
             child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20), 
-              color: Colors.white, 
+              margin: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).ext.inputFill,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isOverLimit ? AppColors.errorRed : Theme.of(context).ext.border.withValues(alpha: 0.4),
+                  width: 1.5,
+                ),
+              ),
               child: TextField(
                 controller: _controller,
                 maxLines: null,
@@ -143,20 +151,20 @@ class _ExpenseNotePageState extends State<ExpenseNotePage> {
                 cursorColor: AppColors.primaryTeal,
                 cursorWidth: 2,
                 style: GoogleFonts.outfit(
-                  fontSize: 18, // Slightly larger font for better space feel
-                  color: AppColors.textBlack.withValues(alpha: 0.9),
-                  height: 1.6,
+                  fontSize: 16,
+                  color: Theme.of(context).ext.textPrimary,
+                  height: 1.5,
                   fontWeight: FontWeight.w500,
                 ),
                 decoration: InputDecoration(
                   hintText: "What was this for?...",
                   hintStyle: GoogleFonts.outfit(
-                    color: AppColors.textGrey.withValues(alpha: 0.4),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).ext.textTertiary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
                   ),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.all(10),
+                  contentPadding: EdgeInsets.zero,
                 ),
               ),
             ),
@@ -171,12 +179,12 @@ class _ExpenseNotePageState extends State<ExpenseNotePage> {
               bottom: MediaQuery.of(context).padding.bottom + 12
             ),
             decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: AppColors.borderGrey.withValues(alpha: 0.1), width: 1)),
+              color: Theme.of(context).ext.surface,
+              border: Border(top: BorderSide(color: Theme.of(context).ext.border.withValues(alpha: 0.1), width: 1)),
             ),
             child: Row(
               children: [
-                Icon(Icons.info_outline_rounded, size: 16, color: AppColors.textGrey.withValues(alpha: 0.5)),
+                Icon(Icons.info_outline_rounded, size: 16, color: Theme.of(context).ext.textSecondary),
                 const SizedBox(width: 8),
                 Text(
                    isOverLimit 
@@ -185,7 +193,7 @@ class _ExpenseNotePageState extends State<ExpenseNotePage> {
                    style: GoogleFonts.outfit(
                      fontSize: 12,
                      fontWeight: FontWeight.w600,
-                     color: isOverLimit ? AppColors.errorRed : AppColors.textGrey.withValues(alpha: 0.5),
+                     color: isOverLimit ? AppColors.errorRed : Theme.of(context).ext.textSecondary,
                    ),
                 ),
               ],

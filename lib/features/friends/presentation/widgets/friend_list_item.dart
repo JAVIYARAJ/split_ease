@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -17,7 +18,7 @@ class FriendListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color statusColor = AppColors.textGrey;
+    Color statusColor = Theme.of(context).ext.textTertiary;
     String subtitleText = "";
     bool showBalance = true;
 
@@ -43,9 +44,9 @@ class FriendListItem extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderGreyLight),
+        border: Border.all(color: Theme.of(context).ext.borderLight),
       ),
       child: Material(
         color: Colors.transparent,
@@ -66,8 +67,8 @@ class FriendListItem extends StatelessWidget {
                       child: AppAvatar(
                         url: friend.imageUrl,
                         radius: 26,
-                        backgroundColor: AppColors.backgroundLightGrey,
-                        iconColor: AppColors.textGrey.withValues(alpha: 0.7),
+                        backgroundColor: Theme.of(context).ext.backgroundGrey,
+                        iconColor: Theme.of(context).ext.textTertiary,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -84,7 +85,7 @@ class FriendListItem extends StatelessWidget {
                               style: GoogleFonts.outfit(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.textBlack,
+                                color: Theme.of(context).ext.textPrimary,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -94,7 +95,7 @@ class FriendListItem extends StatelessWidget {
                               subtitleText,
                               style: GoogleFonts.outfit(
                                 fontSize: 13,
-                                color: showBalance ? statusColor : AppColors.textGrey,
+                                color: showBalance ? statusColor : Theme.of(context).ext.textTertiary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -128,14 +129,14 @@ class FriendListItem extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         for (int i = 0; i < friend.groupBreakdown.length; i++)
-                          _buildNestedBalanceRow(
+                          _buildNestedBalanceRow(context, 
                             contextName: friend.groupBreakdown[i].groupName,
                             balance: friend.groupBreakdown[i].balance,
                             formatter: formatter,
                             isLast: (i == friend.groupBreakdown.length - 1) && friend.nonGroupBalance == 0,
                           ),
                         if (friend.nonGroupBalance != 0)
-                          _buildNestedBalanceRow(
+                          _buildNestedBalanceRow(context, 
                             contextName: "Non-group expense",
                             balance: friend.nonGroupBalance,
                             formatter: formatter,
@@ -152,7 +153,7 @@ class FriendListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildNestedBalanceRow({
+  Widget _buildNestedBalanceRow(BuildContext context, {
     required String contextName,
     required double balance,
     required NumberFormat formatter,
@@ -171,7 +172,10 @@ class FriendListItem extends StatelessWidget {
         children: [
           CustomPaint(
             size: const Size(20, double.infinity),
-            painter: _TreeBranchPainter(isLast: isLast),
+            painter: _TreeBranchPainter(
+              isLast: isLast,
+              color: Theme.of(context).ext.border,
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -184,7 +188,7 @@ class FriendListItem extends StatelessWidget {
                       text: "$textStatus ",
                       style: GoogleFonts.outfit(
                         fontSize: 14,
-                        color: AppColors.textGrey,
+                        color: Theme.of(context).ext.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -200,7 +204,7 @@ class FriendListItem extends StatelessWidget {
                       text: "in $contextName",
                       style: GoogleFonts.outfit(
                         fontSize: 14,
-                        color: AppColors.textGrey,
+                        color: Theme.of(context).ext.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -219,13 +223,14 @@ class FriendListItem extends StatelessWidget {
 
 class _TreeBranchPainter extends CustomPainter {
   final bool isLast;
+  final Color color;
 
-  _TreeBranchPainter({required this.isLast});
+  _TreeBranchPainter({required this.isLast, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.grey.shade300
+      ..color = color
       ..strokeWidth = 1.0
       ..style = PaintingStyle.stroke;
 

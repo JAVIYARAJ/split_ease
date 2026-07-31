@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -88,9 +89,9 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
             }
           },
           child: BaseScreen(
-            backgroundColor: AppColors.backgroundWhite,
+            backgroundColor: Theme.of(context).ext.scaffoldBg,
             appBar: AppBar(
-              backgroundColor: Colors.white,
+              backgroundColor: Theme.of(context).ext.scaffoldBg,
               elevation: 0,
               scrolledUnderElevation: 0,
               centerTitle: true,
@@ -100,7 +101,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
               title: Text(
                 state.isEditMode ? "Edit Group" : "Create Group",
                 style: GoogleFonts.outfit(
-                  color: AppColors.textBlack,
+                  color: Theme.of(context).ext.textPrimary,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                 ),
@@ -146,7 +147,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
       style: GoogleFonts.outfit(
         fontSize: 11,
         fontWeight: FontWeight.w800,
-        color: AppColors.textGrey.withValues(alpha: 0.4),
+        color: Theme.of(context).ext.textTertiary,
         letterSpacing: 1.2,
       ),
     );
@@ -164,8 +165,8 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
               height: 100,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.backgroundLightGrey,
-                border: Border.all(color: Colors.white, width: 3),
+                color: Theme.of(context).ext.inputFill,
+                border: Border.all(color: Theme.of(context).ext.border, width: 3),
                 image: state.groupImage != null
                     ? DecorationImage(image: FileImage(state.groupImage!), fit: BoxFit.cover)
                     : (state.existingIconUrl != null
@@ -176,7 +177,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                 ],
               ),
               child: state.groupImage == null && state.existingIconUrl == null
-                  ? Icon(Icons.camera_alt_rounded, color: AppColors.textGrey.withValues(alpha: 0.2), size: 32)
+                  ? Icon(Icons.camera_alt_rounded, color: Theme.of(context).ext.textTertiary, size: 32)
                   : null,
             ),
             Container(
@@ -193,19 +194,19 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   Widget _buildGroupNameInput(CreateGroupState state) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.backgroundLightGrey.withValues(alpha: 0.5),
+        color: Theme.of(context).ext.inputFill,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.3)),
+        border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: TextField(
         controller: _groupNameController,
         maxLines: 1,
-        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary),
         cursorColor: AppColors.primary,
         decoration: InputDecoration(
           hintText: "E.g. Weekend Trip",
-          hintStyle: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.textGrey.withValues(alpha: 0.3)),
+          hintStyle: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w500, color: Theme.of(context).ext.textTertiary),
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
@@ -227,26 +228,26 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
         return Container(
           height: 68,
           decoration: BoxDecoration(
-            color: AppColors.backgroundLightGrey.withValues(alpha: 0.5),
+            color: Theme.of(context).ext.inputFill,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.borderGrey.withValues(alpha: 0.2)),
+            border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
           ),
           child: Stack(
             children: [
               // Sliding Indicator
               AnimatedPositioned(
-                duration: const Duration(milliseconds: 400),
-                curve: Curves.easeOutExpo,
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeOutCubic,
                 left: (selectedIndex * segmentWidth) + 4,
                 top: 4,
                 bottom: 4,
                 width: segmentWidth - 8,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.primary,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10, offset: const Offset(0, 4)),
+                      BoxShadow(color: AppColors.primary.withValues(alpha: 0.35), blurRadius: 10, offset: const Offset(0, 4)),
                     ],
                   ),
                 ),
@@ -281,7 +282,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
           children: [
             AnimatedIconTheme(
               duration: const Duration(milliseconds: 300),
-              color: isSelected ? AppColors.primary : AppColors.textGrey,
+              color: isSelected ? Colors.white : Theme.of(context).ext.textTertiary,
               size: 20,
               child: Icon(icon),
             ),
@@ -289,7 +290,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 300),
               style: GoogleFonts.outfit(
-                color: isSelected ? AppColors.textBlack : AppColors.textGrey,
+                color: isSelected ? Colors.white : Theme.of(context).ext.textTertiary,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                 fontSize: 12,
               ),
@@ -305,9 +306,9 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.05),
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -337,19 +338,19 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                   child: Text(
                     state.inviteCode,
                     key: ValueKey<String>(state.inviteCode),
-                    style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w800, letterSpacing: 2, color: AppColors.textBlack),
+                    style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w800, letterSpacing: 2, color: Theme.of(context).ext.textPrimary),
                   ),
                 ),
               ),
               IconButton(
                 onPressed: () => ClipboardUtils.copyToClipboard(context, state.inviteCode, successMessage: "Code copied!"),
                 icon: const Icon(Icons.copy_rounded, color: AppColors.primary, size: 20),
-                style: IconButton.styleFrom(backgroundColor: Colors.white, padding: const EdgeInsets.all(10)),
+                style: IconButton.styleFrom(backgroundColor: Theme.of(context).ext.scaffoldBg, padding: const EdgeInsets.all(10)),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Text("Invite friends to join your group using this code.", style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey.withValues(alpha: 0.7))),
+          Text("Invite friends to join your group using this code.", style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).ext.textSecondary)),
         ],
       ),
     );
@@ -358,7 +359,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   Widget _buildFloatingSubmitButton(BuildContext context, CreateGroupState state) {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-      color: Colors.white,
+      color: Theme.of(context).ext.surface,
       child: SizedBox(
         width: double.infinity,
         height: 52,
@@ -413,7 +414,7 @@ class _DiscardDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).ext.scaffoldBg,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -428,13 +429,13 @@ class _DiscardDialog extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               "Unsaved Changes",
-              style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textBlack),
+              style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).ext.textPrimary),
             ),
             const SizedBox(height: 12),
             Text(
               "You have unsaved changes that will be lost if you leave this page.",
               textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textGrey, height: 1.5),
+              style: GoogleFonts.outfit(fontSize: 14, color: Theme.of(context).ext.textSecondary, height: 1.5),
             ),
             const SizedBox(height: 32),
             Column(
@@ -462,7 +463,7 @@ class _DiscardDialog extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
-                    child: Text("Continue Editing", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textGrey)),
+                    child: Text("Continue Editing", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textSecondary)),
                   ),
                 ),
               ],

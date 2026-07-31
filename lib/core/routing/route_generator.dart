@@ -13,40 +13,40 @@ import 'package:split_ease/features/home/presentation/pages/home_page.dart';
 import 'package:split_ease/features/splash/presentation/cubit/splash_cubit.dart';
 import 'package:split_ease/features/welcome/presentation/cubit/welcome_cubit.dart';
 import 'package:split_ease/features/welcome/presentation/pages/welcome_page.dart';
+
+import '../../features/account/presentation/bloc/category_limits/category_limits_bloc.dart';
+import '../../features/account/presentation/pages/category_limits_page.dart';
+import '../../features/account/presentation/pages/user_qr_page.dart';
+import '../../features/auth/domain/entities/user_entity.dart';
+import '../../features/expenses/presentation/bloc/personal_expenses/personal_expenses_bloc.dart';
+import '../../features/expenses/presentation/bloc/settle_up/settle_up_cubit.dart';
+// Import pages
+import '../../features/expenses/presentation/pages/add_expense_page.dart';
+import '../../features/expenses/presentation/pages/category_selection_page.dart';
+import '../../features/expenses/presentation/pages/date_selection_page.dart';
+import '../../features/expenses/presentation/pages/expense_note_page.dart';
+import '../../features/expenses/presentation/pages/expense_pdf_preview_page.dart';
+import '../../features/expenses/presentation/pages/payer_selection_page.dart';
+import '../../features/expenses/presentation/pages/personal_expenses_page.dart';
+import '../../features/expenses/presentation/pages/record_payment_page.dart';
+import '../../features/expenses/presentation/pages/settle_up_selection_page.dart';
+import '../../features/expenses/presentation/pages/split_options_page.dart';
+import '../../features/friends/presentation/bloc/friend_detail_bloc.dart';
+import '../../features/friends/presentation/pages/friend_detail_page.dart';
+import '../../features/friends/presentation/pages/friend_requests_page.dart';
 import '../../features/groups/presentation/bloc/create_group_bloc.dart';
-import '../../features/home/presentation/bloc/home_bloc.dart';
-import '../../features/splash/presentation/pages/splash_pages.dart';
-import '../../injection_container.dart';
+import '../../features/groups/presentation/pages/add_members_page.dart';
 import '../../features/groups/presentation/pages/create_group_page.dart';
 import '../../features/groups/presentation/pages/enter_invite_code_page.dart';
 import '../../features/groups/presentation/pages/group_detail_page.dart';
-import '../../features/friends/presentation/bloc/friend_detail_bloc.dart';
-import '../../features/friends/presentation/pages/friend_detail_page.dart';
-import 'app_routes.dart';
-
-// Import pages
-import '../../features/expenses/presentation/pages/add_expense_page.dart';
-import '../../features/expenses/presentation/pages/payer_selection_page.dart';
-import '../../features/expenses/presentation/pages/split_options_page.dart';
-import '../../features/expenses/presentation/pages/date_selection_page.dart';
-import '../../features/groups/presentation/pages/group_settings_page.dart';
-import '../../features/groups/presentation/pages/add_members_page.dart';
-import '../../features/friends/presentation/pages/friend_requests_page.dart';
-import '../../features/groups/presentation/pages/qr_scanner_page.dart';
-import '../../features/profile/presentation/pages/edit_profile_page.dart';
-import '../../features/account/presentation/pages/user_qr_page.dart';
-import '../../features/expenses/presentation/pages/expense_pdf_preview_page.dart';
-import '../../features/expenses/presentation/pages/expense_note_page.dart';
-import '../../features/auth/domain/entities/user_entity.dart';
-import '../../features/expenses/presentation/pages/settle_up_selection_page.dart';
-import '../../features/expenses/presentation/pages/record_payment_page.dart';
-import '../../features/expenses/presentation/bloc/settle_up/settle_up_cubit.dart';
 import '../../features/groups/presentation/pages/group_qr_page.dart';
-import '../../features/expenses/presentation/pages/category_selection_page.dart';
-import '../../features/account/presentation/pages/category_limits_page.dart';
-import '../../features/account/presentation/bloc/category_limits/category_limits_bloc.dart';
-import '../../features/expenses/presentation/pages/personal_expenses_page.dart';
-import '../../features/expenses/presentation/bloc/personal_expenses/personal_expenses_bloc.dart';
+import '../../features/groups/presentation/pages/group_settings_page.dart';
+import '../../features/groups/presentation/pages/qr_scanner_page.dart';
+import '../../features/home/presentation/bloc/home_bloc.dart';
+import '../../features/profile/presentation/pages/edit_profile_page.dart';
+import '../../features/splash/presentation/pages/splash_pages.dart';
+import '../../injection_container.dart';
+import 'app_routes.dart';
 
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {

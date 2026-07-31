@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 
 class AppLoader extends StatelessWidget {
@@ -18,7 +19,7 @@ class AppLoader extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget loader = CircularProgressIndicator.adaptive(
       valueColor: AlwaysStoppedAnimation<Color>(color ?? AppColors.primaryTeal),
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).ext.scaffoldBg,
     );
 
     if (isOverlay) {

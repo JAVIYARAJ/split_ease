@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
@@ -47,21 +48,21 @@ class _AddMembersPageState extends State<AddMembersPage> {
           final selectedCount = state.selectedUserIds.length;
 
           return Scaffold(
-            backgroundColor: Colors.white,
+            backgroundColor: Theme.of(context).ext.scaffoldBg,
             appBar: AppBar(
-              backgroundColor: Colors.white,
+              backgroundColor: Theme.of(context).ext.scaffoldBg,
               surfaceTintColor: Colors.transparent,
               elevation: 0,
               scrolledUnderElevation: 0,
               centerTitle: true,
               leading: IconButton(
-                icon: const Icon(Icons.close, color: AppColors.textBlack),
+                icon: Icon(Icons.close, color: Theme.of(context).ext.textPrimary),
                 onPressed: () => Navigator.pop(context),
               ),
               title: Text(
                 'Add Members',
                 style: GoogleFonts.openSans(
-                  color: AppColors.textBlack,
+                  color: Theme.of(context).ext.textPrimary,
                   fontWeight: FontWeight.w700,
                   fontSize: 18,
                 ),
@@ -86,7 +87,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
                     label: Text(
                       "Add ($selectedCount)",
                       style: GoogleFonts.openSans(
-                        color: Colors.white,
+                        color: Theme.of(context).ext.surface,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
@@ -112,7 +113,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
           child: Text(
             state.errorMessage,
             textAlign: TextAlign.center,
-            style: GoogleFonts.openSans(fontSize: 15, color: AppColors.textGrey),
+            style: GoogleFonts.openSans(fontSize: 15, color: Theme.of(context).ext.textSecondary),
           ),
         ),
       );
@@ -170,13 +171,13 @@ class _AddMembersPageState extends State<AddMembersPage> {
           child: TextField(
             controller: _searchController,
             onChanged: (value) => context.read<AddMembersBloc>().add(ChangeSearchQuery(value)),
-            style: GoogleFonts.openSans(fontSize: 16, color: AppColors.textBlack),
+            style: GoogleFonts.openSans(fontSize: 16, color: Theme.of(context).ext.textPrimary),
             decoration: InputDecoration(
               hintText: 'Search friends by name...',
-              hintStyle: GoogleFonts.openSans(fontSize: 16, color: AppColors.textGrey.withValues(alpha: 0.6)),
-              prefixIcon: Icon(Icons.search, color: AppColors.textGrey.withValues(alpha: 0.6), size: 24),
+              hintStyle: GoogleFonts.openSans(fontSize: 16, color: Theme.of(context).ext.textTertiary),
+              prefixIcon: Icon(Icons.search, color: Theme.of(context).ext.textTertiary, size: 24),
               filled: true,
-              fillColor: AppColors.backgroundLightGrey,
+              fillColor: Theme.of(context).ext.inputFill,
               contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -227,11 +228,11 @@ class _AddMembersPageState extends State<AddMembersPage> {
                   padding: const EdgeInsets.only(top: 64),
                   child: Column(
                     children: [
-                      Icon(Icons.search_off_rounded, size: 48, color: AppColors.textGrey.withValues(alpha: 0.3)),
+                      Icon(Icons.search_off_rounded, size: 48, color: Theme.of(context).ext.textTertiary),
                       const SizedBox(height: 16),
                       Text(
                         state.searchQuery.isNotEmpty ? 'No friends match "${state.searchQuery}"' : 'No friends found',
-                        style: GoogleFonts.openSans(fontSize: 16, color: AppColors.textGrey),
+                        style: GoogleFonts.openSans(fontSize: 16, color: Theme.of(context).ext.textSecondary),
                       ),
                     ],
                   ),
@@ -251,7 +252,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
         style: GoogleFonts.openSans(
           fontSize: 12,
           fontWeight: FontWeight.w700,
-          color: AppColors.textGrey,
+          color: Theme.of(context).ext.textSecondary,
           letterSpacing: 1.0,
         ),
       ),
@@ -278,7 +279,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
               AppAvatar(
                 url: friend.avatarUrl,
                 radius: 25,
-                backgroundColor: AppColors.backgroundLightGrey,
+                backgroundColor: Theme.of(context).ext.backgroundGrey,
                 iconColor: AppColors.primaryTeal,
               ),
               const SizedBox(width: 16),
@@ -293,7 +294,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
                       style: GoogleFonts.openSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: isDisabled ? AppColors.textGrey : AppColors.textBlack,
+                        color: isDisabled ? Theme.of(context).ext.textTertiary : Theme.of(context).ext.textPrimary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -305,7 +306,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
                         style: GoogleFonts.openSans(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.textGrey.withValues(alpha: 0.8),
+                          color: Theme.of(context).ext.textTertiary,
                         ),
                       ),
                     ] else if (isSelected) ...[
@@ -343,7 +344,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
                       shape: BoxShape.circle,
                       color: isSelected ? AppColors.primaryTeal : Colors.transparent,
                       border: Border.all(
-                        color: isSelected ? AppColors.primaryTeal : AppColors.borderGrey,
+                        color: isSelected ? AppColors.primaryTeal : Theme.of(context).ext.border,
                         width: 2,
                       ),
                     ),
@@ -353,7 +354,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
                   ),
                 )
               else
-                 Icon(Icons.check_circle, color: AppColors.textGrey.withValues(alpha: 0.3), size: 24),
+                 Icon(Icons.check_circle, color: Theme.of(context).ext.textTertiary, size: 24),
             ],
           ),
         ),
@@ -382,7 +383,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
           border: Border.all(
             color: isSelected 
                 ? roleColor
-                : AppColors.borderGrey.withValues(alpha: 0.5),
+                : Theme.of(context).ext.border.withValues(alpha: 0.5),
             width: 1,
           ),
           borderRadius: BorderRadius.circular(12),
@@ -393,7 +394,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
             Icon(
               icon,
               size: 14,
-              color: isSelected ? roleColor : AppColors.textGrey,
+              color: isSelected ? roleColor : Theme.of(context).ext.textTertiary,
             ),
             const SizedBox(width: 4),
             Text(
@@ -401,7 +402,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
               style: GoogleFonts.outfit(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
-                color: isSelected ? roleColor : AppColors.textGrey,
+                color: isSelected ? roleColor : Theme.of(context).ext.textTertiary,
               ),
             ),
           ],

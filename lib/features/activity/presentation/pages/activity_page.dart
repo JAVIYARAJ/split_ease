@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -30,7 +31,7 @@ class ActivityPage extends StatelessWidget {
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).ext.backgroundGrey,
         body: BlocBuilder<ActivityBloc, ActivityState>(
           builder: (context, state) {
             final isLoading = state is ActivityLoading;
@@ -84,7 +85,7 @@ class ActivityPage extends StatelessWidget {
 
                             if (item is String) {
                               return _buildStaggeredWrapper(delay: delay,
-                                  child: _buildSectionHeader(item));
+                                  child: _buildSectionHeader(context, item));
                             }
 
                             final activity = item as ActivityEntity;
@@ -157,7 +158,7 @@ class ActivityPage extends StatelessWidget {
   Widget _buildAppBar(BuildContext context) {
     return SliverAppBar(
       pinned: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).ext.backgroundGrey,
       elevation: 0,
       scrolledUnderElevation: 0,
       toolbarHeight: 64,
@@ -173,14 +174,14 @@ class ActivityPage extends StatelessWidget {
               "Recent Activity",
               style: GoogleFonts.outfit(fontSize: 24,
                   fontWeight: FontWeight.w900,
-                  color: AppColors.textBlack,
+                  color: Theme.of(context).ext.textPrimary,
                   letterSpacing: -1.0),
             ),
             Text(
               "Track transactions & updates",
               style: GoogleFonts.outfit(fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.textGrey),
+                  color: Theme.of(context).ext.textSecondary),
               maxLines: 1,
             ),
           ],
@@ -189,9 +190,9 @@ class ActivityPage extends StatelessWidget {
       // actions: [
       //   IconButton(
       //     onPressed: () {},
-      //     icon: const Icon(Icons.search_rounded, color: AppColors.textBlack),
+      //     icon: Icon(Icons.search_rounded, color: Theme.of(context).ext.textPrimary),
       //     style: IconButton.styleFrom(
-      //         backgroundColor: AppColors.backgroundLightGrey,
+      //         backgroundColor: Theme.of(context).ext.backgroundGrey,
       //         padding: const EdgeInsets.all(12)),
       //   ),
       //   const SizedBox(width: 16),
@@ -216,15 +217,58 @@ class ActivityPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-      child: Text(
-        title,
-        style: GoogleFonts.outfit(fontSize: 12,
-            fontWeight: FontWeight.w900,
-            color: AppColors.textBlack,
-            letterSpacing: 2.0),
+      padding: const EdgeInsets.fromLTRB(2, 20, 2, 10),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.primaryTeal.withValues(alpha: 0.12),
+                  AppColors.primaryTeal.withValues(alpha: 0.04),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppColors.primaryTeal.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primaryTeal,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  title.toUpperCase(),
+                  style: GoogleFonts.outfit(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.primaryTeal,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Container(
+              height: 1,
+              color: Theme.of(context).ext.border.withValues(alpha: 0.3),
+            ),
+          ),
+        ],
       ),
     );
   }

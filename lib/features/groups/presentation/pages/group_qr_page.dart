@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -64,19 +65,19 @@ class _GroupQrPageState extends State<GroupQrPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).ext.scaffoldBg,
       appBar: AppBar(
         title: Text(
           "Group QR Code",
           style: GoogleFonts.outfit(
-            color: AppColors.textBlack,
+            color: Theme.of(context).ext.textPrimary,
             fontWeight: FontWeight.w900,
             fontSize: 20,
             letterSpacing: -0.5,
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).ext.scaffoldBg,
         elevation: 0,
         scrolledUnderElevation: 0,
         leadingWidth: 80,
@@ -95,7 +96,7 @@ class _GroupQrPageState extends State<GroupQrPage> {
                 child: Container(
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).ext.surface,
                     borderRadius: BorderRadius.circular(32),
                     boxShadow: [
                       BoxShadow(
@@ -116,11 +117,11 @@ class _GroupQrPageState extends State<GroupQrPage> {
                         backgroundColor: Colors.white,
                         eyeStyle: const QrEyeStyle(
                           eyeShape: QrEyeShape.square,
-                          color: AppColors.primary,
+                          color: Colors.black,
                         ),
                         dataModuleStyle: const QrDataModuleStyle(
                           dataModuleShape: QrDataModuleShape.square,
-                          color: AppColors.textBlack,
+                          color: Colors.black,
                         ),
                       ),
                       const SizedBox(height: 28),
@@ -129,7 +130,7 @@ class _GroupQrPageState extends State<GroupQrPage> {
                         style: GoogleFonts.outfit(
                           fontSize: 24,
                           fontWeight: FontWeight.w900,
-                          color: AppColors.textBlack,
+                          color: Theme.of(context).ext.textPrimary,
                           letterSpacing: -0.5,
                         ),
                         textAlign: TextAlign.center,
@@ -140,7 +141,7 @@ class _GroupQrPageState extends State<GroupQrPage> {
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textBlack,
+                          color: Theme.of(context).ext.textPrimary,
                           letterSpacing: 2.0,
                         ),
                       ),
@@ -171,7 +172,7 @@ class _GroupQrPageState extends State<GroupQrPage> {
               "Friends can scan this tag with their camera to join '${widget.groupName}' instantly.",
               style: GoogleFonts.outfit(
                 fontSize: 15,
-                color: AppColors.textGrey,
+                color: Theme.of(context).ext.textSecondary,
                 fontWeight: FontWeight.w500,
                 height: 1.5,
               ),
@@ -210,7 +211,7 @@ class _GroupQrPageState extends State<GroupQrPage> {
                     icon: const Icon(Icons.copy_rounded, size: 22),
                     label: const Text("COPY CODE"),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.textBlack,
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 22),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),

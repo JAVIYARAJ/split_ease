@@ -128,7 +128,6 @@ extension ActivityUIPresentation on ActivityEntity {
         return 'Category limit exceeded';
 
       case ActivityType.unknown:
-      default:
         return '$subject performed an action$groupInfo';
     }
   }
@@ -212,5 +211,67 @@ extension ActivityUIPresentation on ActivityEntity {
 
   Color get iconBgColor {
     return iconColor.withValues(alpha: 0.08);
+  }
+
+  Gradient get iconGradient {
+    switch (activityAction) {
+      case ActivityType.settlement:
+        return const LinearGradient(
+          colors: [Color(0xFF00B4DB), Color(0xFF0083B0)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case ActivityType.expense:
+        return const LinearGradient(
+          colors: [Color(0xFFF2994A), Color(0xFFF2C94C)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case ActivityType.payment:
+        return const LinearGradient(
+          colors: [Color(0xFF11998E), Color(0xFF38EF7D)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case ActivityType.added:
+      case ActivityType.groupCreated:
+        return const LinearGradient(
+          colors: [Color(0xFF4776E6), Color(0xFF8E54E9)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case ActivityType.removed:
+      case ActivityType.deleted:
+      case ActivityType.limitExceeded:
+        return const LinearGradient(
+          colors: [Color(0xFFFF416C), Color(0xFFFF4B2B)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case ActivityType.restored:
+        return const LinearGradient(
+          colors: [Color(0xFF00B09B), Color(0xFF96C93D)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case ActivityType.roleUpdated:
+        return const LinearGradient(
+          colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case ActivityType.modification:
+        return const LinearGradient(
+          colors: [Color(0xFFF7971E), Color(0xFFFFD200)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      default:
+        return const LinearGradient(
+          colors: [Color(0xFF757F9A), Color(0xFFD7DDE8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+    }
   }
 }

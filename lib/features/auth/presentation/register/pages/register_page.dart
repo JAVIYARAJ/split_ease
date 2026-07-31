@@ -9,6 +9,7 @@ import 'package:split_ease/features/auth/presentation/register/bloc/register_blo
 import 'package:split_ease/features/auth/presentation/widgets/auth_background.dart';
 import 'package:split_ease/features/auth/presentation/widgets/google_icon.dart';
 
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/widgets/auth_field.dart';
 import '../../login/widgets/primary_button.dart';
@@ -73,13 +74,13 @@ class _RegisterPageState extends State<RegisterPage> {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.backgroundLightGrey,
+                        color: Theme.of(context).ext.inputFill,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_back_ios_new_rounded,
                         size: 18,
-                        color: AppColors.textBlack,
+                        color: Theme.of(context).ext.textPrimary,
                       ),
                     ),
                   ),
@@ -123,7 +124,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 style: GoogleFonts.outfit(
                   fontSize: 32,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textBlack,
+                  color: Theme.of(context).ext.textPrimary,
                   letterSpacing: -0.5,
                 ),
               ),
@@ -132,7 +133,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 "Join thousands of users splitting expenses\neasily every single day.",
                 style: GoogleFonts.outfit(
                   fontSize: 15,
-                  color: AppColors.textGrey,
+                  color: Theme.of(context).ext.textSecondary,
                   height: 1.5,
                   fontWeight: FontWeight.w400,
                 ),
@@ -218,14 +219,14 @@ class _RegisterPageState extends State<RegisterPage> {
                       Icon(
                         Icons.verified_user_rounded,
                         size: 14,
-                        color: AppColors.textGrey.withValues(alpha: 0.5),
+                        color: Theme.of(context).ext.textTertiary,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         "Your data is encrypted and secure",
                         style: GoogleFonts.outfit(
                           fontSize: 12,
-                          color: AppColors.textGrey.withValues(alpha: 0.6),
+                          color: Theme.of(context).ext.textTertiary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -240,7 +241,7 @@ class _RegisterPageState extends State<RegisterPage> {
               if (FeatureFlags.isSocialAuthEnabled) ...[
                 Row(
                   children: [
-                    const Expanded(child: Divider()),
+                    Expanded(child: Divider(color: Theme.of(context).ext.border.withValues(alpha: 0.5))),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
@@ -249,11 +250,11 @@ class _RegisterPageState extends State<RegisterPage> {
                           fontSize: 11,
                           letterSpacing: 1.0,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.iconGrey,
+                          color: Theme.of(context).ext.textTertiary,
                         ),
                       ),
                     ),
-                    const Expanded(child: Divider()),
+                    Expanded(child: Divider(color: Theme.of(context).ext.border.withValues(alpha: 0.5))),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -287,7 +288,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   text: TextSpan(
                     style: GoogleFonts.outfit(
                       fontSize: 15,
-                      color: AppColors.textGrey,
+                      color: Theme.of(context).ext.textSecondary,
                     ),
                     children: [
                       const TextSpan(text: "Already a member? "),

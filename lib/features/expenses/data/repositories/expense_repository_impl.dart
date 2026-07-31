@@ -145,6 +145,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     String? groupId,
     String? note,
     String? paymentMethodId,
+    DateTime? date,
   }) async {
     try {
       await remoteDataSource.settleUp(
@@ -153,6 +154,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
         groupId: groupId,
         note: note,
         paymentMethodId: paymentMethodId,
+        date: date,
       );
       return const Right(null);
     } on ServerException catch (e) {

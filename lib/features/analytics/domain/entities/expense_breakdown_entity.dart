@@ -25,14 +25,16 @@ class ExpenseBreakdownSummaryEntity extends Equatable {
 class ExpenseBreakdownEntity extends Equatable {
   final ExpenseBreakdownSummaryEntity summary;
   final List<CategoryDetailEntity> categoryBreakdown;
+  final List<PaymentMethodDetailEntity> paymentMethodBreakdown;
 
   const ExpenseBreakdownEntity({
     required this.summary,
     required this.categoryBreakdown,
+    this.paymentMethodBreakdown = const [],
   });
 
   @override
-  List<Object?> get props => [summary, categoryBreakdown];
+  List<Object?> get props => [summary, categoryBreakdown, paymentMethodBreakdown];
 }
 
 class CategoryDetailEntity extends Equatable {
@@ -78,5 +80,33 @@ class CategoryDetailEntity extends Equatable {
         limitAmount,
         isOverLimit,
         spentThisMonth,
+      ];
+}
+
+class PaymentMethodDetailEntity extends Equatable {
+  final String id;
+  final String name;
+  final String icon;
+  final String color;
+  final int transactionCount;
+  final double percentage;
+
+  const PaymentMethodDetailEntity({
+    required this.id,
+    required this.name,
+    required this.icon,
+    required this.color,
+    required this.transactionCount,
+    required this.percentage,
+  });
+
+  @override
+  List<Object?> get props => [
+        id,
+        name,
+        icon,
+        color,
+        transactionCount,
+        percentage,
       ];
 }

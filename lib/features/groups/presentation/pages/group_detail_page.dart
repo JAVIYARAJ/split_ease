@@ -1,9 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
 import 'package:split_ease/core/presentation/widgets/app_empty_state.dart';
 import 'package:split_ease/core/presentation/widgets/base_screen.dart';
 import 'package:split_ease/core/presentation/widgets/custom_refresh_indicator.dart';
@@ -11,10 +13,8 @@ import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
-import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
 import 'package:split_ease/core/utils/navigation_utils.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
-import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
 import 'package:split_ease/features/groups/domain/entities/group_expense_entity.dart';
 import 'package:split_ease/features/groups/presentation/bloc/group_detail_bloc.dart';
 
@@ -104,7 +104,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
           },
           child: BaseScreen(
         useSafeArea: false,
-        backgroundColor: AppColors.backgroundLightGrey,
+        backgroundColor: Theme.of(context).ext.backgroundGrey,
         floatingActionButton: _groupId == null
             ? null // No FAB for non-group context
             : BlocBuilder<GroupDetailBloc, GroupDetailState>(
@@ -227,9 +227,9 @@ class _ShimmerDetailInfo extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.borderGreyLight),
+        border: Border.all(color: Theme.of(context).ext.borderLight),
       ),
       child: Skeletonizer(
         enabled: true,
@@ -367,9 +367,9 @@ class _GroupDetailInfo extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
-            color: AppColors.surfaceWhite,
+            color: Theme.of(context).ext.surface,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.borderGreyLight),
+            border: Border.all(color: Theme.of(context).ext.borderLight),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.02),
@@ -409,7 +409,7 @@ class _GroupDetailAppBar extends StatelessWidget {
       leadingWidth: 80,
       leading: AppBackButton(
         onPressed: onBack,
-        color: Colors.white,
+        color: Theme.of(context).ext.surface,
         backgroundColor: Colors.black.withValues(alpha: 0.3),
       ),
       actions: [
@@ -512,7 +512,7 @@ class _GroupDetailAppBar extends StatelessWidget {
                     child: Text(
                       groupEntity?.name ?? "",
                       style: GoogleFonts.outfit(
-                        color: Colors.white,
+                        color: Theme.of(context).ext.surface,
                         fontSize: titleSizes,
                         fontWeight: FontWeight.w700,
                         letterSpacing: -0.5,
@@ -591,7 +591,7 @@ class _BalanceSummary extends StatelessWidget {
         final bool youAreOwed = history.youAreOwed?? false;
         final formatter = NumberFormat('#,##0.##', 'en_IN');
         final balanceColor = overall == 0
-            ? AppColors.textGrey
+            ? Theme.of(context).ext.textTertiary
             : (youAreOwed ? AppColors.successGreen : AppColors.errorRed);
         final overallLabel = overall == 0
             ? "You are fully settled up in this group"
@@ -602,7 +602,7 @@ class _BalanceSummary extends StatelessWidget {
             // ── Overall headline ──────────────────────────
             RichText(
               text: TextSpan(
-                style: GoogleFonts.outfit(fontSize: 16, color: AppColors.textBlack),
+                style: GoogleFonts.outfit(fontSize: 16, color: Theme.of(context).ext.textPrimary),
                 children: [
                   TextSpan(text: overallLabel),
                   if (overall != 0) ...
@@ -635,7 +635,7 @@ class _ActionButtons extends StatelessWidget {
       physics: const BouncingScrollPhysics(),
       child: Row(
         children: [
-          _buildActionButton(
+          _buildActionButton(context, 
             label: "Settle up",
             icon: Icons.account_balance_wallet_rounded,
             color: AppColors.primary,
@@ -652,26 +652,26 @@ class _ActionButtons extends StatelessWidget {
               }
             },
           ),
-          const SizedBox(width: 8),
-          _buildActionButton(
+         /* const SizedBox(width: 8),
+          _buildActionButton(context, 
             label: "Balances",
             icon: Icons.bar_chart_rounded,
-            color: AppColors.textBlack,
+            color: Theme.of(context).ext.textPrimary,
             onPressed: () {},
           ),
           const SizedBox(width: 8),
-          _buildActionButton(
+          _buildActionButton(context, 
             label: "Totals",
             icon: Icons.functions_rounded,
-            color: AppColors.textBlack,
+            color: Theme.of(context).ext.textPrimary,
             onPressed: () {},
-          ),
+          ),*/
         ],
       ),
     );
   }
 
-  Widget _buildActionButton({
+  Widget _buildActionButton(BuildContext context, {
     required String label,
     required IconData icon,
     required Color color,
@@ -683,9 +683,9 @@ class _ActionButtons extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.backgroundLightGrey,
+          color: Theme.of(context).ext.backgroundGrey,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.borderGreyLight),
+          border: Border.all(color: Theme.of(context).ext.borderLight),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -745,7 +745,7 @@ class _TransactionList extends StatelessWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textBlack,
+                    color: Theme.of(context).ext.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -754,7 +754,7 @@ class _TransactionList extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: GoogleFonts.outfit(
                     fontSize: 15,
-                    color: AppColors.textGrey,
+                    color: Theme.of(context).ext.textSecondary,
                     height: 1.5,
                   ),
                 ),
@@ -829,7 +829,7 @@ class _TransactionList extends StatelessWidget {
             style: GoogleFonts.outfit(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: AppColors.textBlack,
+              color: Theme.of(context).ext.textPrimary,
               letterSpacing: 0.5,
             ),
           ),
@@ -897,7 +897,7 @@ class _TransactionItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).ext.surface,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
@@ -917,10 +917,10 @@ class _TransactionItem extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(month, style: GoogleFonts.outfit(fontSize: 10, color: AppColors.textGrey, fontWeight: FontWeight.w600, letterSpacing: 1)),
+                      Text(month, style: GoogleFonts.outfit(fontSize: 10, color: Theme.of(context).ext.textSecondary, fontWeight: FontWeight.w600, letterSpacing: 1)),
                       Text(
                         day,
-                        style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textBlack, height: 1.1),
+                        style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).ext.textPrimary, height: 1.1),
                       ),
                     ],
                   ),
@@ -940,7 +940,7 @@ class _TransactionItem extends StatelessWidget {
                     children: [
                       Text(
                         isSettlement ? "${expense.paidByName} paid" : expense.description,
-                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -949,7 +949,7 @@ class _TransactionItem extends StatelessWidget {
                         isSettlement
                             ? "₹${formatter.format(expense.totalAmount)} exchanged"
                             : "${expense.paidByName} paid ₹${formatter.format(expense.totalAmount)}",
-                        style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                        style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).ext.textSecondary, fontWeight: FontWeight.w500),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -962,7 +962,7 @@ class _TransactionItem extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text("not involved", style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w500)),
+                      Text("not involved", style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).ext.textSecondary, fontWeight: FontWeight.w500)),
                     ],
                   )
                 else

@@ -9,6 +9,7 @@ class SettleUpParams {
   final String? groupId;
   final String? note;
   final String? paymentMethodId;
+  final DateTime? date;
 
   SettleUpParams({
     required this.toUserId,
@@ -16,6 +17,7 @@ class SettleUpParams {
     this.groupId,
     this.note,
     this.paymentMethodId,
+    this.date,
   });
 }
 
@@ -32,6 +34,7 @@ class SettleUpUseCase implements UseCase<void, SettleUpParams> {
       groupId: params.groupId,
       note: params.note,
       paymentMethodId: params.paymentMethodId,
+      date: params.date,
     );
   }
 }

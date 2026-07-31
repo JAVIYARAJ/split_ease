@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -108,7 +109,7 @@ class _FriendDetailPageState extends State<FriendDetailPage> {
           },
           child: BaseScreen(
         useSafeArea: false,
-        backgroundColor: const Color(0xFFF9FAFB), // Very light airy background
+        backgroundColor: Theme.of(context).ext.scaffoldBg,
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _openAddExpense,
           backgroundColor: AppColors.primary,
@@ -249,7 +250,7 @@ class _FriendDetailAppBar extends StatelessWidget {
       leadingWidth: 80,
       leading: AppBackButton(
         onPressed: onBack,
-        color: Colors.white,
+        color: Theme.of(context).ext.surface,
         backgroundColor: Colors.black.withValues(alpha: 0.3),
       ),
       flexibleSpace: BlocBuilder<FriendDetailBloc, FriendDetailState>(
@@ -308,7 +309,7 @@ class _FriendDetailAppBar extends StatelessWidget {
                     child: Text(
                       friendEntity?.name ?? "",
                       style: GoogleFonts.outfit(
-                        color: Colors.white,
+                        color: Theme.of(context).ext.surface,
                         fontSize: titleSizes,
                         fontWeight: FontWeight.w700,
                         letterSpacing: -0.5,
@@ -442,9 +443,9 @@ class _FriendDetailInfo extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).ext.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.borderGreyLight),
+          border: Border.all(color: Theme.of(context).ext.borderLight),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -504,7 +505,7 @@ class _TransactionList extends StatelessWidget {
             style: GoogleFonts.outfit(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: AppColors.textBlack,
+              color: Theme.of(context).ext.textPrimary,
               letterSpacing: 0.5,
             ),
           ),
@@ -569,7 +570,7 @@ class _TransactionItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).ext.surface,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
@@ -589,10 +590,10 @@ class _TransactionItem extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(month, style: GoogleFonts.outfit(fontSize: 10, color: AppColors.textGrey, fontWeight: FontWeight.w600, letterSpacing: 1)),
+                      Text(month, style: GoogleFonts.outfit(fontSize: 10, color: Theme.of(context).ext.textSecondary, fontWeight: FontWeight.w600, letterSpacing: 1)),
                       Text(
                         day,
-                        style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textBlack, height: 1.1),
+                        style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).ext.textPrimary, height: 1.1),
                       ),
                     ],
                   ),
@@ -602,7 +603,7 @@ class _TransactionItem extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: expense.groupIcon != null ? AppColors.backgroundLightGrey : iconBgColor, 
+                    color: expense.groupIcon != null ? Theme.of(context).ext.backgroundGrey : iconBgColor, 
                     shape: BoxShape.circle,
                     image: expense.groupIcon != null
                         ? DecorationImage(image: CachedNetworkImageProvider(expense.groupIcon!), fit: BoxFit.cover)
@@ -620,14 +621,14 @@ class _TransactionItem extends StatelessWidget {
                         isSettlement 
                             ? (youAreOwed ? 'You paid' : 'You received payment')
                             : expense.description,
-                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
                       Text(
                         expense.groupName != null ? 'In ${expense.groupName}' : "Non-group expense",
-                        style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                        style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).ext.textSecondary, fontWeight: FontWeight.w500),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),

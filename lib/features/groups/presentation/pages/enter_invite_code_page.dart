@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/presentation/widgets/base_screen.dart';
@@ -42,12 +43,12 @@ class EnterInviteCodePage extends StatelessWidget {
         }
       },
       child: BaseScreen(
-        backgroundColor: AppColors.backgroundWhite,
+        backgroundColor: Theme.of(context).ext.scaffoldBg,
         appBar: AppBar(
-          backgroundColor: AppColors.backgroundWhite,
+          backgroundColor: Theme.of(context).ext.scaffoldBg,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.close, color: AppColors.textBlack),
+            icon: Icon(Icons.close, color: Theme.of(context).ext.textPrimary),
             onPressed: () => NavigationService.pop(),
           ),
           centerTitle: true,
@@ -75,14 +76,14 @@ class EnterInviteCodePage extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     elevation: 0,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    disabledBackgroundColor: AppColors.backgroundLightGrey,
-                    disabledForegroundColor: AppColors.textGrey.withValues(alpha: 0.5),
+                    disabledBackgroundColor: Theme.of(context).ext.inputFill,
+                    disabledForegroundColor: Theme.of(context).ext.textTertiary,
                   ),
                   child: state.status == JoinGroupStatus.loading
                       ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
                       : Text(
                           'Join Group',
-                          style: GoogleFonts.openSans(fontWeight: FontWeight.bold, fontSize: 16),
+                          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
                         ),
                 ),
               );
@@ -99,17 +100,17 @@ class EnterInviteCodePage extends StatelessWidget {
               const SizedBox(height: 24),
               Text(
                 'Join Group',
-                style: GoogleFonts.openSans(
+                style: GoogleFonts.outfit(
                   fontWeight: FontWeight.bold, 
                   fontSize: 28, 
-                  color: AppColors.textBlack
+                  color: Theme.of(context).ext.textPrimary,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               Text(
                 'Enter the invitation code shared with you to join the group.',
-                style: GoogleFonts.openSans(fontSize: 16, color: AppColors.textGrey),
+                style: GoogleFonts.outfit(fontSize: 16, color: Theme.of(context).ext.textSecondary),
                 textAlign: TextAlign.center,
               ),
               
@@ -127,15 +128,15 @@ class EnterInviteCodePage extends StatelessWidget {
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 4,
-                      color: AppColors.textBlack,
+                      color: Theme.of(context).ext.textPrimary,
                     ),
                     textCapitalization: TextCapitalization.characters,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: AppColors.backgroundLightGrey,
+                      fillColor: Theme.of(context).ext.inputFill,
                       hintText: 'CODE',
                       hintStyle: GoogleFonts.robotoMono(
-                        color: Colors.grey.shade400,
+                        color: Theme.of(context).ext.textTertiary,
                         fontSize: 24,
                         letterSpacing: 4,
                       ),
@@ -157,19 +158,19 @@ class EnterInviteCodePage extends StatelessWidget {
 
               Row(
                 children: [
-                  Expanded(child: Divider(color: AppColors.borderGrey.withValues(alpha: 0.5))),
+                  Expanded(child: Divider(color: Theme.of(context).ext.border.withValues(alpha: 0.5))),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
                       "OR",
-                      style: GoogleFonts.openSans(
+                      style: GoogleFonts.outfit(
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textGrey.withValues(alpha: 0.6),
+                        color: Theme.of(context).ext.textTertiary,
                         fontSize: 14,
                       ),
                     ),
                   ),
-                  Expanded(child: Divider(color: AppColors.borderGrey.withValues(alpha: 0.5))),
+                  Expanded(child: Divider(color: Theme.of(context).ext.border.withValues(alpha: 0.5))),
                 ],
               ),
 
@@ -185,10 +186,10 @@ class EnterInviteCodePage extends StatelessWidget {
                     }
                   },
                   icon: const Icon(Icons.qr_code_scanner_rounded, size: 20),
-                  label: Text("Scan QR Code", style: GoogleFonts.openSans(fontWeight: FontWeight.w600)),
+                  label: Text("Scan QR Code", style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textBlack,
-                    side: const BorderSide(color: AppColors.borderGrey),
+                    foregroundColor: Theme.of(context).ext.textPrimary,
+                    side: BorderSide(color: Theme.of(context).ext.border),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),

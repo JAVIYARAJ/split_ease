@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -45,7 +46,7 @@ class _GroupsPageState extends State<GroupsPage> {
         }
       },
       child: BaseScreen(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).ext.scaffoldBg,
         floatingActionButton: Padding(padding: const EdgeInsets.only(bottom: 100.0), child: _buildFAB(context)),
         child: NotificationListener<UserScrollNotification>(
           onNotification: (notification) {
@@ -120,7 +121,7 @@ class _GroupsPageState extends State<GroupsPage> {
   Widget _buildHeader(BuildContext context) {
     return SliverAppBar(
       pinned: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).ext.scaffoldBg,
       elevation: 0,
       scrolledUnderElevation: 0,
       toolbarHeight: 64,
@@ -133,11 +134,11 @@ class _GroupsPageState extends State<GroupsPage> {
           children: [
             Text(
               "Collaborations",
-              style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.textBlack, letterSpacing: -1.0),
+              style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: Theme.of(context).ext.textPrimary, letterSpacing: -1.0),
             ),
             Text(
               "Track shared expenses across teams",
-              style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textGrey),
+              style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500, color: Theme.of(context).ext.textSecondary),
               maxLines: 2,
             ),
           ],
@@ -152,7 +153,7 @@ class _GroupsPageState extends State<GroupsPage> {
               onRefresh: () => context.read<GroupsBloc>().add(LoadGroups()),
             );
           },
-          icon: const Icon(Icons.qr_code_scanner_rounded, color: AppColors.textBlack, size: 28),
+          icon: Icon(Icons.qr_code_scanner_rounded, color: Theme.of(context).ext.textPrimary, size: 28),
         ),
         IconButton(
           onPressed: () {
@@ -306,7 +307,7 @@ class _GroupsShimmerList extends StatelessWidget {
               child: Container(
                 height: 90,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).ext.surface,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: Colors.grey.shade100),
                 ),

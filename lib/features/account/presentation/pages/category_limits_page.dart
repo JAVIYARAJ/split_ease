@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:split_ease/core/routing/navigation_service.dart';
-import '../../../../core/presentation/widgets/app_back_button.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_alerts.dart';
 import '../../../../core/utils/icon_utils.dart';
@@ -54,9 +52,9 @@ class _CategoryLimitsPageState extends State<CategoryLimitsPage> {
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.backgroundWhite,
+        backgroundColor: Theme.of(context).ext.scaffoldBg,
         appBar: AppBar(
-          backgroundColor: AppColors.backgroundWhite,
+          backgroundColor: Theme.of(context).ext.scaffoldBg,
           elevation: 0,
           centerTitle: true,
           title: Text(
@@ -64,11 +62,11 @@ class _CategoryLimitsPageState extends State<CategoryLimitsPage> {
             style: GoogleFonts.outfit(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: AppColors.textBlack,
+              color: Theme.of(context).ext.textPrimary,
             ),
           ),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textBlack, size: 20),
+            icon: Icon(Icons.arrow_back_ios_new_rounded, color: Theme.of(context).ext.textPrimary, size: 20),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -93,7 +91,7 @@ class _CategoryLimitsPageState extends State<CategoryLimitsPage> {
                         style: GoogleFonts.outfit(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.textBlack.withValues(alpha: 0.8),
+                          color: Theme.of(context).ext.textPrimary,
                           height: 1.4,
                         ),
                       ),
@@ -114,11 +112,11 @@ class _CategoryLimitsPageState extends State<CategoryLimitsPage> {
                     },
                     decoration: InputDecoration(
                       hintText: "Search categories...",
-                      hintStyle: GoogleFonts.outfit(color: AppColors.textGrey, fontSize: 14),
-                      prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textGrey),
+                      hintStyle: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary, fontSize: 14),
+                      prefixIcon: Icon(Icons.search_rounded, color: Theme.of(context).ext.textSecondary),
                       suffixIcon: value.text.isNotEmpty
                           ? IconButton(
-                              icon: const Icon(Icons.clear_rounded, color: AppColors.iconGrey, size: 20),
+                              icon: Icon(Icons.clear_rounded, color: Theme.of(context).ext.textTertiary, size: 20),
                               onPressed: () {
                                 _searchController.clear();
                                 context.read<CategoryLimitsBloc>().add(const SearchCategoryLimitsEvent(query: ''));
@@ -128,7 +126,7 @@ class _CategoryLimitsPageState extends State<CategoryLimitsPage> {
                             )
                           : null,
                       filled: true,
-                      fillColor: AppColors.surfaceWhite,
+                      fillColor: Theme.of(context).ext.inputFill,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -176,7 +174,7 @@ class _CategoryLimitsPageState extends State<CategoryLimitsPage> {
                       return Center(
                         child: Text(
                           "No categories found.",
-                          style: GoogleFonts.outfit(color: AppColors.textGrey, fontSize: 16),
+                          style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary, fontSize: 16),
                         ),
                       );
                     }
@@ -269,7 +267,7 @@ class _ExpandableCategoryTileState extends State<_ExpandableCategoryTile> {
       duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: widget.isExpanded ? AppColors.primary : Colors.grey.shade200, width: widget.isExpanded ? 1.5 : 1),
       ),
@@ -300,7 +298,7 @@ class _ExpandableCategoryTileState extends State<_ExpandableCategoryTile> {
                           style: GoogleFonts.outfit(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.textBlack,
+                            color: Theme.of(context).ext.textPrimary,
                           ),
                         ),
                         if (limitAmount != null)
@@ -318,7 +316,7 @@ class _ExpandableCategoryTileState extends State<_ExpandableCategoryTile> {
                             style: GoogleFonts.outfit(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
-                              color: AppColors.textGrey,
+                              color: Theme.of(context).ext.textSecondary,
                             ),
                           ),
                       ],
@@ -326,7 +324,7 @@ class _ExpandableCategoryTileState extends State<_ExpandableCategoryTile> {
                   ),
                   Icon(
                     widget.isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-                    color: AppColors.iconGrey,
+                    color: Theme.of(context).ext.textTertiary,
                   ),
                 ],
               ),
@@ -364,7 +362,7 @@ class _ExpandableCategoryTileState extends State<_ExpandableCategoryTile> {
                         decoration: InputDecoration(
                           prefixText: "₹ ",
                           labelText: "Monthly Limit",
-                          labelStyle: GoogleFonts.outfit(color: AppColors.textGrey, fontSize: 13),
+                          labelStyle: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary, fontSize: 13),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                           enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -375,7 +373,7 @@ class _ExpandableCategoryTileState extends State<_ExpandableCategoryTile> {
                               borderSide: const BorderSide(color: AppColors.primary)
                           ),
                           filled: true,
-                          fillColor: AppColors.backgroundLightGrey,
+                          fillColor: Theme.of(context).ext.inputFill,
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         ),
                       ),

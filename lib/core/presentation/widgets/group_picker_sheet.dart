@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
@@ -33,14 +34,14 @@ class _GroupPickerSheet extends StatelessWidget {
   final List<GroupEntity> groups;
   final bool isNonGroupVisible;
 
-  const _GroupPickerSheet({required this.groups,this.isNonGroupVisible=false});
+  _GroupPickerSheet({required this.groups,this.isNonGroupVisible=false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
@@ -52,14 +53,14 @@ class _GroupPickerSheet extends StatelessWidget {
           Container(
             width: 40,
             height: 4,
-            decoration: BoxDecoration(color: AppColors.borderGreyLight, borderRadius: BorderRadius.circular(2)),
+            decoration: BoxDecoration(color: Theme.of(context).ext.borderLight, borderRadius: BorderRadius.circular(2)),
           ),
           const SizedBox(height: 20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Text(
               "Select a Group",
-              style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+              style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary),
             ),
           ),
           const SizedBox(height: 16),
@@ -70,7 +71,7 @@ class _GroupPickerSheet extends StatelessWidget {
                     child: Center(
                       child: Text(
                         "No groups yet. Create a group first!",
-                        style: GoogleFonts.outfit(fontSize: 15, color: AppColors.textGrey),
+                        style: GoogleFonts.outfit(fontSize: 15, color: Theme.of(context).ext.textSecondary),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -112,9 +113,9 @@ class _GroupTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.backgroundLightGrey,
+          color: Theme.of(context).ext.backgroundGrey,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.borderGreyLight),
+          border: Border.all(color: Theme.of(context).ext.borderLight),
         ),
         child: Row(
           children: [
@@ -125,7 +126,7 @@ class _GroupTile extends StatelessWidget {
               child: AppAvatar(
                 url: group.groupIcon,
                 radius: 22, // Set radius to half of width/height (44/2)
-                backgroundColor: AppColors.surfaceWhite,
+                backgroundColor: Theme.of(context).ext.surface,
               ),
             ),
             const SizedBox(width: 14),
@@ -136,20 +137,20 @@ class _GroupTile extends StatelessWidget {
                 children: [
                   Text(
                     group.name ?? "Non-group expense",
-                    style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                    style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   if (group.id == null) ...[
                     Text(
                       "Record a personal or outside expense",
-                      style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                      style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).ext.textSecondary, fontWeight: FontWeight.w500),
                     ),
                   ] else ...[
                     if (group.memberCount != null)
                       Text(
                         "${group.memberCount} member${group.memberCount == 1 ? '' : 's'}",
-                        style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                        style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary, fontWeight: FontWeight.w500),
                       ),
                     if (group.memberCount == 1)
                       Text(
@@ -160,7 +161,7 @@ class _GroupTile extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.textGrey),
+            Icon(Icons.chevron_right_rounded, color: Theme.of(context).ext.textSecondary),
           ],
         ),
       ),
@@ -181,17 +182,17 @@ class _NonGroupTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.backgroundLightGrey,
+          color: Theme.of(context).ext.backgroundGrey,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.borderGreyLight),
+          border: Border.all(color: Theme.of(context).ext.borderLight),
         ),
         child: Row(
           children: [
             Container(
               width: 44,
               height: 44,
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: AppColors.surfaceWhite),
-              child: const Icon(Icons.person_outline, color: AppColors.textGrey, size: 24),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: Theme.of(context).ext.surface),
+              child: Icon(Icons.person_outline, color: Theme.of(context).ext.textSecondary, size: 24),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -201,11 +202,11 @@ class _NonGroupTile extends StatelessWidget {
                 children: [
                   Text(
                     "Non-group expense",
-                    style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                    style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary),
                   ),
                   Text(
                     "Record a personal or outside expense",
-                    style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                    style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).ext.textSecondary, fontWeight: FontWeight.w500),
                   ),
                 ],
               ),

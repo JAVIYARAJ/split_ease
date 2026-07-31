@@ -26,6 +26,7 @@ abstract class ExpenseRepository {
     String? groupId,
     String? note,
     String? paymentMethodId,
+    DateTime? date,
   });
   Future<Either<Failure, ExpenseMetadataEntity>> getExpenseMetadata();
   Future<Either<Failure, PersonalExpensesEntity>> getPersonalExpenses({

@@ -29,6 +29,7 @@ abstract class ExpenseRemoteDataSource {
     String? groupId,
     String? note,
     String? paymentMethodId,
+    DateTime? date,
   });
   Future<ExpenseMetadataModel> getExpenseMetadata();
   Future<PersonalExpensesModel> getPersonalExpenses({
@@ -216,6 +217,7 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
     String? groupId,
     String? note,
     String? paymentMethodId,
+    DateTime? date,
   }) async {
     try {
       await client.rpc(
@@ -224,8 +226,10 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
           'p_to_user_id': toUserId,
           'p_amount': amount,
           'p_group_id': groupId,
-          'p_expense_note': note,
           'p_payment_method_id': paymentMethodId,
+          'p_expense_note': note,
+          'p_expense_date':
+              (date ?? DateTime.now()).toIso8601String().split('T').first,
         },
       );
     } catch (e) {
