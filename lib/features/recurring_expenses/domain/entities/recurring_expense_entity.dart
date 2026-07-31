@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 enum RecurrenceFrequency {
+  daily,
   weekly,
   monthly,
   yearly,
@@ -9,6 +10,8 @@ enum RecurrenceFrequency {
 extension RecurrenceFrequencyX on RecurrenceFrequency {
   String get displayName {
     switch (this) {
+      case RecurrenceFrequency.daily:
+        return 'Daily';
       case RecurrenceFrequency.weekly:
         return 'Weekly';
       case RecurrenceFrequency.monthly:

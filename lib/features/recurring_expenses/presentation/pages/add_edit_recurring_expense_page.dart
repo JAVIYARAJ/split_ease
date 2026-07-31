@@ -166,6 +166,7 @@ class _AddEditRecurringExpenseFormView extends StatelessWidget {
                     ),
                   ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         "RECURRING AMOUNT",
@@ -461,7 +462,9 @@ class _AddEditRecurringExpenseFormView extends StatelessWidget {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        "Day of Month Due",
+                                        state.frequency == RecurrenceFrequency.daily
+                                            ? "Recurrence Schedule"
+                                            : "Day of Month Due",
                                         style: GoogleFonts.outfit(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w700,
@@ -472,7 +475,9 @@ class _AddEditRecurringExpenseFormView extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        "Bill due on day ${state.dueDay}",
+                                        state.frequency == RecurrenceFrequency.daily
+                                            ? "Triggers automatically every day"
+                                            : "Bill due on day ${state.dueDay}",
                                         style: GoogleFonts.outfit(
                                           fontSize: 12,
                                           color: Theme.of(context)
@@ -487,47 +492,65 @@ class _AddEditRecurringExpenseFormView extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Container(
-                            height: 40,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).ext.inputFill,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Theme.of(context)
-                                    .ext
-                                    .border
-                                    .withValues(alpha: 0.2),
+                          if (state.frequency == RecurrenceFrequency.daily)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryTeal.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                "Every Day",
+                                style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                  color: AppColors.primaryTeal,
+                                ),
+                              ),
+                            )
+                          else
+                            Container(
+                              height: 40,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).ext.inputFill,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Theme.of(context)
+                                      .ext
+                                      .border
+                                      .withValues(alpha: 0.2),
+                                ),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<int>(
+                                  value: state.dueDay,
+                                  isDense: true,
+                                  dropdownColor: Theme.of(context).ext.surface,
+                                  items: List.generate(28, (index) => index + 1)
+                                      .map((day) => DropdownMenuItem<int>(
+                                            value: day,
+                                            child: Text("Day $day",
+                                                style: GoogleFonts.outfit(
+                                                    fontWeight: FontWeight.w700,
+                                                    fontSize: 13,
+                                                    color: Theme.of(context)
+                                                        .ext
+                                                        .textPrimary)),
+                                          ))
+                                      .toList(),
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      context
+                                          .read<AddEditRecurringExpenseBloc>()
+                                          .add(AddEditRecurringExpenseDueDayChanged(val));
+                                    }
+                                  },
+                                ),
                               ),
                             ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<int>(
-                                value: state.dueDay,
-                                isDense: true,
-                                dropdownColor: Theme.of(context).ext.surface,
-                                items: List.generate(28, (index) => index + 1)
-                                    .map((day) => DropdownMenuItem<int>(
-                                          value: day,
-                                          child: Text("Day $day",
-                                              style: GoogleFonts.outfit(
-                                                  fontWeight: FontWeight.w700,
-                                                  fontSize: 13,
-                                                  color: Theme.of(context)
-                                                      .ext
-                                                      .textPrimary)),
-                                        ))
-                                    .toList(),
-                                onChanged: (val) {
-                                  if (val != null) {
-                                    context
-                                        .read<AddEditRecurringExpenseBloc>()
-                                        .add(AddEditRecurringExpenseDueDayChanged(val));
-                                  }
-                                },
-                              ),
-                            ),
-                          ),
                         ],
                       ),
 

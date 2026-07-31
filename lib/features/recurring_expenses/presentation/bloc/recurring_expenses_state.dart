@@ -21,6 +21,9 @@ class RecurringExpensesState extends Equatable {
     for (var item in items) {
       if (item.isPaused) continue;
       switch (item.frequency) {
+        case RecurrenceFrequency.daily:
+          total += item.amount * 30.4;
+          break;
         case RecurrenceFrequency.weekly:
           total += item.amount * 4.33;
           break;
