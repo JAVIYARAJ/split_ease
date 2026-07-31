@@ -199,11 +199,7 @@ class RecurringExpensesPage extends StatelessWidget {
                                       );
                                 },
                                 onDelete: () {
-                                  context.read<RecurringExpensesBloc>().add(
-                                        DeleteRecurringExpenseEvent(item.id),
-                                      );
-                                  AppAlerts.showSuccess(
-                                      context, 'Template deleted');
+                                  _showDeleteConfirmationDialog(context, item);
                                 },
                               );
                             }).toList(),
@@ -232,6 +228,122 @@ class RecurringExpensesPage extends StatelessWidget {
           "Add Template",
           style: GoogleFonts.outfit(
               color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15),
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmationDialog(
+      BuildContext context, RecurringExpenseEntity item) {
+    final currencyFormatter = NumberFormat('#,##0.00', 'en_IN');
+    final formattedAmount = '₹${currencyFormatter.format(item.amount)}';
+    final frequencyName = item.frequency.displayName;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Theme.of(context).ext.surface,
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.errorRed.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.delete_forever_rounded,
+                  color: AppColors.errorRed,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                "Delete Template?",
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).ext.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "Are you sure you want to delete \"${item.title}\" ($formattedAmount / $frequencyName)?",
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).ext.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "This will permanently remove this recurring expense template and stop future automated reminders. Past expense records will remain unaffected.",
+                style: GoogleFonts.outfit(
+                  fontSize: 13,
+                  color: Theme.of(context).ext.textSecondary,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        side: BorderSide(color: Theme.of(context).ext.border),
+                      ),
+                      child: Text(
+                        "Cancel",
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).ext.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        context.read<RecurringExpensesBloc>().add(
+                              DeleteRecurringExpenseEvent(item.id),
+                            );
+                        AppAlerts.showSuccess(
+                            context, '${item.title} template deleted');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        backgroundColor: AppColors.errorRed,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        "Delete",
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
