@@ -45,6 +45,11 @@ import '../../features/groups/presentation/pages/qr_scanner_page.dart';
 import '../../features/home/presentation/bloc/home_bloc.dart';
 import '../../features/profile/presentation/pages/edit_profile_page.dart';
 import '../../features/splash/presentation/pages/splash_pages.dart';
+import '../../features/recurring_expenses/presentation/bloc/recurring_expenses_bloc.dart';
+import '../../features/recurring_expenses/presentation/bloc/recurring_expenses_event.dart';
+import '../../features/recurring_expenses/presentation/pages/recurring_expenses_page.dart';
+import '../../features/recurring_expenses/presentation/pages/add_edit_recurring_expense_page.dart';
+import '../../features/recurring_expenses/domain/entities/recurring_expense_entity.dart';
 import '../../injection_container.dart';
 import 'app_routes.dart';
 
@@ -239,6 +244,22 @@ class RouteGenerator {
           builder: (_) => BlocProvider(
             create: (context) => sl<PersonalExpensesBloc>(),
             child: const PersonalExpensesPage(),
+          ),
+          settings: RouteSettings(arguments: settings.arguments, name: settings.name),
+        );
+      case AppRoutes.recurringExpenses:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => sl<RecurringExpensesBloc>()..add(LoadRecurringExpensesEvent()),
+            child: const RecurringExpensesPage(),
+          ),
+          settings: RouteSettings(arguments: settings.arguments, name: settings.name),
+        );
+      case AppRoutes.addEditRecurringExpense:
+        final existingTemplate = settings.arguments as RecurringExpenseEntity?;
+        return MaterialPageRoute(
+          builder: (context) => AddEditRecurringExpensePage(
+            existingTemplate: existingTemplate,
           ),
           settings: RouteSettings(arguments: settings.arguments, name: settings.name),
         );

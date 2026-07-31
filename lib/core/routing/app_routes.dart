@@ -27,4 +27,6 @@ class AppRoutes {
   static const String categorySelection = '/categorySelection';
   static const String categoryLimits = '/categoryLimits';
   static const String personalExpenses = '/personalExpenses';
+  static const String recurringExpenses = '/recurringExpenses';
+  static const String addEditRecurringExpense = '/addEditRecurringExpense';
 }

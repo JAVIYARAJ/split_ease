@@ -126,6 +126,16 @@ import 'features/analytics/domain/repositories/analytics_repository.dart';
 import 'features/analytics/domain/usecases/get_expense_breakdown.dart';
 import 'features/analytics/presentation/bloc/expense_breakdown_bloc.dart';
 
+import 'package:split_ease/features/recurring_expenses/data/datasources/recurring_expense_remote_data_source.dart';
+import 'package:split_ease/features/recurring_expenses/data/repositories/recurring_expense_repository_impl.dart';
+import 'package:split_ease/features/recurring_expenses/domain/repositories/recurring_expense_repository.dart';
+import 'package:split_ease/features/recurring_expenses/domain/usecases/delete_recurring_expense_usecase.dart';
+import 'package:split_ease/features/recurring_expenses/domain/usecases/get_recurring_expenses_usecase.dart';
+import 'package:split_ease/features/recurring_expenses/domain/usecases/save_recurring_expense_usecase.dart';
+import 'package:split_ease/features/recurring_expenses/domain/usecases/toggle_pause_recurring_expense_usecase.dart';
+import 'package:split_ease/features/recurring_expenses/presentation/bloc/add_edit_recurring_expense_bloc.dart';
+import 'package:split_ease/features/recurring_expenses/presentation/bloc/recurring_expenses_bloc.dart';
+
 // Service Locator (Shared Instance)
 // This is the central repository where all dependencies (objects) are stored and retrieved.
 // We use 'GetIt' to manage dependency injection throughout the app.
@@ -169,8 +179,6 @@ Future<void> _core() async {
   sl.registerLazySingleton(() => ThemeCubit(sl<SharedPreferences>()));
 }
 
-
-
 /// Helper to aggregate all feature-module registrations.
 void _features() {
   _splash();
@@ -183,6 +191,27 @@ void _features() {
   _profile();
   _expense();
   _analytics();
+  _recurringExpenses();
+}
+
+void _recurringExpenses() {
+  sl.registerFactory<RecurringExpenseRemoteDataSource>(
+      () => RecurringExpenseRemoteDataSourceImpl(client: sl<SupabaseClient>()));
+  sl.registerFactory<RecurringExpenseRepository>(
+      () => RecurringExpenseRepositoryImpl(remoteDataSource: sl()));
+  sl.registerFactory(() => GetRecurringExpensesUseCase(sl()));
+  sl.registerFactory(() => SaveRecurringExpenseUseCase(sl()));
+  sl.registerFactory(() => TogglePauseRecurringExpenseUseCase(sl()));
+  sl.registerFactory(() => DeleteRecurringExpenseUseCase(sl()));
+  sl.registerFactory(() => RecurringExpensesBloc(
+        getRecurringExpensesUseCase: sl(),
+        saveRecurringExpenseUseCase: sl(),
+        togglePauseRecurringExpenseUseCase: sl(),
+        deleteRecurringExpenseUseCase: sl(),
+      ));
+  sl.registerFactory(() => AddEditRecurringExpenseBloc(
+        getExpenseMetadataUseCase: sl(),
+      ));
 }
 
 void _analytics() {

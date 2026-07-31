@@ -423,6 +423,14 @@ class AccountPage extends StatelessWidget {
           iconColor: AppColors.primary,
           iconBgColor: AppColors.primary.withValues(alpha: 0.1),
         ),
+        _buildSettingItem(
+          context: context,
+          icon: Icons.autorenew_rounded,
+          title: "Recurring Expenses",
+          onTap: () => NavigationService.pushNamed(AppRoutes.recurringExpenses),
+          iconColor: const Color(0xFF009688),
+          iconBgColor: const Color(0xFF009688).withValues(alpha: 0.1),
+        ),
         // ── Dark Mode Toggle ─────────────────────────────────────────────
         _buildDarkModeToggle(context),
         const SizedBox(height: 24),
