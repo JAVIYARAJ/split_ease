@@ -8,6 +8,7 @@ class SmoothAnimatedFAB extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color backgroundColor;
+  final Color? foregroundColor;
   final String heroTag;
 
   const SmoothAnimatedFAB({
@@ -17,11 +18,13 @@ class SmoothAnimatedFAB extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.backgroundColor,
+    this.foregroundColor,
     required this.heroTag,
   });
 
   @override
   Widget build(BuildContext context) {
+    final fgColor = foregroundColor ?? Colors.white;
     return Hero(
       tag: heroTag,
       child: Material(
@@ -48,7 +51,7 @@ class SmoothAnimatedFAB extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, color: Colors.white, size: 28),
+                Icon(icon, color: fgColor, size: 28),
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 500),
                   curve: Curves.fastOutSlowIn,
@@ -65,7 +68,7 @@ class SmoothAnimatedFAB extends StatelessWidget {
                             ? Text(
                                 label,
                                 style: GoogleFonts.outfit(
-                                  color: Theme.of(context).ext.textPrimary,
+                                  color: fgColor,
                                   fontWeight: FontWeight.w800,
                                   fontSize: 16,
                                 ),
