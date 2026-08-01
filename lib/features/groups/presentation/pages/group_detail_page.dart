@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
+import 'package:split_ease/core/theme/app_layout.dart';
 import 'package:split_ease/core/presentation/widgets/app_empty_state.dart';
 import 'package:split_ease/core/presentation/widgets/base_screen.dart';
 import 'package:split_ease/core/presentation/widgets/custom_refresh_indicator.dart';
@@ -406,10 +407,10 @@ class _GroupDetailAppBar extends StatelessWidget {
       expandedHeight: 180.0,
       pinned: true,
       backgroundColor: Colors.transparent,
-      leadingWidth: 80,
+      leadingWidth: AppLayout.appBarLeadingWidth,
       leading: AppBackButton(
         onPressed: onBack,
-        color: Theme.of(context).ext.surface,
+        color: Colors.white,
         backgroundColor: Colors.black.withValues(alpha: 0.3),
       ),
       actions: [

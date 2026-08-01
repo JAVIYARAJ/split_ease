@@ -10,6 +10,7 @@ import 'package:split_ease/core/presentation/widgets/base_screen.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
+import 'package:split_ease/core/utils/clipboard_utils.dart';
 import 'package:split_ease/core/utils/icon_utils.dart';
 import 'package:split_ease/core/utils/navigation_utils.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_detail_entity.dart';
@@ -18,6 +19,8 @@ import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_ev
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_state.dart';
 import 'package:split_ease/features/expenses/presentation/utils/expense_pdf_generator.dart';
 import 'package:split_ease/features/expenses/presentation/widgets/expense_media_list.dart';
+
+import 'package:split_ease/core/theme/app_layout.dart';
 
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/routing/navigation_service.dart';
@@ -104,7 +107,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 backgroundColor: Colors.transparent,
                 elevation: 0,
                 scrolledUnderElevation: 0,
-                leadingWidth: 80,
+                leadingWidth: AppLayout.appBarLeadingWidth,
                 leading: AppBackButton(
                   onPressed: _onBack,
                 ),
@@ -236,45 +239,14 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
-                                    _buildHeaderAmount(entity, isDeleted),
-                                    const SizedBox(height: 32),
-                                    _buildQuickInfo(loadedState ?? ExpenseDetailLoaded(_getMockEntity(), "")),
+                                    _buildDigitalReceiptCard(context, loadedState, entity, isDeleted),
+                                    const SizedBox(height: 20),
+                                    _buildActionGrid(entity, isDeleted),
                                     if (loadedState != null) ...[
                                       const SizedBox(height: 16),
                                       _buildActivityLog(loadedState),
                                     ],
                                     const SizedBox(height: 24),
-                                    _buildActionGrid(entity, isDeleted),
-                                    const SizedBox(height: 24),
-                                    if (entity.expenseType == 'settlement') ...[
-                                      _buildSectionTitle("Settlement Details"),
-                                      const SizedBox(height: 8),
-                                      _buildSettlementDetailsSection(entity),
-                                      const SizedBox(height: 24),
-                                    ] else ...[
-                                      _buildSectionTitle("Paid By"),
-                                      const SizedBox(height: 8),
-                                      _buildPaidBySection(entity),
-                                      const SizedBox(height: 24),
-                                    ],
-                                    if (entity.notes != null && entity.notes!.isNotEmpty) ...[
-                                      _buildSectionTitle("Notes"),
-                                      const SizedBox(height: 8),
-                                      _buildNotesSection(entity.notes!),
-                                      const SizedBox(height: 24),
-                                    ],
-                                    if (entity.expenseType != 'settlement' && entity.splits.isNotEmpty) ...[
-                                      _buildSectionTitle("Split Details"),
-                                      const SizedBox(height: 8),
-                                      _buildSplitsList(entity),
-                                      const SizedBox(height: 24),
-                                    ],
-                                    if (entity.media.isNotEmpty) ...[
-                                      _buildSectionTitle("Attachments"),
-                                      const SizedBox(height: 8),
-                                      ExpenseMediaList(entity: entity, canManageExpense: loadedState?.canManageExpense ?? false),
-                                      const SizedBox(height: 24),
-                                    ],
                                     _buildSectionTitle("Comments"),
                                     const SizedBox(height: 8),
                                     _buildCommentsList(
@@ -472,6 +444,717 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     return Text(
       title,
       style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary),
+    );
+  }
+
+  // ── Digital Receipt Card Ticket ───────────────────────────────────────────
+  Widget _buildDigitalReceiptCard(
+    BuildContext context,
+    ExpenseDetailLoaded? state,
+    ExpenseDetailEntity entity,
+    bool isDeleted,
+  ) {
+    final ext = Theme.of(context).ext;
+    final formatter = NumberFormat('#,##0.00', 'en_IN');
+
+    Color categoryColor = AppColors.primary;
+    IconData categoryIcon = Icons.receipt_long_rounded;
+
+    if (entity.category != null) {
+      try {
+        categoryColor = Color(
+            int.parse(entity.category!.color.replaceFirst('#', '0xFF')));
+      } catch (_) {}
+      categoryIcon = IconUtils.getIconFromString(entity.category!.icon);
+    }
+
+    String formattedDate = "Unknown Date";
+    String formattedTime = "";
+    try {
+      final parsed = DateTime.parse(entity.expenseDate);
+      formattedDate = DateFormat('MMM dd, yyyy').format(parsed);
+      formattedTime = DateFormat('hh:mm a').format(parsed);
+    } catch (_) {}
+
+    final shortId = entity.id.length >= 8
+        ? entity.id.substring(0, 8).toUpperCase()
+        : entity.id.toUpperCase();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: ext.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: ext.border.withValues(alpha: 0.6)),
+        boxShadow: [
+          BoxShadow(
+            color: ext.shadowLight,
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // ── 1. Top Verified Status Badge & Category Header ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+            child: Column(
+              children: [
+                // Verified Status Pill
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: isDeleted
+                        ? AppColors.errorRed.withValues(alpha: 0.1)
+                        : AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isDeleted
+                          ? AppColors.errorRed.withValues(alpha: 0.3)
+                          : AppColors.primary.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isDeleted
+                            ? Icons.cancel_outlined
+                            : (entity.expenseType == 'settlement'
+                                ? Icons.handshake_rounded
+                                : Icons.verified_rounded),
+                        size: 14,
+                        color:
+                            isDeleted ? AppColors.errorRed : AppColors.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        isDeleted
+                            ? "CANCELLED EXPENSE"
+                            : (entity.expenseType == 'settlement'
+                                ? "SETTLEMENT RECORD"
+                                : "OFFICIAL RECEIPT"),
+                        style: GoogleFonts.outfit(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                          color: isDeleted
+                              ? AppColors.errorRed
+                              : AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Category Icon Circle Avatar
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: categoryColor.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: categoryColor.withValues(alpha: 0.3),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: categoryColor.withValues(alpha: 0.15),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(categoryIcon, color: categoryColor, size: 32),
+                ),
+
+                if (entity.category != null) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: categoryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      entity.category!.name,
+                      style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: categoryColor,
+                      ),
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 12),
+
+                // Expense Description
+                Text(
+                  entity.description,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: isDeleted ? ext.textTertiary : ext.textPrimary,
+                    decoration: isDeleted ? TextDecoration.lineThrough : null,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                const SizedBox(height: 6),
+
+                // Grand Total Amount Display
+                Text(
+                  "₹${formatter.format(entity.totalAmount)}",
+                  style: GoogleFonts.outfit(
+                    fontSize: 34,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -1,
+                    color: isDeleted ? ext.textTertiary : ext.textPrimary,
+                    decoration: isDeleted ? TextDecoration.lineThrough : null,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ── 2. Receipt Tear Notch & Dashed Divider ──
+          _buildReceiptNotchDivider(context),
+
+          // ── 3. Receipt Metadata Information Grid ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+            child: Column(
+              children: [
+                _buildReceiptDetailRow(
+                  context,
+                  icon: Icons.receipt_long_rounded,
+                  label: "Receipt Ref",
+                  valueWidget: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "#EXP-$shortId",
+                        style: GoogleFonts.outfit(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      InkWell(
+                        onTap: () => ClipboardUtils.copyToClipboard(
+                          context,
+                          entity.id,
+                          successMessage: "Receipt ID copied!",
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: Icon(
+                            Icons.copy_rounded,
+                            size: 13,
+                            color: ext.textTertiary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildReceiptDetailRow(
+                  context,
+                  icon: Icons.calendar_today_rounded,
+                  label: "Date & Time",
+                  value: formattedTime.isNotEmpty
+                      ? "$formattedDate • $formattedTime"
+                      : formattedDate,
+                ),
+                const SizedBox(height: 12),
+                _buildReceiptDetailRow(
+                  context,
+                  icon: entity.splits.isEmpty
+                      ? Icons.lock_outline_rounded
+                      : Icons.group_outlined,
+                  label: "Scope / Group",
+                  value: entity.splits.isEmpty
+                      ? "Personal Expense"
+                      : (state?.groupDisplayName ?? "Group Expense"),
+                ),
+                const SizedBox(height: 12),
+                _buildReceiptDetailRow(
+                  context,
+                  icon: Icons.person_outline_rounded,
+                  label: "Created By",
+                  value: state?.creatorFirstName ?? entity.createdBy.fullName,
+                ),
+              ],
+            ),
+          ),
+
+          // ── 4. Sub Dashed Line Divider ──
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: ReceiptDashedDivider(
+              color: ext.border.withValues(alpha: 0.4),
+            ),
+          ),
+
+          // ── 5. Payment & Payer Summary ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  entity.expenseType == 'settlement'
+                      ? "SETTLEMENT SUMMARY"
+                      : "PAYMENT DETAILS",
+                  style: GoogleFonts.outfit(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.0,
+                    color: ext.textTertiary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    AppAvatar(
+                      url: entity.paidBy.avatar,
+                      radius: 18,
+                      backgroundColor: ext.backgroundGrey,
+                      iconColor: AppColors.textGrey,
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            entity.paidBy.fullName,
+                            style: GoogleFonts.outfit(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: ext.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            "Paid 100% of the bill",
+                            style: GoogleFonts.outfit(
+                              fontSize: 12,
+                              color: ext.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      "₹${formatter.format(entity.totalAmount)}",
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: ext.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                if (entity.paymentMethod != null) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Color(int.parse(entity.paymentMethod!.color
+                              .replaceFirst('#', '0xFF')))
+                          .withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          IconUtils.getIconFromString(
+                              entity.paymentMethod!.icon),
+                          color: Color(int.parse(entity.paymentMethod!.color
+                              .replaceFirst('#', '0xFF'))),
+                          size: 14,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          "Paid via ${entity.paymentMethod!.name}",
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(int.parse(entity.paymentMethod!.color
+                                .replaceFirst('#', '0xFF'))),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          // ── 6. Split Participants Breakdown (if splits exist) ──
+          if (entity.expenseType != 'settlement' &&
+              entity.splits.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: ReceiptDashedDivider(
+                color: ext.border.withValues(alpha: 0.4),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "SPLIT BREAKDOWN",
+                        style: GoogleFonts.outfit(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.0,
+                          color: ext.textTertiary,
+                        ),
+                      ),
+                      Text(
+                        "${entity.splits.length} Participants",
+                        style: GoogleFonts.outfit(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: entity.splits.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final split = entity.splits[index];
+                      final isPayer = split.userId == entity.paidBy.id;
+                      final percentage = entity.totalAmount > 0
+                          ? ((split.amount / entity.totalAmount) * 100)
+                              .toStringAsFixed(0)
+                          : "0";
+
+                      return Row(
+                        children: [
+                          AppAvatar(
+                            url: split.avatar,
+                            radius: 16,
+                            backgroundColor: ext.backgroundGrey,
+                            iconColor: AppColors.textGrey,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        split.fullName,
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: ext.textPrimary,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if (isPayer) ...[
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary
+                                              .withValues(alpha: 0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          "Payer",
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.primary,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                Text(
+                                  "$percentage% share",
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 11,
+                                    color: ext.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            "₹${formatter.format(split.amount)}",
+                            style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color:
+                                  isPayer ? AppColors.primary : ext.textPrimary,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // ── 7. Notes Memo Section (if present) ──
+          if (entity.notes != null && entity.notes!.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: ReceiptDashedDivider(
+                color: ext.border.withValues(alpha: 0.4),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "NOTES & MEMO",
+                    style: GoogleFonts.outfit(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.0,
+                      color: ext.textTertiary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: ext.backgroundGrey,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: ext.border.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.edit_note_rounded,
+                            size: 18, color: AppColors.primary),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            entity.notes!,
+                            style: GoogleFonts.outfit(
+                              fontSize: 13,
+                              color: ext.textPrimary,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // ── 8. Media Attachments (if present) ──
+          if (entity.media.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: ReceiptDashedDivider(
+                color: ext.border.withValues(alpha: 0.4),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "RECEIPT ATTACHMENTS",
+                    style: GoogleFonts.outfit(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.0,
+                      color: ext.textTertiary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  ExpenseMediaList(
+                    entity: entity,
+                    canManageExpense: state?.canManageExpense ?? false,
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // ── 9. Bottom Tear Notch & Barcode Verification Footer ──
+          _buildReceiptNotchDivider(context),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            child: _buildReceiptBarcode(context, entity.id),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReceiptNotchDivider(BuildContext context) {
+    final ext = Theme.of(context).ext;
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: ReceiptDashedDivider(
+            color: ext.border.withValues(alpha: 0.4),
+            dashWidth: 6,
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              width: 14,
+              height: 22,
+              decoration: BoxDecoration(
+                color: ext.backgroundGrey,
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(11),
+                  bottomRight: Radius.circular(11),
+                ),
+                border: Border(
+                  top: BorderSide(color: ext.border.withValues(alpha: 0.4)),
+                  right: BorderSide(color: ext.border.withValues(alpha: 0.4)),
+                  bottom: BorderSide(color: ext.border.withValues(alpha: 0.4)),
+                ),
+              ),
+            ),
+            Container(
+              width: 14,
+              height: 22,
+              decoration: BoxDecoration(
+                color: ext.backgroundGrey,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(11),
+                  bottomLeft: Radius.circular(11),
+                ),
+                border: Border(
+                  top: BorderSide(color: ext.border.withValues(alpha: 0.4)),
+                  left: BorderSide(color: ext.border.withValues(alpha: 0.4)),
+                  bottom: BorderSide(color: ext.border.withValues(alpha: 0.4)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReceiptDetailRow(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    String? value,
+    Widget? valueWidget,
+  }) {
+    final ext = Theme.of(context).ext;
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: ext.textTertiary),
+        const SizedBox(width: 10),
+        Text(
+          label,
+          style: GoogleFonts.outfit(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: ext.textSecondary,
+          ),
+        ),
+        const Spacer(),
+        if (valueWidget != null)
+          valueWidget
+        else
+          Text(
+            value ?? "",
+            style: GoogleFonts.outfit(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: ext.textPrimary,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildReceiptBarcode(BuildContext context, String expenseId) {
+    final ext = Theme.of(context).ext;
+    final codeString =
+        expenseId.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toUpperCase();
+    final displayCode =
+        codeString.length > 16 ? codeString.substring(0, 16) : codeString;
+
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(34, (index) {
+            final isWide =
+                (index * 7 + 3) % 5 == 0 || (index * 3 + 1) % 4 == 0;
+            final isSpace = (index * 13 + 2) % 7 == 0;
+            if (isSpace) return const SizedBox(width: 3);
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 1),
+              width: isWide ? 3 : 1.5,
+              height: 32,
+              color: ext.textPrimary.withValues(alpha: 0.6),
+            );
+          }),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          "SPLITEASE VERIFIED RECEIPT • $displayCode",
+          style: GoogleFonts.outfit(
+            fontSize: 11,
+            letterSpacing: 1.2,
+            color: ext.textTertiary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
     );
   }
 
@@ -1274,5 +1957,41 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
         user: const ExpenseUserEntity(id: "", fullName: "User Name")
       ),
     ];
+  }
+}
+
+class ReceiptDashedDivider extends StatelessWidget {
+  final Color color;
+  final double height;
+  final double dashWidth;
+
+  const ReceiptDashedDivider({
+    super.key,
+    required this.color,
+    this.height = 1,
+    this.dashWidth = 6,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final boxWidth = constraints.constrainWidth();
+        final dashCount = (boxWidth / (2 * dashWidth)).floor();
+        return Flex(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          direction: Axis.horizontal,
+          children: List.generate(dashCount, (_) {
+            return SizedBox(
+              width: dashWidth,
+              height: height,
+              child: DecoratedBox(
+                decoration: BoxDecoration(color: color),
+              ),
+            );
+          }),
+        );
+      },
+    );
   }
 }

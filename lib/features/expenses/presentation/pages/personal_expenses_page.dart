@@ -21,6 +21,7 @@ import 'package:split_ease/core/utils/navigation_utils.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 
 import '../../../../core/presentation/widgets/app_back_button.dart';
+import 'package:split_ease/core/theme/app_layout.dart';
 
 // ── Filter definition (mirrors AnalyticsFilter) ─────────────────────────────
 enum PersonalExpenseFilter {
@@ -212,6 +213,7 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).ext.scaffoldBg,
         elevation: 0,
+        leadingWidth: AppLayout.appBarLeadingWidth,
         centerTitle: true,
         title: Text(
           "Personal Expenses",

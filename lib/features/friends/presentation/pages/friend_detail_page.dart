@@ -11,6 +11,7 @@ import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
+import 'package:split_ease/core/theme/app_layout.dart';
 import 'package:split_ease/features/friends/domain/entities/friend_entity.dart';
 import 'package:split_ease/features/friends/domain/entities/friend_expense_entity.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friend_detail_bloc.dart';
@@ -247,10 +248,10 @@ class _FriendDetailAppBar extends StatelessWidget {
       expandedHeight: 180.0,
       pinned: true,
       backgroundColor: Colors.transparent,
-      leadingWidth: 80,
+      leadingWidth: AppLayout.appBarLeadingWidth,
       leading: AppBackButton(
         onPressed: onBack,
-        color: Theme.of(context).ext.surface,
+        color: Colors.white,
         backgroundColor: Colors.black.withValues(alpha: 0.3),
       ),
       flexibleSpace: BlocBuilder<FriendDetailBloc, FriendDetailState>(

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
+import 'package:split_ease/core/theme/app_layout.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
@@ -24,7 +25,7 @@ class SettleUpSelectionPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Theme.of(context).ext.backgroundGrey,
         elevation: 0,
-        leadingWidth: 80,
+        leadingWidth: AppLayout.appBarLeadingWidth,
         leading: AppBackButton(
           onPressed: () => Navigator.pop(context),
           color: Theme.of(context).ext.textPrimary,

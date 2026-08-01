@@ -10,6 +10,7 @@ import 'package:split_ease/features/auth/domain/entities/user_entity.dart';
 import 'package:split_ease/features/profile/presentation/bloc/profile_bloc.dart';
 import 'package:split_ease/features/profile/presentation/widgets/profile_avatar.dart';
 import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
+import 'package:split_ease/core/theme/app_layout.dart';
 import 'package:split_ease/injection_container.dart';
 
 class EditProfilePage extends StatefulWidget {
@@ -195,7 +196,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       elevation: 0,
       scrolledUnderElevation: 0,
       toolbarHeight: 64,
-      leadingWidth: 64,
+      leadingWidth: AppLayout.appBarLeadingWidth,
       leading: AppBackButton(onPressed: () => Navigator.pop(context)),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

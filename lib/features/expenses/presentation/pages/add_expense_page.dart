@@ -11,6 +11,7 @@ import 'package:split_ease/core/presentation/widgets/group_picker_sheet.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
+import 'package:split_ease/core/theme/app_layout.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
@@ -122,7 +123,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
             style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary, fontWeight: FontWeight.w600, fontSize: 16),
           ),
         ),
-        leadingWidth: 80,
+        leadingWidth: AppLayout.appBarLeadingWidth,
         title: BlocBuilder<ExpenseBloc, ExpenseState>(
           buildWhen: (previous, current) => previous.isEdit != current.isEdit,
           builder: (context, state) {

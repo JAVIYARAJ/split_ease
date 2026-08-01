@@ -11,6 +11,7 @@ import 'package:split_ease/core/utils/clipboard_utils.dart';
 import 'package:split_ease/core/utils/file_utils.dart';
 import 'package:split_ease/core/presentation/widgets/animations/staggered_entry_column.dart';
 import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
+import 'package:split_ease/core/theme/app_layout.dart';
 
 class GroupQrPage extends StatefulWidget {
   final String inviteCode;
@@ -80,12 +81,12 @@ class _GroupQrPageState extends State<GroupQrPage> {
         backgroundColor: Theme.of(context).ext.scaffoldBg,
         elevation: 0,
         scrolledUnderElevation: 0,
-        leadingWidth: 80,
+        leadingWidth: AppLayout.appBarLeadingWidth,
         leading: AppBackButton(onPressed: () => Navigator.pop(context)),
       ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        padding: EdgeInsets.symmetric(horizontal: AppLayout.pageHorizontalPadding, vertical: 16),
         child: StaggeredEntryColumn(
           verticalOffset: 30,
           children: [

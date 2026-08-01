@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
+import 'package:split_ease/core/theme/app_layout.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_formatter.dart';
 import 'package:split_ease/core/presentation/widgets/animations/animated_counter_text.dart';
@@ -105,6 +106,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).ext.backgroundGrey,
         elevation: 0,
+        leadingWidth: AppLayout.appBarLeadingWidth,
         centerTitle: true,
         title: Text(
           "Analytics",
