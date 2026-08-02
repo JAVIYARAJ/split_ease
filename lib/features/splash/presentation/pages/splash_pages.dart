@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lottie/lottie.dart';
-import 'package:split_ease/core/presentation/widgets/base_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
-import 'package:split_ease/core/utils/app_assets.dart';
-import 'package:split_ease/features/splash/presentation/cubit/splash_cubit.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
+import 'package:split_ease/features/splash/presentation/cubit/splash_cubit.dart';
+import 'package:split_ease/features/splash/presentation/widgets/splash_background.dart';
+import 'package:split_ease/features/splash/presentation/widgets/splash_split_logo.dart';
 
 class SplashPages extends StatefulWidget {
   const SplashPages({super.key});
@@ -16,20 +15,27 @@ class SplashPages extends StatefulWidget {
   State<SplashPages> createState() => _SplashPagesState();
 }
 
-class _SplashPagesState extends State<SplashPages> {
-  bool _showEase = false;
+class _SplashPagesState extends State<SplashPages>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _progressController;
 
   @override
   void initState() {
     super.initState();
+    // Start splash business logic
     context.read<SplashCubit>().start();
-    
-    // Trigger the "ease" animation after the Lottie finishes drawing "Split"
-    Future.delayed(const Duration(milliseconds: 1600), () {
-      if (mounted) {
-        setState(() => _showEase = true);
-      }
-    });
+
+    // Progress bar animation for visual feedback (3 seconds duration)
+    _progressController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2800),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _progressController.dispose();
+    super.dispose();
   }
 
   @override
@@ -44,42 +50,120 @@ class _SplashPagesState extends State<SplashPages> {
           NavigationService.pushReplacement(AppRoutes.home);
         }
       },
-      child: BaseScreen(
-        child: Center(
-          child: Stack(
-            alignment: Alignment.center,
-            clipBehavior: Clip.none,
-            children: [
-              Lottie.asset(
-                AppAssets.icWelcomeBanner, 
-                width: double.maxFinite, 
-                height: 200, 
-                fit: BoxFit.cover,
-              ),
-              Positioned(
-                top: 155, // Moved down to sit completely underneath "lit"
-                right: (MediaQuery.of(context).size.width / 2) - 85, // Aligned its right edge exactly with the right edge of "t"
-                child: AnimatedOpacity(
-                  opacity: _showEase ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 800),
-                  child: AnimatedSlide(
-                    offset: _showEase ? Offset.zero : const Offset(0.5, 0.0), // Starts from the right
-                    duration: const Duration(milliseconds: 800),
-                    curve: Curves.easeOutCubic,
-                    child: Text(
-                      "ease",
-                      style: GoogleFonts.outfit(
-                        fontSize: 52,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.primary,
-                        height: 1,
-                        letterSpacing: -2.0,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF041816),
+        body: SplashBackground(
+          child: SafeArea(
+            child: Stack(
+              children: [
+                // 1. Central Hero Emblem & Brand Typography
+                const Center(
+                  child: SplashSplitLogo(),
+                ),
+
+                // 2. Bottom Loading Progress Bar & Version Info
+                Positioned(
+                  left: 32,
+                  right: 32,
+                  bottom: 24,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Loading Status Text
+                      AnimatedBuilder(
+                        animation: _progressController,
+                        builder: (context, child) {
+                          final double val = _progressController.value;
+                          String statusText = "Initializing...";
+                          if (val > 0.7) {
+                            statusText = "Syncing balances...";
+                          } else if (val > 0.4) {
+                            statusText = "Preparing experience...";
+                          }
+
+                          return Text(
+                            statusText,
+                            style: GoogleFonts.outfit(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white.withValues(alpha: 0.6),
+                              letterSpacing: 0.8,
+                            ),
+                          );
+                        },
                       ),
-                    ),
+
+                      const SizedBox(height: 10),
+
+                      // Animated Progress Bar Pill
+                      Container(
+                        height: 4,
+                        width: 140,
+                        clipBehavior: Clip.antiAlias,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                        child: AnimatedBuilder(
+                          animation: _progressController,
+                          builder: (context, child) {
+                            return FractionallySizedBox(
+                              alignment: Alignment.centerLeft,
+                              widthFactor: Curves.easeOutCubic
+                                  .transform(_progressController.value),
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppColors.primary,
+                                      AppColors.brandYellow,
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(2),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.brandYellow,
+                                      blurRadius: 6,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+
+                      const SizedBox(height: 18),
+
+                      // Version Indicator Tag
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.08),
+                          ),
+                        ),
+                        child: Text(
+                          "v1.0.0",
+                          style: GoogleFonts.outfit(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white.withValues(alpha: 0.4),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

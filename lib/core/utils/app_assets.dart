@@ -1,10 +1,7 @@
 class AppAssets {
   AppAssets._();
 
+  // Animations
 
-  //Animation
-  static const String icWelcomeBanner = "assets/animation/welcome_banner.json";
-
-  //Images
-
+  // Images
 }
