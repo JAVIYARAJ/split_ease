@@ -1,8 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 
-/// Animated ambient background for SplitEase Splash Screen
+/// Theme-aware animated background for SplitEase Splash Screen
 class SplashBackground extends StatefulWidget {
   final Widget child;
 
@@ -48,6 +49,9 @@ class _SplashBackgroundState extends State<SplashBackground>
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).isDark;
+    final AppColorTokens tokens = Theme.of(context).ext;
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -55,6 +59,8 @@ class _SplashBackgroundState extends State<SplashBackground>
           painter: _ParticlePainter(
             particles: _particles,
             progress: _controller.value,
+            isDark: isDark,
+            tokens: tokens,
           ),
           child: widget.child,
         );
@@ -82,41 +88,55 @@ class _Particle {
 class _ParticlePainter extends CustomPainter {
   final List<_Particle> particles;
   final double progress;
+  final bool isDark;
+  final AppColorTokens tokens;
 
-  _ParticlePainter({required this.particles, required this.progress});
+  _ParticlePainter({
+    required this.particles,
+    required this.progress,
+    required this.isDark,
+    required this.tokens,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 1. Base Rich Gradient Background
     final Rect rect = Offset.zero & size;
+
+    // 1. Theme-adapted Base Canvas Gradient
     final Paint bgPaint = Paint()
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [
-          Color(0xFF041816), // Ultra dark deep teal top
-          Color(0xFF00332D), // Rich midnight teal
-          Color(0xFF004D40), // Deep primary teal bottom
-        ],
-        stops: [0.0, 0.55, 1.0],
+        colors: isDark
+            ? [
+                const Color(0xFF0A1628), // Deep Dark Obsidian
+                const Color(0xFF0F172A), // App Theme Dark Scaffold Bg
+                const Color(0xFF003832), // Dark Teal Brand Depth
+              ]
+            : [
+                AppColors.backgroundWhite, // App Theme Light Scaffold Bg
+                AppColors.backgroundLightGrey, // Light Grey Surface
+                AppColors.primary.withValues(alpha: 0.08), // Light Teal Wash
+              ],
+        stops: const [0.0, 0.55, 1.0],
       ).createShader(rect);
     canvas.drawRect(rect, bgPaint);
 
-    // 2. Ambient Glowing Spotlights (Top-Right Teal Glow & Center Gold Glow)
+    // 2. Ambient Spotlights matching Primary Teal & Brand Yellow
     final Paint spotTeal = Paint()
       ..shader = RadialGradient(
         colors: [
-          AppColors.primary.withValues(alpha: 0.35),
+          AppColors.primary.withValues(alpha: isDark ? 0.35 : 0.15),
           AppColors.primary.withValues(alpha: 0.0),
         ],
       ).createShader(
         Rect.fromCircle(
-          center: Offset(size.width * 0.75, size.height * 0.25),
+          center: Offset(size.width * 0.8, size.height * 0.2),
           radius: size.width * 0.7,
         ),
       );
     canvas.drawCircle(
-      Offset(size.width * 0.75, size.height * 0.25),
+      Offset(size.width * 0.8, size.height * 0.2),
       size.width * 0.7,
       spotTeal,
     );
@@ -124,17 +144,17 @@ class _ParticlePainter extends CustomPainter {
     final Paint spotGold = Paint()
       ..shader = RadialGradient(
         colors: [
-          AppColors.brandYellow.withValues(alpha: 0.18),
+          AppColors.brandYellow.withValues(alpha: isDark ? 0.20 : 0.12),
           AppColors.brandYellow.withValues(alpha: 0.0),
         ],
       ).createShader(
         Rect.fromCircle(
-          center: Offset(size.width * 0.3, size.height * 0.65),
+          center: Offset(size.width * 0.25, size.height * 0.7),
           radius: size.width * 0.6,
         ),
       );
     canvas.drawCircle(
-      Offset(size.width * 0.3, size.height * 0.65),
+      Offset(size.width * 0.25, size.height * 0.7),
       size.width * 0.6,
       spotGold,
     );
@@ -145,11 +165,13 @@ class _ParticlePainter extends CustomPainter {
       final double actualX = particle.x * size.width;
       final double actualY = currentY * size.height;
 
+      final Color particleColor = particle.radius > 3.5
+          ? AppColors.brandYellow
+          : (isDark ? Colors.white : AppColors.primary);
+
       final Paint particlePaint = Paint()
-        ..color = (particle.radius > 3.5
-                ? AppColors.brandYellow
-                : Colors.white)
-            .withValues(alpha: particle.opacity)
+        ..color = particleColor.withValues(
+            alpha: isDark ? particle.opacity : particle.opacity * 0.6)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
 
       canvas.drawCircle(
@@ -161,5 +183,6 @@ class _ParticlePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _ParticlePainter oldDelegate) => true;
+  bool shouldRepaint(covariant _ParticlePainter oldDelegate) =>
+      oldDelegate.isDark != isDark || oldDelegate.progress != progress;
 }

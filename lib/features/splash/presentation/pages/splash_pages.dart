@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/features/splash/presentation/cubit/splash_cubit.dart';
 import 'package:split_ease/features/splash/presentation/widgets/splash_background.dart';
@@ -25,7 +26,7 @@ class _SplashPagesState extends State<SplashPages>
     // Start splash business logic
     context.read<SplashCubit>().start();
 
-    // Progress bar animation for visual feedback (3 seconds duration)
+    // Progress bar animation for visual feedback (2.8 seconds duration)
     _progressController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2800),
@@ -40,6 +41,9 @@ class _SplashPagesState extends State<SplashPages>
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).isDark;
+    final AppColorTokens tokens = Theme.of(context).ext;
+
     return BlocListener<SplashCubit, SplashState>(
       listener: (context, state) {
         if (state is SplashNavigateToWelcome) {
@@ -51,7 +55,7 @@ class _SplashPagesState extends State<SplashPages>
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFF041816),
+        backgroundColor: tokens.scaffoldBg,
         body: SplashBackground(
           child: SafeArea(
             child: Stack(
@@ -86,7 +90,7 @@ class _SplashPagesState extends State<SplashPages>
                             style: GoogleFonts.outfit(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: Colors.white.withValues(alpha: 0.6),
+                              color: tokens.textSecondary,
                               letterSpacing: 0.8,
                             ),
                           );
@@ -101,7 +105,7 @@ class _SplashPagesState extends State<SplashPages>
                         width: 140,
                         clipBehavior: Clip.antiAlias,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.12),
+                          color: tokens.border.withValues(alpha: isDark ? 0.2 : 0.5),
                           borderRadius: BorderRadius.circular(2),
                         ),
                         child: AnimatedBuilder(
@@ -124,7 +128,7 @@ class _SplashPagesState extends State<SplashPages>
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.brandYellow,
+                                      color: AppColors.primary,
                                       blurRadius: 6,
                                     ),
                                   ],
@@ -144,10 +148,10 @@ class _SplashPagesState extends State<SplashPages>
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.2),
+                          color: tokens.surface.withValues(alpha: isDark ? 0.2 : 0.8),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.08),
+                            color: tokens.border.withValues(alpha: isDark ? 0.15 : 0.5),
                           ),
                         ),
                         child: Text(
@@ -155,7 +159,7 @@ class _SplashPagesState extends State<SplashPages>
                           style: GoogleFonts.outfit(
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
-                            color: Colors.white.withValues(alpha: 0.4),
+                            color: tokens.textTertiary,
                           ),
                         ),
                       ),
