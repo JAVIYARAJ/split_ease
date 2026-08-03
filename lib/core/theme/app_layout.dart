@@ -11,6 +11,8 @@ class AppLayout {
   /// (20.0 left padding + 40.0 button width + 8.0 trailing space)
   static const double appBarLeadingWidth = 68.0;
 
+  static const double appBarTextLeadingWidth = 75.0;
+
   /// Standard EdgeInsets for page body content
   static const EdgeInsets pagePadding = EdgeInsets.symmetric(
     horizontal: pageHorizontalPadding,

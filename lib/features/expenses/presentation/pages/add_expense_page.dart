@@ -124,7 +124,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
             style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary, fontWeight: FontWeight.w600, fontSize: 16),
           ),
         ),
-        leadingWidth: AppLayout.appBarLeadingWidth,
+        leadingWidth: AppLayout.appBarTextLeadingWidth,
         title: BlocBuilder<ExpenseBloc, ExpenseState>(
           buildWhen: (previous, current) => previous.isEdit != current.isEdit,
           builder: (context, state) {
