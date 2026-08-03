@@ -395,17 +395,37 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                           const SizedBox(height: 22),
                           Padding(
                             padding: const EdgeInsets.only(bottom: 10),
-                            child: Expanded(
-                              child: Text(
-                                "Category Breakdown",
-                                style: GoogleFonts.outfit(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: Theme.of(context).ext.textPrimary,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    "Category Breakdown",
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                      color: Theme.of(context).ext.textPrimary,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                                const SizedBox(width: 8),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.touch_app_rounded, size: 12, color: AppColors.primary),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      "Tap for details",
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
                         ],
