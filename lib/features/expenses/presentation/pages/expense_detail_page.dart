@@ -7,6 +7,7 @@ import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
 import 'package:split_ease/core/presentation/widgets/base_screen.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/core/utils/icon_utils.dart';
@@ -69,7 +70,6 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     return BlocListener<DataRefreshCubit, DataRefreshState>(
@@ -98,7 +98,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             },
             child: BaseScreen(
               useSafeArea: true,
-              backgroundColor: AppColors.backgroundLightGrey,
+              backgroundColor: Theme.of(context).ext.scaffoldBg,
               appBar: AppBar(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
@@ -109,7 +109,11 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 ),
                 title: Text(
                   "Expense Details",
-                  style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 18, fontWeight: FontWeight.w600),
+                  style: GoogleFonts.outfit(
+                    color: Theme.of(context).ext.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 actions: [
                   BlocBuilder<ExpenseDetailBloc, ExpenseDetailState>(
@@ -140,11 +144,11 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                             Container(
                               margin: const EdgeInsets.symmetric(horizontal: 4),
                               decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.3),
+                                color: Theme.of(context).ext.inputFill,
                                 shape: BoxShape.circle,
                               ),
                               child: IconButton(
-                                icon: const Icon(Icons.edit_outlined, color: Colors.white, size: 20),
+                                icon: Icon(Icons.edit_outlined, color: Theme.of(context).ext.textPrimary, size: 20),
                                 onPressed: () {
                                   NavigationUtils.handleResult(
                                     context: context,
@@ -162,11 +166,11 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                           Container(
                             margin: const EdgeInsets.symmetric(horizontal: 4),
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.3),
+                              color: Theme.of(context).ext.inputFill,
                               shape: BoxShape.circle,
                             ),
                             child: IconButton(
-                              icon: const Icon(Icons.delete_outline_rounded, color: Colors.white, size: 20),
+                              icon: Icon(Icons.delete_outline_rounded, color: Theme.of(context).ext.error, size: 20),
                               onPressed: () {
                                 _showDeleteConfirmationDialog(context, loadedState.expenseDetail.id);
                               },
@@ -183,8 +187,6 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 listener: (context, state) {
                   if (state is ExpenseDeleted) {
                     AppAlerts.showSuccess(context, 'Expense deleted successfully');
-                    // In a detail page, we might want to stay but show the deleted state,
-                    // or pop back. Assuming we pop for now as before.
                     Navigator.of(context).pop(true);
                   } else if (state is ExpenseDeleteError) {
                     AppAlerts.showError(context, state.message);
@@ -292,18 +294,14 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                           // Sticky Comments Section at the Bottom
                           if (!isDeleted)
                             Container(
-                              color: AppColors.backgroundLightGrey,
+                              color: Theme.of(context).ext.scaffoldBg,
                               padding: EdgeInsets.only(
                                 left: 20,
                                 right: 20,
                                 top: 12,
-                                bottom: MediaQuery
-                                    .of(context)
-                                    .padding
-                                    .bottom > 0 ? MediaQuery
-                                    .of(context)
-                                    .padding
-                                    .bottom : 20,
+                                bottom: MediaQuery.of(context).padding.bottom > 0
+                                    ? MediaQuery.of(context).padding.bottom
+                                    : 20,
                               ),
                               child: _buildCommentsSection(entity, loadedState?.editingCommentId),
                             ),
@@ -325,19 +323,19 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderGreyLight),
+        border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: const BoxDecoration(
-              color: AppColors.borderGrey,
+            decoration: BoxDecoration(
+              color: Theme.of(context).ext.inputFill,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.delete_outline_rounded, color: AppColors.textGrey, size: 20),
+            child: Icon(Icons.delete_outline_rounded, color: Theme.of(context).ext.textSecondary, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -347,7 +345,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 Text(
                   "Deleted Expense",
                   style: GoogleFonts.outfit(
-                    color: AppColors.textBlack,
+                    color: Theme.of(context).ext.textPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                   ),
@@ -355,7 +353,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 Text(
                   "Does not affect balances.",
                   style: GoogleFonts.outfit(
-                    color: AppColors.textGrey,
+                    color: Theme.of(context).ext.textSecondary,
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
                   ),
@@ -374,8 +372,8 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 13),
               ),
               style: TextButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                foregroundColor: AppColors.primaryTeal,
+                backgroundColor: AppColors.primaryTeal.withValues(alpha: 0.1),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
@@ -392,26 +390,26 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.05),
+        color: AppColors.primaryTeal.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+        border: Border.all(color: AppColors.primaryTeal.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
+              color: AppColors.primaryTeal.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.info_outline_rounded, color: AppColors.primary, size: 20),
+            child: const Icon(Icons.info_outline_rounded, color: AppColors.primaryTeal, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               "Settle up expense is not editable, you can just delete or revert this tnx",
               style: GoogleFonts.outfit(
-                color: AppColors.textBlack,
+                color: Theme.of(context).ext.textPrimary,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -427,12 +425,13 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: Text('Delete Expense', style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
-          content: Text('Are you sure you want to delete this expense? This will hide it and revert its metabolic effect on balances.', style: GoogleFonts.outfit()),
+          backgroundColor: Theme.of(context).ext.surface,
+          title: Text('Delete Expense', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary)),
+          content: Text('Are you sure you want to delete this expense? This will hide it and revert its metabolic effect on balances.', style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary)),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: Text('Cancel', style: GoogleFonts.outfit(color: AppColors.textGrey)),
+              child: Text('Cancel', style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary)),
             ),
             TextButton(
               onPressed: () {
@@ -441,7 +440,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
               },
               child: Text(
                 'Delete',
-                style: GoogleFonts.outfit(color: AppColors.errorRed, fontWeight: FontWeight.w600),
+                style: GoogleFonts.outfit(color: Theme.of(context).ext.error, fontWeight: FontWeight.w600),
               ),
             ),
           ],
@@ -455,12 +454,12 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.errorRed),
+          Icon(Icons.error_outline_rounded, size: 48, color: Theme.of(context).ext.error),
           const SizedBox(height: 16),
           Text(
             "Failed to load expense details:\n$message",
             textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(color: AppColors.textGrey, fontSize: 15),
+            style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary, fontSize: 15),
           ),
         ],
       ),
@@ -470,14 +469,14 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+      style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary),
     );
   }
 
   Widget _buildHeaderAmount(ExpenseDetailEntity entity, bool isDeleted) {
     final formatter = NumberFormat('#,##0.00', 'en_IN');
 
-    Color categoryColor = AppColors.primary;
+    Color categoryColor = AppColors.primaryTeal;
     IconData categoryIcon = Icons.receipt_long_rounded;
 
     if (entity.category != null) {
@@ -526,7 +525,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
           style: GoogleFonts.outfit(
             fontSize: 22,
             fontWeight: FontWeight.w700,
-            color: isDeleted ? AppColors.textGrey : AppColors.textBlack,
+            color: isDeleted ? Theme.of(context).ext.textTertiary : Theme.of(context).ext.textPrimary,
             decoration: isDeleted ? TextDecoration.lineThrough : null,
           ),
           maxLines: 2,
@@ -539,7 +538,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             fontSize: 32,
             fontWeight: FontWeight.w800,
             letterSpacing: -1,
-            color: isDeleted ? AppColors.textGrey : AppColors.textBlack,
+            color: isDeleted ? Theme.of(context).ext.textTertiary : Theme.of(context).ext.textPrimary,
             decoration: isDeleted ? TextDecoration.lineThrough : null,
           ),
         ),
@@ -558,17 +557,17 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderGreyLight),
+        border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildInfoItem(Icons.calendar_today_rounded, "Date", formattedDate),
-          Container(width: 1, height: 32, color: AppColors.borderGreyLight),
+          Container(width: 1, height: 32, color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
           _buildInfoItem(Icons.person_outline_rounded, "Added By", state.creatorFirstName),
-          Container(width: 1, height: 32, color: AppColors.borderGreyLight),
+          Container(width: 1, height: 32, color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
           if (entity.splits.isEmpty)
             _buildInfoItem(Icons.lock_outline_rounded, "Scope", "Personal")
           else
@@ -582,11 +581,11 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     return Expanded(
       child: Column(
         children: [
-          Icon(icon, color: AppColors.iconGrey, size: 20),
+          Icon(icon, color: Theme.of(context).ext.textSecondary, size: 20),
           const SizedBox(height: 8),
           Text(
             label,
-            style: GoogleFonts.outfit(color: AppColors.iconGrey, fontSize: 12, fontWeight: FontWeight.w500),
+            style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary, fontSize: 12, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 4),
           FittedBox(
@@ -595,7 +594,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             child: Text(
               value,
               textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 13, fontWeight: FontWeight.w600),
+              style: GoogleFonts.outfit(color: Theme.of(context).ext.textPrimary, fontSize: 13, fontWeight: FontWeight.w600),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -617,46 +616,46 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderGreyLight),
+        border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
           Row(
             children: [
-              const Icon(Icons.add_circle_outline_rounded, size: 16, color: AppColors.primary),
+              const Icon(Icons.add_circle_outline_rounded, size: 16, color: AppColors.primaryTeal),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   "Created by ${state.creatorFirstName}",
-                  style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 13, fontWeight: FontWeight.w500),
+                  style: GoogleFonts.outfit(color: Theme.of(context).ext.textPrimary, fontSize: 13, fontWeight: FontWeight.w500),
                 ),
               ),
               Text(
                 formattedCreatedAt,
-                style: GoogleFonts.outfit(color: AppColors.textGrey, fontSize: 12, fontWeight: FontWeight.w400),
+                style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary, fontSize: 12, fontWeight: FontWeight.w400),
               ),
             ],
           ),
           if (state.expenseDetail.updatedBy != null) ...[
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 10),
-              child: Divider(height: 1, color: AppColors.borderGreyLight),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Divider(height: 1, color: Theme.of(context).ext.border.withValues(alpha: 0.2)),
             ),
             Row(
               children: [
-                const Icon(Icons.edit_note_rounded, size: 16, color: AppColors.iconGrey),
+                Icon(Icons.edit_note_rounded, size: 16, color: Theme.of(context).ext.textSecondary),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     "Updated by ${state.updatedByFirstName}",
-                    style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 13, fontWeight: FontWeight.w500),
+                    style: GoogleFonts.outfit(color: Theme.of(context).ext.textPrimary, fontSize: 13, fontWeight: FontWeight.w500),
                   ),
                 ),
                 Text(
                   state.formattedUpdatedAt ?? "",
-                  style: GoogleFonts.outfit(color: AppColors.textGrey, fontSize: 12, fontWeight: FontWeight.w400),
+                  style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary, fontSize: 12, fontWeight: FontWeight.w400),
                 ),
               ],
             ),
@@ -691,18 +690,18 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.surfaceWhite,
+          color: Theme.of(context).ext.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.borderGreyLight),
+          border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: AppColors.primary, size: 20),
+            Icon(icon, color: AppColors.primaryTeal, size: 20),
             const SizedBox(width: 8),
             Text(
               label,
-              style: GoogleFonts.outfit(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 14),
+              style: GoogleFonts.outfit(color: AppColors.primaryTeal, fontWeight: FontWeight.w600, fontSize: 14),
             ),
           ],
         ),
@@ -713,9 +712,9 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
   Widget _buildPaidBySection(ExpenseDetailEntity entity) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderGreyLight),
+        border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -723,7 +722,12 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                AppAvatar(url: entity.paidBy.avatar, radius: 18, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+                AppAvatar(
+                  url: entity.paidBy.avatar,
+                  radius: 18,
+                  backgroundColor: Theme.of(context).ext.inputFill,
+                  iconColor: Theme.of(context).ext.textSecondary,
+                ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -731,21 +735,21 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                     children: [
                       Text(
                         entity.paidBy.fullName,
-                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary),
                       ),
-                      Text("Paid 100% of the cost", style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
+                      Text("Paid 100% of the cost", style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary)),
                     ],
                   ),
                 ),
                 Text(
                   "₹${NumberFormat('#,##0.00', 'en_IN').format(entity.totalAmount)}",
-                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary),
                 ),
               ],
             ),
           ),
           if (entity.paymentMethod != null) ...[
-            Divider(height: 1, color: AppColors.borderGreyLight, indent: 16, endIndent: 16),
+            Divider(height: 1, color: Theme.of(context).ext.border.withValues(alpha: 0.2), indent: 16, endIndent: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
@@ -768,7 +772,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                     style: GoogleFonts.outfit(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textGrey,
+                      color: Theme.of(context).ext.textSecondary,
                     ),
                   ),
                 ],
@@ -786,9 +790,9 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderGreyLight),
+        border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -797,7 +801,12 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                AppAvatar(url: paidBy.avatar, radius: 18, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+                AppAvatar(
+                  url: paidBy.avatar,
+                  radius: 18,
+                  backgroundColor: Theme.of(context).ext.inputFill,
+                  iconColor: Theme.of(context).ext.textSecondary,
+                ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -805,28 +814,33 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                     children: [
                       Text(
                         paidBy.fullName,
-                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary),
                       ),
-                      Text("Paid By", style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
+                      Text("Paid By", style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary)),
                     ],
                   ),
                 ),
                 Text(
                   "₹${NumberFormat('#,##0.00', 'en_IN').format(entity.totalAmount)}",
-                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary),
                 ),
               ],
             ),
           ),
 
           if (paidTo != null) ...[
-            Divider(height: 1, color: AppColors.borderGreyLight, indent: 16, endIndent: 16),
+            Divider(height: 1, color: Theme.of(context).ext.border.withValues(alpha: 0.2), indent: 16, endIndent: 16),
             // Paid To
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
-                  AppAvatar(url: paidTo.avatar, radius: 18, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+                  AppAvatar(
+                    url: paidTo.avatar,
+                    radius: 18,
+                    backgroundColor: Theme.of(context).ext.inputFill,
+                    iconColor: Theme.of(context).ext.textSecondary,
+                  ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
@@ -834,15 +848,15 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                       children: [
                         Text(
                           paidTo.fullName,
-                          style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                          style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary),
                         ),
-                        Text("Paid To", style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
+                        Text("Paid To", style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary)),
                       ],
                     ),
                   ),
                   Text(
                     "₹${NumberFormat('#,##0.00', 'en_IN').format(entity.totalAmount)}",
-                    style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack),
+                    style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary),
                   ),
                 ],
               ),
@@ -850,7 +864,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
           ],
 
           if (entity.paymentMethod != null) ...[
-            Divider(height: 1, color: AppColors.borderGreyLight, indent: 16, endIndent: 16),
+            Divider(height: 1, color: Theme.of(context).ext.border.withValues(alpha: 0.2), indent: 16, endIndent: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
@@ -873,7 +887,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                     style: GoogleFonts.outfit(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textGrey,
+                      color: Theme.of(context).ext.textSecondary,
                     ),
                   ),
                 ],
@@ -886,11 +900,18 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
   }
 
   Widget _buildNotesSection(String notes) {
+    final isDark = Theme.of(context).isDark;
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF9C4).withValues(alpha: 0.3),
+        color: isDark
+            ? AppColors.primaryTeal.withValues(alpha: 0.08)
+            : const Color(0xFFFFF9C4).withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFFF176).withValues(alpha: 0.5)),
+        border: Border.all(
+          color: isDark
+              ? AppColors.primaryTeal.withValues(alpha: 0.25)
+              : const Color(0xFFFFF176).withValues(alpha: 0.6),
+        ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Text(
@@ -900,7 +921,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
           fontSize: 14,
           height: 1.6,
           letterSpacing: 0.2,
-          color: AppColors.textBlack.withValues(alpha: 0.8),
+          color: Theme.of(context).ext.textPrimary,
           fontStyle: FontStyle.italic,
         ),
       ),
@@ -910,32 +931,34 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
   Widget _buildSplitsList(ExpenseDetailEntity entity) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderGreyLight),
+        border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
       ),
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: entity.splits.length,
-        separatorBuilder: (context, index) => const Divider(height: 1, thickness: 1, color: AppColors.backgroundLightGrey),
+        separatorBuilder: (context, index) => Divider(height: 1, thickness: 1, color: Theme.of(context).ext.border.withValues(alpha: 0.2)),
         itemBuilder: (context, index) {
           final split = entity.splits[index];
           final isOwed = split.type != "participant";
           final amountText = isOwed ? "Owes" : "Participated";
 
-          return _buildSplitListItem(name: split.fullName,
-              avatarUrl: split.avatar,
-              subText: amountText,
-              amount: split.amount,
-              isOwed: isOwed);
+          return _buildSplitListItem(
+            name: split.fullName,
+            avatarUrl: split.avatar,
+            subText: amountText,
+            amount: split.amount,
+            isOwed: isOwed,
+          );
         },
       ),
     );
   }
 
   Widget _buildSplitListItem({required String name, String? avatarUrl, required String subText, required double amount, required bool isOwed}) {
-    final amountColor = isOwed ? AppColors.warningOrange : AppColors.textGrey;
+    final amountColor = isOwed ? AppColors.warningOrange : Theme.of(context).ext.textSecondary;
 
     return InkWell(
       onTap: () {},
@@ -943,7 +966,12 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Row(
           children: [
-            AppAvatar(url: avatarUrl, radius: 18, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+            AppAvatar(
+              url: avatarUrl,
+              radius: 18,
+              backgroundColor: Theme.of(context).ext.inputFill,
+              iconColor: Theme.of(context).ext.textSecondary,
+            ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -951,10 +979,10 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 children: [
                   Text(
                     name,
-                    style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                    style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary),
                   ),
                   const SizedBox(height: 2),
-                  Text(subText, style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
+                  Text(subText, style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary)),
                 ],
               ),
             ),
@@ -971,9 +999,9 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
   Widget _buildCommentsSection(ExpenseDetailEntity entity, String? editingCommentId) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
+        color: Theme.of(context).ext.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderGreyLight),
+        border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
       ),
       padding: const EdgeInsets.all(12.0),
       child: Column(
@@ -986,17 +1014,17 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Editing comment", style: GoogleFonts.outfit(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w500)),
+                  Text("Editing comment", style: GoogleFonts.outfit(fontSize: 12, color: AppColors.primaryTeal, fontWeight: FontWeight.w500)),
                   GestureDetector(
                     onTap: () => context.read<ExpenseDetailBloc>().add(CancelEditingCommentEvent()),
-                    child: const Icon(Icons.close_rounded, size: 16, color: AppColors.textGrey),
+                    child: Icon(Icons.close_rounded, size: 16, color: Theme.of(context).ext.textSecondary),
                   ),
                 ],
               ),
             ),
           Row(
             children: [
-              const AppAvatar(radius: 18, backgroundColor: AppColors.primary, iconColor: Colors.white),
+              const AppAvatar(radius: 18, backgroundColor: AppColors.primaryTeal, iconColor: Colors.white),
               const SizedBox(width: 12),
               Expanded(
                 child: TextField(
@@ -1008,12 +1036,12 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                   buildCounter: (context, {required currentLength, required isFocused, maxLength}) {
                     // Only show counter when actively typing (near limit)
                     if (!isFocused || currentLength < 400) return null;
-                    return Text('$currentLength/$maxLength', style: GoogleFonts.outfit(fontSize: 10, color: currentLength >= 490 ? AppColors.errorRed : AppColors.textGrey));
+                    return Text('$currentLength/$maxLength', style: GoogleFonts.outfit(fontSize: 10, color: currentLength >= 490 ? Theme.of(context).ext.error : Theme.of(context).ext.textSecondary));
                   },
-                  style: GoogleFonts.outfit(fontSize: 14),
+                  style: GoogleFonts.outfit(fontSize: 14, color: Theme.of(context).ext.textPrimary),
                   decoration: InputDecoration(
                     hintText: editingCommentId != null ? "Update your comment..." : "Add a comment...",
-                    hintStyle: GoogleFonts.outfit(color: AppColors.iconGrey, fontSize: 14),
+                    hintStyle: GoogleFonts.outfit(color: Theme.of(context).ext.textTertiary, fontSize: 14),
                     border: InputBorder.none,
                     isDense: true,
                   ),
@@ -1031,7 +1059,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 ),
               ),
               IconButton(
-                icon: Icon(editingCommentId != null ? Icons.check_circle_rounded : Icons.send_rounded, color: AppColors.primary, size: 20),
+                icon: Icon(editingCommentId != null ? Icons.check_circle_rounded : Icons.send_rounded, color: AppColors.primaryTeal, size: 20),
                 onPressed: () {
                   if (_commentController.text.trim().isNotEmpty) {
                     if (editingCommentId != null) {
@@ -1059,14 +1087,14 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surfaceWhite,
+          color: Theme.of(context).ext.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.borderGreyLight),
+          border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
         ),
         child: Center(
           child: Text(
             "No comments yet",
-            style: GoogleFonts.outfit(color: AppColors.textGrey, fontSize: 14),
+            style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary, fontSize: 14),
           ),
         ),
       );
@@ -1089,21 +1117,26 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
               constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: isMe ? AppColors.primary.withValues(alpha: 0.05) : AppColors.surfaceWhite,
+                color: isMe ? AppColors.primaryTeal.withValues(alpha: 0.08) : Theme.of(context).ext.surface,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),
                   bottomLeft: Radius.circular(isMe ? 16 : 0),
                   bottomRight: Radius.circular(isMe ? 0 : 16),
                 ),
-                border: Border.all(color: isMe ? AppColors.primary.withValues(alpha: 0.1) : AppColors.borderGreyLight),
+                border: Border.all(color: isMe ? AppColors.primaryTeal.withValues(alpha: 0.2) : Theme.of(context).ext.border.withValues(alpha: 0.3)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (!isMe) ...[
-                    AppAvatar(url: comment.user.avatar, radius: 14, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+                    AppAvatar(
+                      url: comment.user.avatar,
+                      radius: 14,
+                      backgroundColor: Theme.of(context).ext.inputFill,
+                      iconColor: Theme.of(context).ext.textSecondary,
+                    ),
                     const SizedBox(width: 12),
                   ],
                   Flexible(
@@ -1118,13 +1151,13 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                             if (!isMe) ...[
                               Text(
                                 comment.user.fullName,
-                                style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                                style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary),
                               ),
                               const SizedBox(width: 8),
                             ],
                             Text(
                               _formatCommentDate(comment.createdAt),
-                              style: GoogleFonts.outfit(fontSize: 10, color: AppColors.textGrey),
+                              style: GoogleFonts.outfit(fontSize: 10, color: Theme.of(context).ext.textSecondary),
                             ),
                           ],
                         ),
@@ -1132,14 +1165,19 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                         Text(
                           comment.content,
                           textAlign: TextAlign.left,
-                          style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textBlack.withValues(alpha: 0.8)),
+                          style: GoogleFonts.outfit(fontSize: 14, color: Theme.of(context).ext.textPrimary),
                         ),
                       ],
                     ),
                   ),
                   if (isMe) ...[
                     const SizedBox(width: 12),
-                    AppAvatar(url: comment.user.avatar, radius: 16, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+                    AppAvatar(
+                      url: comment.user.avatar,
+                      radius: 16,
+                      backgroundColor: Theme.of(context).ext.inputFill,
+                      iconColor: Theme.of(context).ext.textSecondary,
+                    ),
                   ],
                 ],
               ),
@@ -1166,13 +1204,13 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.only(left: 24),
                 margin: const EdgeInsets.symmetric(vertical: 4),
-                child: const Icon(Icons.edit_rounded, color: AppColors.primary, size: 24),
+                child: const Icon(Icons.edit_rounded, color: AppColors.primaryTeal, size: 24),
               ),
               secondaryBackground: Container(
                 alignment: Alignment.centerRight,
                 padding: const EdgeInsets.only(right: 24),
                 margin: const EdgeInsets.symmetric(vertical: 4),
-                child: const Icon(Icons.delete_rounded, color: AppColors.errorRed, size: 24),
+                child: Icon(Icons.delete_rounded, color: Theme.of(context).ext.error, size: 24),
               ),
               child: commentWidget,
             );
@@ -1189,16 +1227,17 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text("Delete Comment", style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
-          content: Text("Are you sure you want to delete this comment?", style: GoogleFonts.outfit()),
+          backgroundColor: Theme.of(context).ext.surface,
+          title: Text("Delete Comment", style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary)),
+          content: Text("Are you sure you want to delete this comment?", style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: Text("Cancel", style: GoogleFonts.outfit(color: AppColors.textGrey)),
+              child: Text("Cancel", style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.errorRed,
+                backgroundColor: Theme.of(context).ext.error,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               onPressed: () {
@@ -1210,7 +1249,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 );
                 Navigator.pop(dialogContext);
               },
-              child: Text("Delete", style: GoogleFonts.outfit(color: AppColors.backgroundWhite)),
+              child: Text("Delete", style: GoogleFonts.outfit(color: Colors.white)),
             ),
           ],
         );

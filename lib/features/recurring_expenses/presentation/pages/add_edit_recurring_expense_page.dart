@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/services.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
+import 'package:split_ease/core/utils/amount_input_formatter.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
+import 'package:split_ease/core/utils/app_formatter.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_category_entity.dart';
 import '../../../../core/presentation/widgets/app_back_button.dart';
 import '../../../../core/presentation/widgets/app_error_full_screen_dialog.dart';
@@ -43,8 +46,8 @@ class _AddEditRecurringExpenseFormView extends StatelessWidget {
         ? _titleController.text.trim()
         : blocState.title;
     final amountText = _amountController.text.trim().isNotEmpty
-        ? _amountController.text.trim()
-        : blocState.amount;
+        ? _amountController.text.trim().replaceAll(',', '')
+        : blocState.amount.replaceAll(',', '');
 
     if (title.isEmpty) {
       AppAlerts.showError(context, 'Please enter a title for the recurring expense');
@@ -123,7 +126,10 @@ class _AddEditRecurringExpenseFormView extends StatelessWidget {
   Widget build(BuildContext context) {
     if (existingTemplate != null && _titleController.text.isEmpty) {
       _titleController.text = existingTemplate!.title;
-      _amountController.text = existingTemplate!.amount.toInt().toString();
+      final double amt = existingTemplate!.amount;
+      _amountController.text = (amt % 1 == 0)
+          ? AppFormatter.formatNumber(amt.toInt())
+          : AppFormatter.formatNumber(amt);
     }
 
     return Scaffold(
@@ -208,7 +214,10 @@ class _AddEditRecurringExpenseFormView extends StatelessWidget {
                           Expanded(
                             child: TextField(
                               controller: _amountController,
-                              keyboardType: TextInputType.number,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              inputFormatters: [
+                                AmountInputFormatter(),
+                              ],
                               style: GoogleFonts.outfit(
                                 fontSize: 38,
                                 color: Theme.of(context).ext.textPrimary,
@@ -217,7 +226,7 @@ class _AddEditRecurringExpenseFormView extends StatelessWidget {
                               ),
                               onChanged: (val) => context
                                   .read<AddEditRecurringExpenseBloc>()
-                                  .add(AddEditRecurringExpenseAmountChanged(val)),
+                                  .add(AddEditRecurringExpenseAmountChanged(val.replaceAll(',', ''))),
                               decoration: InputDecoration(
                                 hintText: "0.00",
                                 hintStyle: GoogleFonts.outfit(
