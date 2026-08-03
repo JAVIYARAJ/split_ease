@@ -27,6 +27,7 @@ import '../../../friends/presentation/pages/friends_page.dart';
 import '../../../groups/presentation/bloc/groups_bloc.dart';
 import '../../../groups/presentation/pages/groups_page.dart';
 import '../../domain/usecases/get_advertisements_usecase.dart';
+import '../../domain/usecases/update_user_last_active_usecase.dart';
 import '../bloc/dashboard/home_dashboard_bloc.dart';
 import '../bloc/dashboard/home_dashboard_event.dart';
 import '../bloc/dashboard/home_dashboard_state.dart';
@@ -60,6 +61,14 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _initRealtimeListener();
     _checkAdvertisements();
+    _updateUserActivity();
+  }
+
+  void _updateUserActivity() {
+    final appUserState = context.read<AppUserCubit>().state;
+    if (appUserState is AppUserLoggedIn) {
+      sl<UpdateUserLastActiveUseCase>()(appUserState.user.id);
+    }
   }
 
   Future<void> _checkAdvertisements() async {

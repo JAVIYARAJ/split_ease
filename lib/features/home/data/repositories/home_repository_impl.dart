@@ -34,4 +34,15 @@ class HomeRepositoryImpl implements HomeRepository {
       return left(Failure(message: e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> updateUserLastActive(String userId) async {
+    try {
+      await remoteDataSource.updateUserLastActive(userId);
+      return right(null);
+    } catch (e) {
+      return left(Failure(message: e.toString()));
+    }
+  }
 }
+

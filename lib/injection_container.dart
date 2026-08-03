@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:split_ease/features/home/domain/usecases/update_user_last_active_usecase.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:split_ease/features/account/data/datasources/account_remote_data_source.dart';
 import 'package:split_ease/features/account/data/repository/account_repository_impl.dart';
@@ -379,6 +380,7 @@ void _home() {
   sl.registerFactory<HomeRepository>(() => HomeRepositoryImpl(remoteDataSource: sl<HomeRemoteDataSource>()));
   sl.registerFactory(() => GetHomeDashboard(sl<HomeRepository>()));
   sl.registerFactory(() => GetAdvertisementsUseCase(sl<HomeRepository>()));
+  sl.registerFactory(() => UpdateUserLastActiveUseCase(sl<HomeRepository>()));
   sl.registerFactory(() => HomeDashboardBloc(
     getHomeDashboard: sl<GetHomeDashboard>(),
     dataRefreshCubit: sl<DataRefreshCubit>(),

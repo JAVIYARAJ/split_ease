@@ -6,6 +6,7 @@ import 'package:split_ease/core/error/exception.dart';
 abstract class HomeRemoteDataSource {
   Future<HomeDashboardModel> getHomeDashboard({DateTime? startDate, DateTime? endDate});
   Future<List<AdvertisementModel>> getAdvertisements(DateTime clientDate);
+  Future<void> updateUserLastActive(String userId);
 }
 
 class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
@@ -52,5 +53,20 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       throw ServerException(message: e.toString());
     }
   }
+
+  @override
+  Future<void> updateUserLastActive(String userId) async {
+    try {
+      await supabaseClient.rpc(
+        'update_user_last_active_rpc',
+        params: {
+          'p_user_id': userId,
+        },
+      );
+    } catch (_) {
+      // Background activity update failure ignored silently
+    }
+  }
 }
+
 
