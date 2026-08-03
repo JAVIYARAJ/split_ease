@@ -13,9 +13,13 @@ import 'package:split_ease/core/utils/app_formatter.dart';
 import 'package:split_ease/core/presentation/widgets/animations/animated_counter_text.dart';
 import 'package:split_ease/core/utils/icon_utils.dart';
 import '../../domain/entities/expense_breakdown_entity.dart';
+import '../../domain/usecases/get_category_expenses_paginated_usecase.dart';
 import '../bloc/expense_breakdown_bloc.dart';
 import '../bloc/expense_breakdown_event.dart';
 import '../bloc/expense_breakdown_state.dart';
+import '../widgets/category_transactions_bottom_sheet.dart';
+import 'package:split_ease/core/routing/app_routes.dart';
+import 'package:split_ease/injection_container.dart';
 
 class ExpenseBreakdownPage extends StatefulWidget {
   const ExpenseBreakdownPage({super.key});
@@ -81,6 +85,91 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
           }
         },
       ),
+    );
+  }
+
+  (String?, String?) _getFilterDateRange(AnalyticsFilter filter, DateTime? customStart, DateTime? customEnd) {
+    final now = DateTime.now();
+
+    DateTime start;
+    DateTime end = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
+
+    switch (filter) {
+      case AnalyticsFilter.thisWeek:
+        start = DateTime(now.year, now.month, now.day).subtract(Duration(days: now.weekday - 1));
+        break;
+
+      case AnalyticsFilter.lastWeek:
+        final startOfThisWeek = DateTime(now.year, now.month, now.day).subtract(Duration(days: now.weekday - 1));
+        end = startOfThisWeek.subtract(const Duration(milliseconds: 1));
+        start = startOfThisWeek.subtract(const Duration(days: 7));
+        break;
+
+      case AnalyticsFilter.thisMonth:
+        start = DateTime(now.year, now.month, 1);
+        break;
+
+      case AnalyticsFilter.lastMonth:
+        start = DateTime(now.year, now.month - 1, 1);
+        end = DateTime(now.year, now.month, 1).subtract(const Duration(milliseconds: 1));
+        break;
+
+      case AnalyticsFilter.thisYear:
+        start = DateTime(now.year, 1, 1);
+        break;
+
+      case AnalyticsFilter.custom:
+        final s = customStart != null
+            ? DateTime(customStart.year, customStart.month, customStart.day, 0, 0, 0).toUtc().toIso8601String()
+            : null;
+        final e = customEnd != null
+            ? DateTime(customEnd.year, customEnd.month, customEnd.day, 23, 59, 59, 999).toUtc().toIso8601String()
+            : null;
+        return (s, e);
+    }
+
+    return (
+      DateTime(start.year, start.month, start.day, 0, 0, 0).toUtc().toIso8601String(),
+      end.toUtc().toIso8601String(),
+    );
+  }
+
+  void _openCategoryTransactionsSheet(CategoryDetailEntity category, ExpenseBreakdownState state) {
+    final dates = _getFilterDateRange(state.activeFilter, state.customStart, state.customEnd);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return CategoryTransactionsBottomSheet(
+          category: category,
+          fetchTransactions: (offset, limit) async {
+            final usecase = sl<GetCategoryExpensesPaginatedUseCase>();
+            final result = await usecase(
+              GetCategoryExpensesPaginatedParams(
+                categoryId: category.id,
+                startDate: dates.$1,
+                endDate: dates.$2,
+                offset: offset,
+                limit: limit,
+              ),
+            );
+            return result.fold(
+              (failure) => throw Exception(failure.message),
+              (items) => items,
+            );
+          },
+          onExpenseTap: (expenseId) {
+            Navigator.pop(context);
+            Navigator.pushNamed(
+              context,
+              AppRoutes.expanseDetail,
+              arguments: {'expanse_id': expenseId},
+            );
+          },
+        );
+      },
     );
   }
 
@@ -306,12 +395,16 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                           const SizedBox(height: 22),
                           Padding(
                             padding: const EdgeInsets.only(bottom: 10),
-                            child: Text(
-                              "Category Breakdown",
-                              style: GoogleFonts.outfit(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: Theme.of(context).ext.textPrimary,
+                            child: Expanded(
+                              child: Text(
+                                "Category Breakdown",
+                                style: GoogleFonts.outfit(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: Theme.of(context).ext.textPrimary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ),
@@ -321,7 +414,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                   ),
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
-                    sliver: _buildCategoryList(displayData.categoryBreakdown, state.activeFilter, isLoading),
+                    sliver: _buildCategoryList(displayData.categoryBreakdown, state, isLoading),
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 40)),
                 ],
@@ -520,7 +613,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
     );
   }
 
-  Widget _buildCategoryList(List<CategoryDetailEntity> categories, AnalyticsFilter filter, bool isLoading) {
+  Widget _buildCategoryList(List<CategoryDetailEntity> categories, ExpenseBreakdownState state, bool isLoading) {
     if (categories.isEmpty) {
       return SliverToBoxAdapter(
         child: Padding(
@@ -595,91 +688,103 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
           final color = _parseColor(category.color);
           final iconData = IconUtils.getIconFromString(category.icon);
 
-          return Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).ext.surface,
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: InkWell(
+              onTap: () => _openCategoryTransactionsSheet(category, state),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.8), width: 1.2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
-                  child: Icon(iconData, color: color, size: 24),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(category.name, style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary)),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TweenAnimationBuilder<double>(
-                              key: ValueKey('${isLoading}_${filter}_${category.id}_${category.categoryPercentage}'),
-                              tween: Tween<double>(begin: 0.0, end: (category.categoryPercentage / 100).clamp(0.0, 1.0)),
-                              duration: const Duration(milliseconds: 800),
-                              curve: Curves.easeOutCubic,
-                              builder: (context, animatedValue, _) {
-                                return ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: LinearProgressIndicator(
-                                    value: animatedValue,
-                                    backgroundColor: color.withValues(alpha: 0.15),
-                                    valueColor: AlwaysStoppedAnimation<Color>(color),
-                                    minHeight: 8,
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text("${category.categoryPercentage.toStringAsFixed(1)}%", style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textTertiary)),
-                        ],
-                      ),
-                      if (category.limitAmount != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6.0),
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              category.isOverLimit == true
-                                  ? "⚠️ Limit exceeded by ₹${((category.spentThisMonth ?? 0) - category.limitAmount!).toStringAsFixed(0)}"
-                                  : "₹${(category.remaining ?? 0).toStringAsFixed(0)} left of ₹${category.limitAmount!.toStringAsFixed(0)}",
-                              maxLines: 1,
-                              style: GoogleFonts.outfit(
-                                fontSize: 11,
-                                color: category.isOverLimit == true ? AppColors.errorRed : AppColors.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(AppFormatter.formatCurrency(category.amount), style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w800, color: Theme.of(context).ext.textPrimary)),
-                    Text("${category.expenseCount} Trx", style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).ext.textTertiary)),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).ext.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.8), width: 1.2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
                   ],
                 ),
-              ],
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
+                      child: Icon(iconData, color: color, size: 24),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(category.name, style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary)),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TweenAnimationBuilder<double>(
+                                  key: ValueKey('${isLoading}_${state.activeFilter}_${category.id}_${category.categoryPercentage}'),
+                                  tween: Tween<double>(begin: 0.0, end: (category.categoryPercentage / 100).clamp(0.0, 1.0)),
+                                  duration: const Duration(milliseconds: 800),
+                                  curve: Curves.easeOutCubic,
+                                  builder: (context, animatedValue, _) {
+                                    return ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: LinearProgressIndicator(
+                                        value: animatedValue,
+                                        backgroundColor: color.withValues(alpha: 0.15),
+                                        valueColor: AlwaysStoppedAnimation<Color>(color),
+                                        minHeight: 8,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text("${category.categoryPercentage.toStringAsFixed(1)}%", style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textTertiary)),
+                            ],
+                          ),
+                          if (category.limitAmount != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 6.0),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  category.isOverLimit == true
+                                      ? "⚠️ Limit exceeded by ₹${((category.spentThisMonth ?? 0) - category.limitAmount!).toStringAsFixed(0)}"
+                                      : "₹${(category.remaining ?? 0).toStringAsFixed(0)} left of ₹${category.limitAmount!.toStringAsFixed(0)}",
+                                  maxLines: 1,
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 11,
+                                    color: category.isOverLimit == true ? AppColors.errorRed : AppColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(AppFormatter.formatCurrency(category.amount), style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w800, color: Theme.of(context).ext.textPrimary)),
+                        Text("${category.expenseCount} Trx", style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).ext.textTertiary)),
+                      ],
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 20,
+                      color: Theme.of(context).ext.textTertiary.withValues(alpha: 0.6),
+                    ),
+                  ],
+                ),
+              ),
             ),
           );
         },

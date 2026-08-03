@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import '../../domain/usecases/get_expense_breakdown.dart';
 import 'expense_breakdown_event.dart';
 import 'expense_breakdown_state.dart';
@@ -43,37 +42,48 @@ class ExpenseBreakdownBloc extends Bloc<ExpenseBreakdownEvent, ExpenseBreakdownS
   /// Converts the selected [AnalyticsFilter] into a (startDate, endDate) pair
   /// formatted as 'yyyy-MM-dd', ready for the RPC.
   (String?, String?) _resolveDates(LoadExpenseBreakdown event) {
-    final fmt = DateFormat('yyyy-MM-dd');
     final now = DateTime.now();
+
+    DateTime start;
+    DateTime end = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
 
     switch (event.filter) {
       case AnalyticsFilter.thisWeek:
-        final start = now.subtract(Duration(days: now.weekday - 1));
-        return (fmt.format(start), fmt.format(now));
+        start = DateTime(now.year, now.month, now.day).subtract(Duration(days: now.weekday - 1));
+        break;
 
       case AnalyticsFilter.lastWeek:
-        final startOfThisWeek = now.subtract(Duration(days: now.weekday - 1));
-        final end = startOfThisWeek.subtract(const Duration(days: 1));
-        final start = end.subtract(const Duration(days: 6));
-        return (fmt.format(start), fmt.format(end));
+        final startOfThisWeek = DateTime(now.year, now.month, now.day).subtract(Duration(days: now.weekday - 1));
+        end = startOfThisWeek.subtract(const Duration(milliseconds: 1));
+        start = startOfThisWeek.subtract(const Duration(days: 7));
+        break;
 
       case AnalyticsFilter.thisMonth:
-        final start = DateTime(now.year, now.month, 1);
-        return (fmt.format(start), fmt.format(now));
+        start = DateTime(now.year, now.month, 1);
+        break;
 
       case AnalyticsFilter.lastMonth:
-        final start = DateTime(now.year, now.month - 1, 1);
-        final end = DateTime(now.year, now.month, 0); // last day of prev month
-        return (fmt.format(start), fmt.format(end));
+        start = DateTime(now.year, now.month - 1, 1);
+        end = DateTime(now.year, now.month, 1).subtract(const Duration(milliseconds: 1));
+        break;
 
       case AnalyticsFilter.thisYear:
-        final start = DateTime(now.year, 1, 1);
-        return (fmt.format(start), fmt.format(now));
+        start = DateTime(now.year, 1, 1);
+        break;
 
       case AnalyticsFilter.custom:
-        final s = event.customStart != null ? fmt.format(event.customStart!) : null;
-        final e = event.customEnd != null ? fmt.format(event.customEnd!) : null;
+        final s = event.customStart != null
+            ? DateTime(event.customStart!.year, event.customStart!.month, event.customStart!.day, 0, 0, 0).toUtc().toIso8601String()
+            : null;
+        final e = event.customEnd != null
+            ? DateTime(event.customEnd!.year, event.customEnd!.month, event.customEnd!.day, 23, 59, 59, 999).toUtc().toIso8601String()
+            : null;
         return (s, e);
     }
+
+    return (
+      DateTime(start.year, start.month, start.day, 0, 0, 0).toUtc().toIso8601String(),
+      end.toUtc().toIso8601String(),
+    );
   }
 }

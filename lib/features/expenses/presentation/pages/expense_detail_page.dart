@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -10,7 +9,6 @@ import 'package:split_ease/core/presentation/widgets/base_screen.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
-import 'package:split_ease/core/utils/clipboard_utils.dart';
 import 'package:split_ease/core/utils/icon_utils.dart';
 import 'package:split_ease/core/utils/navigation_utils.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_detail_entity.dart';
@@ -19,8 +17,6 @@ import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_ev
 import 'package:split_ease/features/expenses/presentation/bloc/expense_detail_state.dart';
 import 'package:split_ease/features/expenses/presentation/utils/expense_pdf_generator.dart';
 import 'package:split_ease/features/expenses/presentation/widgets/expense_media_list.dart';
-
-import 'package:split_ease/core/theme/app_layout.dart';
 
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/routing/navigation_service.dart';
@@ -102,18 +98,18 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             },
             child: BaseScreen(
               useSafeArea: true,
-              backgroundColor: Theme.of(context).ext.backgroundGrey, 
+              backgroundColor: AppColors.backgroundLightGrey,
               appBar: AppBar(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
                 scrolledUnderElevation: 0,
-                leadingWidth: AppLayout.appBarLeadingWidth,
+                leadingWidth: 80,
                 leading: AppBackButton(
                   onPressed: _onBack,
                 ),
                 title: Text(
                   "Expense Details",
-                  style: GoogleFonts.outfit(color: Theme.of(context).ext.textPrimary, fontSize: 18, fontWeight: FontWeight.w600),
+                  style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 18, fontWeight: FontWeight.w600),
                 ),
                 actions: [
                   BlocBuilder<ExpenseDetailBloc, ExpenseDetailState>(
@@ -142,27 +138,27 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                             ),
                           if (loadedState.expenseDetail.expenseType != 'settlement')
                             Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.3),
-                              shape: BoxShape.circle,
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                shape: BoxShape.circle,
+                              ),
+                              child: IconButton(
+                                icon: const Icon(Icons.edit_outlined, color: Colors.white, size: 20),
+                                onPressed: () {
+                                  NavigationUtils.handleResult(
+                                    context: context,
+                                    navigation: NavigationService.pushNamed(AppRoutes.addExpense, args: {'expense': loadedState.expenseDetail}),
+                                    refreshType: RefreshType.expenseDetail,
+                                    id: loadedState.expenseDetail.id,
+                                    onRefresh: () {
+                                      context.read<ExpenseDetailBloc>().add(MarkExpenseAsChanged());
+                                      context.read<ExpenseDetailBloc>().add(FetchExpenseDetailEvent(loadedState.expenseDetail.id));
+                                    },
+                                  );
+                                },
+                              ),
                             ),
-                            child: IconButton(
-                              icon: const Icon(Icons.edit_outlined, color: Colors.white, size: 20),
-                              onPressed: () {
-                                NavigationUtils.handleResult(
-                                  context: context,
-                                  navigation: NavigationService.pushNamed(AppRoutes.addExpense, args: {'expense': loadedState.expenseDetail}),
-                                  refreshType: RefreshType.expenseDetail,
-                                  id: loadedState.expenseDetail.id,
-                                  onRefresh: () {
-                                    context.read<ExpenseDetailBloc>().add(MarkExpenseAsChanged());
-                                    context.read<ExpenseDetailBloc>().add(FetchExpenseDetailEvent(loadedState.expenseDetail.id));
-                                  },
-                                );
-                              },
-                            ),
-                          ),
                           Container(
                             margin: const EdgeInsets.symmetric(horizontal: 4),
                             decoration: BoxDecoration(
@@ -187,9 +183,9 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 listener: (context, state) {
                   if (state is ExpenseDeleted) {
                     AppAlerts.showSuccess(context, 'Expense deleted successfully');
-                    // In a detail page, we might want to stay but show the deleted state, 
+                    // In a detail page, we might want to stay but show the deleted state,
                     // or pop back. Assuming we pop for now as before.
-                    Navigator.of(context).pop(true); 
+                    Navigator.of(context).pop(true);
                   } else if (state is ExpenseDeleteError) {
                     AppAlerts.showError(context, state.message);
                   } else if (state is ExpenseRestored) {
@@ -198,28 +194,28 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                     AppAlerts.showError(context, state.message);
                   } else if (state is CommentActionError) {
                     AppAlerts.showError(context, state.message);
-                    } else if (state is ExpenseDetailLoaded) {
-                      _lastLoadedState = state;
-                      if (state.editingCommentId == null) {
-                        _commentController.clear();
-                        _commentFocusNode.unfocus();
-                      } else if (_commentController.text != state.editingCommentText) {
-                        _commentController.text = state.editingCommentText ?? '';
-                        _commentFocusNode.requestFocus();
-                      }
+                  } else if (state is ExpenseDetailLoaded) {
+                    _lastLoadedState = state;
+                    if (state.editingCommentId == null) {
+                      _commentController.clear();
+                      _commentFocusNode.unfocus();
+                    } else if (_commentController.text != state.editingCommentText) {
+                      _commentController.text = state.editingCommentText ?? '';
+                      _commentFocusNode.requestFocus();
                     }
-                  },
+                  }
+                },
                 child: BlocBuilder<ExpenseDetailBloc, ExpenseDetailState>(
                   builder: (context, state) {
                     if (state is ExpenseDetailError) {
                       return _buildErrorState(state.message);
                     }
 
-                    final bool isLoading = state is ExpenseDetailLoading || 
-                                         state is ExpenseDetailInitial || 
-                                         state is ExpenseDeleteLoading ||
-                                         state is ExpenseRestoreLoading;
-                                         
+                    final bool isLoading = state is ExpenseDetailLoading ||
+                        state is ExpenseDetailInitial ||
+                        state is ExpenseDeleteLoading ||
+                        state is ExpenseRestoreLoading;
+
                     final loadedState = state is ExpenseDetailLoaded ? state : _lastLoadedState;
                     final entity = loadedState?.expenseDetail ?? _getMockEntity();
                     final bool isDeleted = loadedState?.isDeleted ?? false;
@@ -239,24 +235,55 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
-                                    _buildDigitalReceiptCard(context, loadedState, entity, isDeleted),
-                                    const SizedBox(height: 20),
-                                    _buildActionGrid(entity, isDeleted),
+                                    _buildHeaderAmount(entity, isDeleted),
+                                    const SizedBox(height: 32),
+                                    _buildQuickInfo(loadedState ?? ExpenseDetailLoaded(_getMockEntity(), "")),
                                     if (loadedState != null) ...[
                                       const SizedBox(height: 16),
                                       _buildActivityLog(loadedState),
                                     ],
                                     const SizedBox(height: 24),
+                                    _buildActionGrid(entity, isDeleted),
+                                    const SizedBox(height: 24),
+                                    if (entity.expenseType == 'settlement') ...[
+                                      _buildSectionTitle("Settlement Details"),
+                                      const SizedBox(height: 8),
+                                      _buildSettlementDetailsSection(entity),
+                                      const SizedBox(height: 24),
+                                    ] else ...[
+                                      _buildSectionTitle("Paid By"),
+                                      const SizedBox(height: 8),
+                                      _buildPaidBySection(entity),
+                                      const SizedBox(height: 24),
+                                    ],
+                                    if (entity.notes != null && entity.notes!.isNotEmpty) ...[
+                                      _buildSectionTitle("Notes"),
+                                      const SizedBox(height: 8),
+                                      _buildNotesSection(entity.notes!),
+                                      const SizedBox(height: 24),
+                                    ],
+                                    if (entity.expenseType != 'settlement' && entity.splits.isNotEmpty) ...[
+                                      _buildSectionTitle("Split Details"),
+                                      const SizedBox(height: 8),
+                                      _buildSplitsList(entity),
+                                      const SizedBox(height: 24),
+                                    ],
+                                    if (entity.media.isNotEmpty) ...[
+                                      _buildSectionTitle("Attachments"),
+                                      const SizedBox(height: 8),
+                                      ExpenseMediaList(entity: entity, canManageExpense: loadedState?.canManageExpense ?? false),
+                                      const SizedBox(height: 24),
+                                    ],
                                     _buildSectionTitle("Comments"),
                                     const SizedBox(height: 8),
                                     _buildCommentsList(
-                                      loadedState?.comments ?? _getMockComments(), 
-                                      loadedState?.currentUserId ?? "", 
+                                      loadedState?.comments ?? _getMockComments(),
+                                      loadedState?.currentUserId ?? "",
                                       isDeleted,
                                       loadedState?.commentsLoading ?? false,
                                       entity.id,
                                     ),
-                                    const SizedBox(height: 80), 
+                                    const SizedBox(height: 80),
                                   ],
                                 ),
                               ),
@@ -264,22 +291,22 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                           ),
                           // Sticky Comments Section at the Bottom
                           if (!isDeleted)
-                          Container(
-                            color: Theme.of(context).ext.backgroundGrey,
-                            padding: EdgeInsets.only(
-                              left: 20,
-                              right: 20,
-                              top: 12,
-                              bottom: MediaQuery
-                                  .of(context)
-                                  .padding
-                                  .bottom > 0 ? MediaQuery
-                                  .of(context)
-                                  .padding
-                                  .bottom : 20,
+                            Container(
+                              color: AppColors.backgroundLightGrey,
+                              padding: EdgeInsets.only(
+                                left: 20,
+                                right: 20,
+                                top: 12,
+                                bottom: MediaQuery
+                                    .of(context)
+                                    .padding
+                                    .bottom > 0 ? MediaQuery
+                                    .of(context)
+                                    .padding
+                                    .bottom : 20,
+                              ),
+                              child: _buildCommentsSection(entity, loadedState?.editingCommentId),
                             ),
-                            child: _buildCommentsSection(entity, loadedState?.editingCommentId),
-                          ),
                         ],
                       ),
                     );
@@ -298,19 +325,19 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).ext.surface,
+        color: AppColors.surfaceWhite,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).ext.borderLight),
+        border: Border.all(color: AppColors.borderGreyLight),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Theme.of(context).ext.border,
+            decoration: const BoxDecoration(
+              color: AppColors.borderGrey,
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.delete_outline_rounded, color: Theme.of(context).ext.textSecondary, size: 20),
+            child: const Icon(Icons.delete_outline_rounded, color: AppColors.textGrey, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -320,7 +347,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 Text(
                   "Deleted Expense",
                   style: GoogleFonts.outfit(
-                    color: Theme.of(context).ext.textPrimary,
+                    color: AppColors.textBlack,
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                   ),
@@ -328,7 +355,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 Text(
                   "Does not affect balances.",
                   style: GoogleFonts.outfit(
-                    color: Theme.of(context).ext.textSecondary,
+                    color: AppColors.textGrey,
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
                   ),
@@ -384,7 +411,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             child: Text(
               "Settle up expense is not editable, you can just delete or revert this tnx",
               style: GoogleFonts.outfit(
-                color: Theme.of(context).ext.textPrimary,
+                color: AppColors.textBlack,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -405,7 +432,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: Text('Cancel', style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary)),
+              child: Text('Cancel', style: GoogleFonts.outfit(color: AppColors.textGrey)),
             ),
             TextButton(
               onPressed: () {
@@ -433,7 +460,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
           Text(
             "Failed to load expense details:\n$message",
             textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary, fontSize: 15),
+            style: GoogleFonts.outfit(color: AppColors.textGrey, fontSize: 15),
           ),
         ],
       ),
@@ -443,718 +470,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary),
-    );
-  }
-
-  // ── Digital Receipt Card Ticket ───────────────────────────────────────────
-  Widget _buildDigitalReceiptCard(
-    BuildContext context,
-    ExpenseDetailLoaded? state,
-    ExpenseDetailEntity entity,
-    bool isDeleted,
-  ) {
-    final ext = Theme.of(context).ext;
-    final formatter = NumberFormat('#,##0.00', 'en_IN');
-
-    Color categoryColor = AppColors.primary;
-    IconData categoryIcon = Icons.receipt_long_rounded;
-
-    if (entity.category != null) {
-      try {
-        categoryColor = Color(
-            int.parse(entity.category!.color.replaceFirst('#', '0xFF')));
-      } catch (_) {}
-      categoryIcon = IconUtils.getIconFromString(entity.category!.icon);
-    }
-
-    String formattedDate = "Unknown Date";
-    String formattedTime = "";
-    try {
-      final parsed = DateTime.parse(entity.expenseDate);
-      formattedDate = DateFormat('MMM dd, yyyy').format(parsed);
-      formattedTime = DateFormat('hh:mm a').format(parsed);
-    } catch (_) {}
-
-    final shortId = entity.id.length >= 8
-        ? entity.id.substring(0, 8).toUpperCase()
-        : entity.id.toUpperCase();
-
-    return Container(
-      decoration: BoxDecoration(
-        color: ext.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: ext.border.withValues(alpha: 0.6)),
-        boxShadow: [
-          BoxShadow(
-            color: ext.shadowLight,
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // ── 1. Top Verified Status Badge & Category Header ──
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-            child: Column(
-              children: [
-                // Verified Status Pill
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: isDeleted
-                        ? AppColors.errorRed.withValues(alpha: 0.1)
-                        : AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isDeleted
-                          ? AppColors.errorRed.withValues(alpha: 0.3)
-                          : AppColors.primary.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        isDeleted
-                            ? Icons.cancel_outlined
-                            : (entity.expenseType == 'settlement'
-                                ? Icons.handshake_rounded
-                                : Icons.verified_rounded),
-                        size: 14,
-                        color:
-                            isDeleted ? AppColors.errorRed : AppColors.primary,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        isDeleted
-                            ? "CANCELLED EXPENSE"
-                            : (entity.expenseType == 'settlement'
-                                ? "SETTLEMENT RECORD"
-                                : "OFFICIAL RECEIPT"),
-                        style: GoogleFonts.outfit(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.8,
-                          color: isDeleted
-                              ? AppColors.errorRed
-                              : AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Category Icon Circle Avatar
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: categoryColor.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: categoryColor.withValues(alpha: 0.3),
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: categoryColor.withValues(alpha: 0.15),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Icon(categoryIcon, color: categoryColor, size: 32),
-                ),
-
-                if (entity.category != null) ...[
-                  const SizedBox(height: 10),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: categoryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      entity.category!.name,
-                      style: GoogleFonts.outfit(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: categoryColor,
-                      ),
-                    ),
-                  ),
-                ],
-
-                const SizedBox(height: 12),
-
-                // Expense Description
-                Text(
-                  entity.description,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: isDeleted ? ext.textTertiary : ext.textPrimary,
-                    decoration: isDeleted ? TextDecoration.lineThrough : null,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-
-                const SizedBox(height: 6),
-
-                // Grand Total Amount Display
-                Text(
-                  "₹${formatter.format(entity.totalAmount)}",
-                  style: GoogleFonts.outfit(
-                    fontSize: 34,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -1,
-                    color: isDeleted ? ext.textTertiary : ext.textPrimary,
-                    decoration: isDeleted ? TextDecoration.lineThrough : null,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // ── 2. Receipt Tear Notch & Dashed Divider ──
-          _buildReceiptNotchDivider(context),
-
-          // ── 3. Receipt Metadata Information Grid ──
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-            child: Column(
-              children: [
-                _buildReceiptDetailRow(
-                  context,
-                  icon: Icons.receipt_long_rounded,
-                  label: "Receipt Ref",
-                  valueWidget: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        "#EXP-$shortId",
-                        style: GoogleFonts.outfit(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      InkWell(
-                        onTap: () => ClipboardUtils.copyToClipboard(
-                          context,
-                          entity.id,
-                          successMessage: "Receipt ID copied!",
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(4.0),
-                          child: Icon(
-                            Icons.copy_rounded,
-                            size: 13,
-                            color: ext.textTertiary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _buildReceiptDetailRow(
-                  context,
-                  icon: Icons.calendar_today_rounded,
-                  label: "Date & Time",
-                  value: formattedTime.isNotEmpty
-                      ? "$formattedDate • $formattedTime"
-                      : formattedDate,
-                ),
-                const SizedBox(height: 12),
-                _buildReceiptDetailRow(
-                  context,
-                  icon: entity.splits.isEmpty
-                      ? Icons.lock_outline_rounded
-                      : Icons.group_outlined,
-                  label: "Scope / Group",
-                  value: entity.splits.isEmpty
-                      ? "Personal Expense"
-                      : (state?.groupDisplayName ?? "Group Expense"),
-                ),
-                const SizedBox(height: 12),
-                _buildReceiptDetailRow(
-                  context,
-                  icon: Icons.person_outline_rounded,
-                  label: "Created By",
-                  value: state?.creatorFirstName ?? entity.createdBy.fullName,
-                ),
-              ],
-            ),
-          ),
-
-          // ── 4. Sub Dashed Line Divider ──
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: ReceiptDashedDivider(
-              color: ext.border.withValues(alpha: 0.4),
-            ),
-          ),
-
-          // ── 5. Payment & Payer Summary ──
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  entity.expenseType == 'settlement'
-                      ? "SETTLEMENT SUMMARY"
-                      : "PAYMENT DETAILS",
-                  style: GoogleFonts.outfit(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.0,
-                    color: ext.textTertiary,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    AppAvatar(
-                      url: entity.paidBy.avatar,
-                      radius: 18,
-                      backgroundColor: ext.backgroundGrey,
-                      iconColor: AppColors.textGrey,
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            entity.paidBy.fullName,
-                            style: GoogleFonts.outfit(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: ext.textPrimary,
-                            ),
-                          ),
-                          Text(
-                            "Paid 100% of the bill",
-                            style: GoogleFonts.outfit(
-                              fontSize: 12,
-                              color: ext.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      "₹${formatter.format(entity.totalAmount)}",
-                      style: GoogleFonts.outfit(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: ext.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-                if (entity.paymentMethod != null) ...[
-                  const SizedBox(height: 10),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Color(int.parse(entity.paymentMethod!.color
-                              .replaceFirst('#', '0xFF')))
-                          .withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          IconUtils.getIconFromString(
-                              entity.paymentMethod!.icon),
-                          color: Color(int.parse(entity.paymentMethod!.color
-                              .replaceFirst('#', '0xFF'))),
-                          size: 14,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          "Paid via ${entity.paymentMethod!.name}",
-                          style: GoogleFonts.outfit(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(int.parse(entity.paymentMethod!.color
-                                .replaceFirst('#', '0xFF'))),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-
-          // ── 6. Split Participants Breakdown (if splits exist) ──
-          if (entity.expenseType != 'settlement' &&
-              entity.splits.isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: ReceiptDashedDivider(
-                color: ext.border.withValues(alpha: 0.4),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "SPLIT BREAKDOWN",
-                        style: GoogleFonts.outfit(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.0,
-                          color: ext.textTertiary,
-                        ),
-                      ),
-                      Text(
-                        "${entity.splits.length} Participants",
-                        style: GoogleFonts.outfit(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: entity.splits.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final split = entity.splits[index];
-                      final isPayer = split.userId == entity.paidBy.id;
-                      final percentage = entity.totalAmount > 0
-                          ? ((split.amount / entity.totalAmount) * 100)
-                              .toStringAsFixed(0)
-                          : "0";
-
-                      return Row(
-                        children: [
-                          AppAvatar(
-                            url: split.avatar,
-                            radius: 16,
-                            backgroundColor: ext.backgroundGrey,
-                            iconColor: AppColors.textGrey,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        split.fullName,
-                                        style: GoogleFonts.outfit(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: ext.textPrimary,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    if (isPayer) ...[
-                                      const SizedBox(width: 6),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.primary
-                                              .withValues(alpha: 0.1),
-                                          borderRadius:
-                                              BorderRadius.circular(6),
-                                        ),
-                                        child: Text(
-                                          "Payer",
-                                          style: GoogleFonts.outfit(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.primary,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                Text(
-                                  "$percentage% share",
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 11,
-                                    color: ext.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Text(
-                            "₹${formatter.format(split.amount)}",
-                            style: GoogleFonts.outfit(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color:
-                                  isPayer ? AppColors.primary : ext.textPrimary,
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-
-          // ── 7. Notes Memo Section (if present) ──
-          if (entity.notes != null && entity.notes!.isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: ReceiptDashedDivider(
-                color: ext.border.withValues(alpha: 0.4),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "NOTES & MEMO",
-                    style: GoogleFonts.outfit(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.0,
-                      color: ext.textTertiary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: ext.backgroundGrey,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: ext.border.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.edit_note_rounded,
-                            size: 18, color: AppColors.primary),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            entity.notes!,
-                            style: GoogleFonts.outfit(
-                              fontSize: 13,
-                              color: ext.textPrimary,
-                              height: 1.4,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-
-          // ── 8. Media Attachments (if present) ──
-          if (entity.media.isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: ReceiptDashedDivider(
-                color: ext.border.withValues(alpha: 0.4),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "RECEIPT ATTACHMENTS",
-                    style: GoogleFonts.outfit(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.0,
-                      color: ext.textTertiary,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  ExpenseMediaList(
-                    entity: entity,
-                    canManageExpense: state?.canManageExpense ?? false,
-                  ),
-                ],
-              ),
-            ),
-          ],
-
-          // ── 9. Bottom Tear Notch & Barcode Verification Footer ──
-          _buildReceiptNotchDivider(context),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 18),
-            child: _buildReceiptBarcode(context, entity.id),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildReceiptNotchDivider(BuildContext context) {
-    final ext = Theme.of(context).ext;
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: ReceiptDashedDivider(
-            color: ext.border.withValues(alpha: 0.4),
-            dashWidth: 6,
-          ),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              width: 14,
-              height: 22,
-              decoration: BoxDecoration(
-                color: ext.backgroundGrey,
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(11),
-                  bottomRight: Radius.circular(11),
-                ),
-                border: Border(
-                  top: BorderSide(color: ext.border.withValues(alpha: 0.4)),
-                  right: BorderSide(color: ext.border.withValues(alpha: 0.4)),
-                  bottom: BorderSide(color: ext.border.withValues(alpha: 0.4)),
-                ),
-              ),
-            ),
-            Container(
-              width: 14,
-              height: 22,
-              decoration: BoxDecoration(
-                color: ext.backgroundGrey,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(11),
-                  bottomLeft: Radius.circular(11),
-                ),
-                border: Border(
-                  top: BorderSide(color: ext.border.withValues(alpha: 0.4)),
-                  left: BorderSide(color: ext.border.withValues(alpha: 0.4)),
-                  bottom: BorderSide(color: ext.border.withValues(alpha: 0.4)),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildReceiptDetailRow(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    String? value,
-    Widget? valueWidget,
-  }) {
-    final ext = Theme.of(context).ext;
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: ext.textTertiary),
-        const SizedBox(width: 10),
-        Text(
-          label,
-          style: GoogleFonts.outfit(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: ext.textSecondary,
-          ),
-        ),
-        const Spacer(),
-        if (valueWidget != null)
-          valueWidget
-        else
-          Text(
-            value ?? "",
-            style: GoogleFonts.outfit(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: ext.textPrimary,
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildReceiptBarcode(BuildContext context, String expenseId) {
-    final ext = Theme.of(context).ext;
-    final codeString =
-        expenseId.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toUpperCase();
-    final displayCode =
-        codeString.length > 16 ? codeString.substring(0, 16) : codeString;
-
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(34, (index) {
-            final isWide =
-                (index * 7 + 3) % 5 == 0 || (index * 3 + 1) % 4 == 0;
-            final isSpace = (index * 13 + 2) % 7 == 0;
-            if (isSpace) return const SizedBox(width: 3);
-            return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 1),
-              width: isWide ? 3 : 1.5,
-              height: 32,
-              color: ext.textPrimary.withValues(alpha: 0.6),
-            );
-          }),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          "SPLITEASE VERIFIED RECEIPT • $displayCode",
-          style: GoogleFonts.outfit(
-            fontSize: 11,
-            letterSpacing: 1.2,
-            color: ext.textTertiary,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ],
+      style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
     );
   }
 
@@ -1163,7 +479,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
 
     Color categoryColor = AppColors.primary;
     IconData categoryIcon = Icons.receipt_long_rounded;
-    
+
     if (entity.category != null) {
       try {
         categoryColor = Color(int.parse(entity.category!.color.replaceFirst('#', '0xFF')));
@@ -1208,9 +524,9 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
           entity.description,
           textAlign: TextAlign.center,
           style: GoogleFonts.outfit(
-            fontSize: 22, 
-            fontWeight: FontWeight.w700, 
-            color: isDeleted ? Theme.of(context).ext.textTertiary : Theme.of(context).ext.textPrimary,
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            color: isDeleted ? AppColors.textGrey : AppColors.textBlack,
             decoration: isDeleted ? TextDecoration.lineThrough : null,
           ),
           maxLines: 2,
@@ -1220,10 +536,10 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
         Text(
           "₹${formatter.format(entity.totalAmount)}",
           style: GoogleFonts.outfit(
-            fontSize: 32, 
-            fontWeight: FontWeight.w800, 
-            letterSpacing: -1, 
-            color: isDeleted ? Theme.of(context).ext.textTertiary : Theme.of(context).ext.textPrimary,
+            fontSize: 32,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -1,
+            color: isDeleted ? AppColors.textGrey : AppColors.textBlack,
             decoration: isDeleted ? TextDecoration.lineThrough : null,
           ),
         ),
@@ -1242,17 +558,17 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).ext.surface,
+        color: AppColors.surfaceWhite,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).ext.borderLight),
+        border: Border.all(color: AppColors.borderGreyLight),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildInfoItem(Icons.calendar_today_rounded, "Date", formattedDate),
-          Container(width: 1, height: 32, color: Theme.of(context).ext.borderLight),
+          Container(width: 1, height: 32, color: AppColors.borderGreyLight),
           _buildInfoItem(Icons.person_outline_rounded, "Added By", state.creatorFirstName),
-          Container(width: 1, height: 32, color: Theme.of(context).ext.borderLight),
+          Container(width: 1, height: 32, color: AppColors.borderGreyLight),
           if (entity.splits.isEmpty)
             _buildInfoItem(Icons.lock_outline_rounded, "Scope", "Personal")
           else
@@ -1266,11 +582,11 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     return Expanded(
       child: Column(
         children: [
-          Icon(icon, color: Theme.of(context).ext.textTertiary, size: 20),
+          Icon(icon, color: AppColors.iconGrey, size: 20),
           const SizedBox(height: 8),
           Text(
             label,
-            style: GoogleFonts.outfit(color: Theme.of(context).ext.textTertiary, fontSize: 12, fontWeight: FontWeight.w500),
+            style: GoogleFonts.outfit(color: AppColors.iconGrey, fontSize: 12, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 4),
           FittedBox(
@@ -1279,7 +595,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             child: Text(
               value,
               textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(color: Theme.of(context).ext.textPrimary, fontSize: 13, fontWeight: FontWeight.w600),
+              style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 13, fontWeight: FontWeight.w600),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -1301,9 +617,9 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).ext.surface,
+        color: AppColors.surfaceWhite,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).ext.borderLight),
+        border: Border.all(color: AppColors.borderGreyLight),
       ),
       child: Column(
         children: [
@@ -1314,33 +630,33 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
               Expanded(
                 child: Text(
                   "Created by ${state.creatorFirstName}",
-                  style: GoogleFonts.outfit(color: Theme.of(context).ext.textPrimary, fontSize: 13, fontWeight: FontWeight.w500),
+                  style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 13, fontWeight: FontWeight.w500),
                 ),
               ),
               Text(
                 formattedCreatedAt,
-                style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary, fontSize: 12, fontWeight: FontWeight.w400),
+                style: GoogleFonts.outfit(color: AppColors.textGrey, fontSize: 12, fontWeight: FontWeight.w400),
               ),
             ],
           ),
           if (state.expenseDetail.updatedBy != null) ...[
-            Padding(
+            const Padding(
               padding: EdgeInsets.symmetric(vertical: 10),
-              child: Divider(height: 1, color: Theme.of(context).ext.borderLight),
+              child: Divider(height: 1, color: AppColors.borderGreyLight),
             ),
             Row(
               children: [
-                Icon(Icons.edit_note_rounded, size: 16, color: Theme.of(context).ext.textTertiary),
+                const Icon(Icons.edit_note_rounded, size: 16, color: AppColors.iconGrey),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     "Updated by ${state.updatedByFirstName}",
-                    style: GoogleFonts.outfit(color: Theme.of(context).ext.textPrimary, fontSize: 13, fontWeight: FontWeight.w500),
+                    style: GoogleFonts.outfit(color: AppColors.textBlack, fontSize: 13, fontWeight: FontWeight.w500),
                   ),
                 ),
                 Text(
                   state.formattedUpdatedAt ?? "",
-                  style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary, fontSize: 12, fontWeight: FontWeight.w400),
+                  style: GoogleFonts.outfit(color: AppColors.textGrey, fontSize: 12, fontWeight: FontWeight.w400),
                 ),
               ],
             ),
@@ -1375,9 +691,9 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: Theme.of(context).ext.surface,
+          color: AppColors.surfaceWhite,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Theme.of(context).ext.borderLight),
+          border: Border.all(color: AppColors.borderGreyLight),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1397,9 +713,9 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
   Widget _buildPaidBySection(ExpenseDetailEntity entity) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).ext.surface,
+        color: AppColors.surfaceWhite,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).ext.borderLight),
+        border: Border.all(color: AppColors.borderGreyLight),
       ),
       child: Column(
         children: [
@@ -1407,7 +723,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                AppAvatar(url: entity.paidBy.avatar, radius: 18, backgroundColor: Theme.of(context).ext.backgroundGrey, iconColor: AppColors.textGrey),
+                AppAvatar(url: entity.paidBy.avatar, radius: 18, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -1415,21 +731,21 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                     children: [
                       Text(
                         entity.paidBy.fullName,
-                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary),
+                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
                       ),
-                      Text("Paid 100% of the cost", style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary)),
+                      Text("Paid 100% of the cost", style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
                     ],
                   ),
                 ),
                 Text(
                   "₹${NumberFormat('#,##0.00', 'en_IN').format(entity.totalAmount)}",
-                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary),
+                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack),
                 ),
               ],
             ),
           ),
           if (entity.paymentMethod != null) ...[
-            Divider(height: 1, color: Theme.of(context).ext.borderLight, indent: 16, endIndent: 16),
+            Divider(height: 1, color: AppColors.borderGreyLight, indent: 16, endIndent: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
@@ -1452,7 +768,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                     style: GoogleFonts.outfit(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: Theme.of(context).ext.textSecondary,
+                      color: AppColors.textGrey,
                     ),
                   ),
                 ],
@@ -1466,22 +782,13 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
 
   Widget _buildSettlementDetailsSection(ExpenseDetailEntity entity) {
     final paidBy = entity.paidBy;
-    ExpenseSplitEntity? paidTo;
-    if (entity.splits.isNotEmpty) {
-      for (final s in entity.splits) {
-        if (s.userId != paidBy.id) {
-          paidTo = s;
-          break;
-        }
-      }
-      paidTo ??= entity.splits.first;
-    }
-    
+    final paidTo = entity.splits.isNotEmpty ? entity.splits.first : null;
+
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).ext.surface,
+        color: AppColors.surfaceWhite,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).ext.borderLight),
+        border: Border.all(color: AppColors.borderGreyLight),
       ),
       child: Column(
         children: [
@@ -1490,7 +797,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                AppAvatar(url: paidBy.avatar, radius: 18, backgroundColor: Theme.of(context).ext.backgroundGrey, iconColor: AppColors.textGrey),
+                AppAvatar(url: paidBy.avatar, radius: 18, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -1498,28 +805,28 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                     children: [
                       Text(
                         paidBy.fullName,
-                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary),
+                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
                       ),
-                      Text("Paid By", style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary)),
+                      Text("Paid By", style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
                     ],
                   ),
                 ),
                 Text(
                   "₹${NumberFormat('#,##0.00', 'en_IN').format(entity.totalAmount)}",
-                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary),
+                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack),
                 ),
               ],
             ),
           ),
-          
+
           if (paidTo != null) ...[
-            Divider(height: 1, color: Theme.of(context).ext.borderLight, indent: 16, endIndent: 16),
+            Divider(height: 1, color: AppColors.borderGreyLight, indent: 16, endIndent: 16),
             // Paid To
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
-                  AppAvatar(url: paidTo.avatar, radius: 18, backgroundColor: Theme.of(context).ext.backgroundGrey, iconColor: AppColors.textGrey),
+                  AppAvatar(url: paidTo.avatar, radius: 18, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
@@ -1527,23 +834,23 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                       children: [
                         Text(
                           paidTo.fullName,
-                          style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary),
+                          style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textBlack),
                         ),
-                        Text("Paid To", style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary)),
+                        Text("Paid To", style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
                       ],
                     ),
                   ),
                   Text(
                     "₹${NumberFormat('#,##0.00', 'en_IN').format(entity.totalAmount)}",
-                    style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary),
+                    style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textBlack),
                   ),
                 ],
               ),
             ),
           ],
-          
+
           if (entity.paymentMethod != null) ...[
-            Divider(height: 1, color: Theme.of(context).ext.borderLight, indent: 16, endIndent: 16),
+            Divider(height: 1, color: AppColors.borderGreyLight, indent: 16, endIndent: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
@@ -1566,7 +873,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                     style: GoogleFonts.outfit(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: Theme.of(context).ext.textSecondary,
+                      color: AppColors.textGrey,
                     ),
                   ),
                 ],
@@ -1579,12 +886,11 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
   }
 
   Widget _buildNotesSection(String notes) {
-    final isDark = Theme.of(context).ext.isDark;
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2C2411) : const Color(0xFFFFF9C4).withValues(alpha: 0.3), 
+        color: const Color(0xFFFFF9C4).withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? const Color(0xFF4A3B18) : const Color(0xFFFFF176).withValues(alpha: 0.5)),
+        border: Border.all(color: const Color(0xFFFFF176).withValues(alpha: 0.5)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Text(
@@ -1594,7 +900,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
           fontSize: 14,
           height: 1.6,
           letterSpacing: 0.2,
-          color: Theme.of(context).ext.textPrimary,
+          color: AppColors.textBlack.withValues(alpha: 0.8),
           fontStyle: FontStyle.italic,
         ),
       ),
@@ -1604,15 +910,15 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
   Widget _buildSplitsList(ExpenseDetailEntity entity) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).ext.surface,
+        color: AppColors.surfaceWhite,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).ext.borderLight),
+        border: Border.all(color: AppColors.borderGreyLight),
       ),
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: entity.splits.length,
-        separatorBuilder: (context, index) => Divider(height: 1, thickness: 1, color: Theme.of(context).ext.backgroundGrey),
+        separatorBuilder: (context, index) => const Divider(height: 1, thickness: 1, color: AppColors.backgroundLightGrey),
         itemBuilder: (context, index) {
           final split = entity.splits[index];
           final isOwed = split.type != "participant";
@@ -1637,7 +943,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Row(
           children: [
-            AppAvatar(url: avatarUrl, radius: 18, backgroundColor: Theme.of(context).ext.backgroundGrey, iconColor: AppColors.textGrey),
+            AppAvatar(url: avatarUrl, radius: 18, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -1645,10 +951,10 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 children: [
                   Text(
                     name,
-                    style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary),
+                    style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textBlack),
                   ),
                   const SizedBox(height: 2),
-                  Text(subText, style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary)),
+                  Text(subText, style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textGrey)),
                 ],
               ),
             ),
@@ -1665,9 +971,9 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
   Widget _buildCommentsSection(ExpenseDetailEntity entity, String? editingCommentId) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).ext.surface,
+        color: AppColors.surfaceWhite,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).ext.borderLight),
+        border: Border.all(color: AppColors.borderGreyLight),
       ),
       padding: const EdgeInsets.all(12.0),
       child: Column(
@@ -1683,63 +989,63 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                   Text("Editing comment", style: GoogleFonts.outfit(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w500)),
                   GestureDetector(
                     onTap: () => context.read<ExpenseDetailBloc>().add(CancelEditingCommentEvent()),
-                    child: Icon(Icons.close_rounded, size: 16, color: Theme.of(context).ext.textSecondary),
+                    child: const Icon(Icons.close_rounded, size: 16, color: AppColors.textGrey),
                   ),
                 ],
               ),
             ),
           Row(
             children: [
-          const AppAvatar(radius: 18, backgroundColor: AppColors.primary, iconColor: Colors.white),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              controller: _commentController,
-              focusNode: _commentFocusNode,
-              maxLength: 500,
-              maxLines: 4,
-              minLines: 1,
-              buildCounter: (context, {required currentLength, required isFocused, maxLength}) {
-                // Only show counter when actively typing (near limit)
-                if (!isFocused || currentLength < 400) return null;
-                return Text('$currentLength/$maxLength', style: GoogleFonts.outfit(fontSize: 10, color: currentLength >= 490 ? AppColors.errorRed : AppColors.textGrey));
-              },
-              style: GoogleFonts.outfit(fontSize: 14),
-              decoration: InputDecoration(
-                hintText: editingCommentId != null ? "Update your comment..." : "Add a comment...",
-                hintStyle: GoogleFonts.outfit(color: Theme.of(context).ext.textTertiary, fontSize: 14),
-                border: InputBorder.none,
-                isDense: true,
+              const AppAvatar(radius: 18, backgroundColor: AppColors.primary, iconColor: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: _commentController,
+                  focusNode: _commentFocusNode,
+                  maxLength: 500,
+                  maxLines: 4,
+                  minLines: 1,
+                  buildCounter: (context, {required currentLength, required isFocused, maxLength}) {
+                    // Only show counter when actively typing (near limit)
+                    if (!isFocused || currentLength < 400) return null;
+                    return Text('$currentLength/$maxLength', style: GoogleFonts.outfit(fontSize: 10, color: currentLength >= 490 ? AppColors.errorRed : AppColors.textGrey));
+                  },
+                  style: GoogleFonts.outfit(fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: editingCommentId != null ? "Update your comment..." : "Add a comment...",
+                    hintStyle: GoogleFonts.outfit(color: AppColors.iconGrey, fontSize: 14),
+                    border: InputBorder.none,
+                    isDense: true,
+                  ),
+                  onSubmitted: (val) {
+                    if (val.trim().isNotEmpty) {
+                      if (editingCommentId != null) {
+                        context.read<ExpenseDetailBloc>().add(UpdateExpenseCommentEvent(expenseId: entity.id, commentId: editingCommentId, comment: val.trim()));
+                        context.read<ExpenseDetailBloc>().add(CancelEditingCommentEvent());
+                      } else {
+                        context.read<ExpenseDetailBloc>().add(AddExpenseCommentEvent(expenseId: entity.id, comment: val.trim()));
+                        _commentController.clear();
+                      }
+                    }
+                  },
+                ),
               ),
-              onSubmitted: (val) {
-                if (val.trim().isNotEmpty) {
-                  if (editingCommentId != null) {
-                    context.read<ExpenseDetailBloc>().add(UpdateExpenseCommentEvent(expenseId: entity.id, commentId: editingCommentId, comment: val.trim()));
-                    context.read<ExpenseDetailBloc>().add(CancelEditingCommentEvent());
-                  } else {
-                    context.read<ExpenseDetailBloc>().add(AddExpenseCommentEvent(expenseId: entity.id, comment: val.trim()));
-                    _commentController.clear();
+              IconButton(
+                icon: Icon(editingCommentId != null ? Icons.check_circle_rounded : Icons.send_rounded, color: AppColors.primary, size: 20),
+                onPressed: () {
+                  if (_commentController.text.trim().isNotEmpty) {
+                    if (editingCommentId != null) {
+                      context.read<ExpenseDetailBloc>().add(UpdateExpenseCommentEvent(expenseId: entity.id, commentId: editingCommentId, comment: _commentController.text.trim()));
+                      context.read<ExpenseDetailBloc>().add(CancelEditingCommentEvent());
+                    } else {
+                      context.read<ExpenseDetailBloc>().add(AddExpenseCommentEvent(expenseId: entity.id, comment: _commentController.text.trim()));
+                      _commentController.clear();
+                    }
                   }
-                }
-              },
-            ),
+                },
+              ),
+            ],
           ),
-          IconButton(
-            icon: Icon(editingCommentId != null ? Icons.check_circle_rounded : Icons.send_rounded, color: AppColors.primary, size: 20),
-            onPressed: () {
-              if (_commentController.text.trim().isNotEmpty) {
-                if (editingCommentId != null) {
-                  context.read<ExpenseDetailBloc>().add(UpdateExpenseCommentEvent(expenseId: entity.id, commentId: editingCommentId, comment: _commentController.text.trim()));
-                  context.read<ExpenseDetailBloc>().add(CancelEditingCommentEvent());
-                } else {
-                  context.read<ExpenseDetailBloc>().add(AddExpenseCommentEvent(expenseId: entity.id, comment: _commentController.text.trim()));
-                  _commentController.clear();
-                }
-              }
-            },
-          ),
-          ],
-        ),
         ],
       ),
     );
@@ -1753,14 +1059,14 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Theme.of(context).ext.surface,
+          color: AppColors.surfaceWhite,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Theme.of(context).ext.borderLight),
+          border: Border.all(color: AppColors.borderGreyLight),
         ),
         child: Center(
           child: Text(
             "No comments yet",
-            style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary, fontSize: 14),
+            style: GoogleFonts.outfit(color: AppColors.textGrey, fontSize: 14),
           ),
         ),
       );
@@ -1776,68 +1082,68 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
         itemBuilder: (context, index) {
           final comment = comments[index];
           final bool isMe = comment.user.id == currentUserId;
-    
+
           Widget commentWidget = Align(
             alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
             child: Container(
-                constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: isMe ? AppColors.primary.withValues(alpha: 0.05) : AppColors.surfaceWhite,
-                  borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(16),
-                    topRight: const Radius.circular(16),
-                    bottomLeft: Radius.circular(isMe ? 16 : 0),
-                    bottomRight: Radius.circular(isMe ? 0 : 16),
-                  ),
-                  border: Border.all(color: isMe ? AppColors.primary.withValues(alpha: 0.1) : AppColors.borderGreyLight),
+              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isMe ? AppColors.primary.withValues(alpha: 0.05) : AppColors.surfaceWhite,
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(16),
+                  topRight: const Radius.circular(16),
+                  bottomLeft: Radius.circular(isMe ? 16 : 0),
+                  bottomRight: Radius.circular(isMe ? 0 : 16),
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (!isMe) ...[
-                      AppAvatar(url: comment.user.avatar, radius: 14, backgroundColor: Theme.of(context).ext.backgroundGrey, iconColor: AppColors.textGrey),
-                      const SizedBox(width: 12),
-                    ],
-                    Flexible(
-                      child: Column(
-                        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (!isMe) ...[
-                                Text(
-                                  comment.user.fullName,
-                                  style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textPrimary),
-                                ),
-                                const SizedBox(width: 8),
-                              ],
-                              Text(
-                                _formatCommentDate(comment.createdAt),
-                                style: GoogleFonts.outfit(fontSize: 10, color: Theme.of(context).ext.textSecondary),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            comment.content,
-                            textAlign: TextAlign.left,
-                            style: GoogleFonts.outfit(fontSize: 14, color: Theme.of(context).ext.textPrimary),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (isMe) ...[
-                      const SizedBox(width: 12),
-                      AppAvatar(url: comment.user.avatar, radius: 16, backgroundColor: Theme.of(context).ext.backgroundGrey, iconColor: AppColors.textGrey),
-                    ],
-                  ],
-                ),
+                border: Border.all(color: isMe ? AppColors.primary.withValues(alpha: 0.1) : AppColors.borderGreyLight),
               ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (!isMe) ...[
+                    AppAvatar(url: comment.user.avatar, radius: 14, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+                    const SizedBox(width: 12),
+                  ],
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (!isMe) ...[
+                              Text(
+                                comment.user.fullName,
+                                style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textBlack),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            Text(
+                              _formatCommentDate(comment.createdAt),
+                              style: GoogleFonts.outfit(fontSize: 10, color: AppColors.textGrey),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          comment.content,
+                          textAlign: TextAlign.left,
+                          style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textBlack.withValues(alpha: 0.8)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isMe) ...[
+                    const SizedBox(width: 12),
+                    AppAvatar(url: comment.user.avatar, radius: 16, backgroundColor: AppColors.backgroundLightGrey, iconColor: AppColors.textGrey),
+                  ],
+                ],
+              ),
+            ),
           );
 
           if (isMe && !isDeleted) {
@@ -1888,7 +1194,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: Text("Cancel", style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary)),
+              child: Text("Cancel", style: GoogleFonts.outfit(color: AppColors.textGrey)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -1941,7 +1247,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       createdBy: ExpenseUserEntity(id: "", fullName: "User Name"),
       updatedAt: null,
       updatedBy: null,
-      splits: [
+      splits: const [
         ExpenseSplitEntity(type: "you_owe", amount: 500, userId: "1", fullName: "Test User"),
         ExpenseSplitEntity(type: "participant", amount: 500, userId: "2", fullName: "Test User"),
       ],
@@ -1951,47 +1257,11 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
   List<ExpenseCommentEntity> _getMockComments() {
     return [
       ExpenseCommentEntity(
-        id: "mock1", 
-        content: "Loading...", 
-        createdAt: DateTime.now().toIso8601String(), 
-        user: const ExpenseUserEntity(id: "", fullName: "User Name")
+          id: "mock1",
+          content: "Loading...",
+          createdAt: DateTime.now().toIso8601String(),
+          user: const ExpenseUserEntity(id: "", fullName: "User Name")
       ),
     ];
-  }
-}
-
-class ReceiptDashedDivider extends StatelessWidget {
-  final Color color;
-  final double height;
-  final double dashWidth;
-
-  const ReceiptDashedDivider({
-    super.key,
-    required this.color,
-    this.height = 1,
-    this.dashWidth = 6,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final boxWidth = constraints.constrainWidth();
-        final dashCount = (boxWidth / (2 * dashWidth)).floor();
-        return Flex(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          direction: Axis.horizontal,
-          children: List.generate(dashCount, (_) {
-            return SizedBox(
-              width: dashWidth,
-              height: height,
-              child: DecoratedBox(
-                decoration: BoxDecoration(color: color),
-              ),
-            );
-          }),
-        );
-      },
-    );
   }
 }

@@ -126,6 +126,7 @@ import 'features/analytics/data/datasources/analytics_remote_data_source.dart';
 import 'features/analytics/data/repositories/analytics_repository_impl.dart';
 import 'features/analytics/domain/repositories/analytics_repository.dart';
 import 'features/analytics/domain/usecases/get_expense_breakdown.dart';
+import 'features/analytics/domain/usecases/get_category_expenses_paginated_usecase.dart';
 import 'features/analytics/presentation/bloc/expense_breakdown_bloc.dart';
 
 import 'package:split_ease/features/recurring_expenses/data/datasources/recurring_expense_remote_data_source.dart';
@@ -220,6 +221,7 @@ void _analytics() {
   sl.registerFactory<AnalyticsRemoteDataSource>(() => AnalyticsRemoteDataSourceImpl(supabaseClient: sl<SupabaseClient>()));
   sl.registerFactory<AnalyticsRepository>(() => AnalyticsRepositoryImpl(remoteDataSource: sl<AnalyticsRemoteDataSource>()));
   sl.registerFactory(() => GetExpenseBreakdown(sl<AnalyticsRepository>()));
+  sl.registerFactory(() => GetCategoryExpensesPaginatedUseCase(sl<AnalyticsRepository>()));
   sl.registerFactory(() => ExpenseBreakdownBloc(getExpenseBreakdown: sl<GetExpenseBreakdown>()));
 }
 
