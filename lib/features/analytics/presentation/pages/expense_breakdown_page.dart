@@ -296,7 +296,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildSummaryGrid(displayData.summary),
+                          _buildSummaryGrid(displayData.summary, state.activeFilter, isLoading),
                           if (displayData.paymentMethodBreakdown.isNotEmpty) ...[
                             const SizedBox(height: 22),
                             PaymentMethodBreakdownCard(
@@ -321,7 +321,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                   ),
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
-                    sliver: _buildCategoryList(displayData.categoryBreakdown),
+                    sliver: _buildCategoryList(displayData.categoryBreakdown, state.activeFilter, isLoading),
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 40)),
                 ],
@@ -333,7 +333,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
     );
   }
 
-  Widget _buildSummaryGrid(ExpenseBreakdownSummaryEntity summary) {
+  Widget _buildSummaryGrid(ExpenseBreakdownSummaryEntity summary, AnalyticsFilter filter, bool isLoading) {
     final total = summary.totalSpent;
     final groupPct = total > 0 ? (summary.groupExpenseShare / total).clamp(0.0, 1.0) : 0.0;
     final personalPct = total > 0 ? (summary.personalExpenseShare / total).clamp(0.0, 1.0) : 0.0;
@@ -378,33 +378,50 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
           ),
           const SizedBox(height: 16),
 
-          // Multi-Segment Proportion Bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              height: 10,
-              width: double.infinity,
-              color: Theme.of(context).ext.backgroundGrey,
-              child: Row(
-                children: [
-                  if (groupPct > 0)
-                    Flexible(
-                      flex: (groupPct * 1000).toInt(),
-                      child: Container(color: AppColors.primary),
+          // Animated Multi-Segment Proportion Bar with Smooth Subpixel Scaling
+          TweenAnimationBuilder<double>(
+            key: ValueKey('${isLoading}_${filter}_${summary.totalSpent}_${groupPct}_${personalPct}_${nonGroupPct}'),
+            tween: Tween<double>(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 900),
+            curve: Curves.easeOutCubic,
+            builder: (context, animProgress, child) {
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final totalWidth = constraints.maxWidth;
+                  final groupWidth = totalWidth * groupPct * animProgress;
+                  final personalWidth = totalWidth * personalPct * animProgress;
+                  final nonGroupWidth = totalWidth * nonGroupPct * animProgress;
+
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      height: 10,
+                      width: double.infinity,
+                      color: Theme.of(context).ext.backgroundGrey,
+                      child: Row(
+                        children: [
+                          if (groupWidth > 0)
+                            SizedBox(
+                              width: groupWidth,
+                              child: Container(color: AppColors.primary),
+                            ),
+                          if (personalWidth > 0)
+                            SizedBox(
+                              width: personalWidth,
+                              child: Container(color: const Color(0xFF00E5FF)),
+                            ),
+                          if (nonGroupWidth > 0)
+                            SizedBox(
+                              width: nonGroupWidth,
+                              child: Container(color: const Color(0xFF7C4DFF)),
+                            ),
+                        ],
+                      ),
                     ),
-                  if (personalPct > 0)
-                    Flexible(
-                      flex: (personalPct * 1000).toInt(),
-                      child: Container(color: const Color(0xFF00E5FF)),
-                    ),
-                  if (nonGroupPct > 0)
-                    Flexible(
-                      flex: (nonGroupPct * 1000).toInt(),
-                      child: Container(color: const Color(0xFF7C4DFF)),
-                    ),
-                ],
-              ),
-            ),
+                  );
+                },
+              );
+            },
           ),
           const SizedBox(height: 20),
 
@@ -503,7 +520,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
     );
   }
 
-  Widget _buildCategoryList(List<CategoryDetailEntity> categories) {
+  Widget _buildCategoryList(List<CategoryDetailEntity> categories, AnalyticsFilter filter, bool isLoading) {
     if (categories.isEmpty) {
       return SliverToBoxAdapter(
         child: Padding(
@@ -610,14 +627,22 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
                       Row(
                         children: [
                           Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: LinearProgressIndicator(
-                                value: category.categoryPercentage / 100,
-                                backgroundColor: color.withValues(alpha: 0.15),
-                                valueColor: AlwaysStoppedAnimation<Color>(color),
-                                minHeight: 8,
-                              ),
+                            child: TweenAnimationBuilder<double>(
+                              key: ValueKey('${isLoading}_${filter}_${category.id}_${category.categoryPercentage}'),
+                              tween: Tween<double>(begin: 0.0, end: (category.categoryPercentage / 100).clamp(0.0, 1.0)),
+                              duration: const Duration(milliseconds: 800),
+                              curve: Curves.easeOutCubic,
+                              builder: (context, animatedValue, _) {
+                                return ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: LinearProgressIndicator(
+                                    value: animatedValue,
+                                    backgroundColor: color.withValues(alpha: 0.15),
+                                    valueColor: AlwaysStoppedAnimation<Color>(color),
+                                    minHeight: 8,
+                                  ),
+                                );
+                              },
                             ),
                           ),
                           const SizedBox(width: 12),
