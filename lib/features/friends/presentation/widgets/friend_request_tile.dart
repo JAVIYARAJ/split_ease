@@ -22,13 +22,18 @@ class FriendRequestTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ext = Theme.of(context).ext;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Theme.of(context).ext.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE8E8E8), width: 1),
+        color: ext.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: ext.border.withValues(alpha: 0.3),
+          width: 1,
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,7 +64,7 @@ class FriendRequestTile extends StatelessWidget {
                         style: GoogleFonts.outfit(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1A1A1A),
+                          color: ext.textPrimary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -71,7 +76,7 @@ class FriendRequestTile extends StatelessWidget {
                       style: GoogleFonts.outfit(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: const Color(0xFF888888),
+                        color: ext.textSecondary,
                       ),
                     ),
                   ],
@@ -85,7 +90,7 @@ class FriendRequestTile extends StatelessWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF1C182A),
+                    color: ext.textSecondary,
                   ),
                 ),
 
@@ -97,8 +102,8 @@ class FriendRequestTile extends StatelessWidget {
                     // Confirm
                     Expanded(
                       child: SizedBox(
-                        height: 36,
-                        child: TextButton(
+                        height: 38,
+                        child: ElevatedButton(
                           onPressed: () {
                             context.read<FriendRequestsBloc>().add(
                                   RespondToRequest(
@@ -107,23 +112,21 @@ class FriendRequestTile extends StatelessWidget {
                                   ),
                                 );
                           },
-                          style: TextButton.styleFrom(
-                            backgroundColor: AppColors.primary,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryTeal,
                             foregroundColor: Colors.white,
                             elevation: 0,
-                            shadowColor: Colors.transparent,
                             padding: EdgeInsets.zero,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            splashFactory: NoSplash.splashFactory,
                           ),
                           child: Text(
                             'Confirm',
                             style: GoogleFonts.outfit(
                               fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).ext.surface,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
                             ),
                           ),
                         ),
@@ -135,8 +138,8 @@ class FriendRequestTile extends StatelessWidget {
                     // Delete
                     Expanded(
                       child: SizedBox(
-                        height: 36,
-                        child: TextButton(
+                        height: 38,
+                        child: OutlinedButton(
                           onPressed: () {
                             context.read<FriendRequestsBloc>().add(
                                   RespondToRequest(
@@ -145,23 +148,24 @@ class FriendRequestTile extends StatelessWidget {
                                   ),
                                 );
                           },
-                          style: TextButton.styleFrom(
-                            backgroundColor: const Color(0xFFF2F2F2),
-                            foregroundColor: const Color(0xFF333333),
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: ext.inputFill,
+                            foregroundColor: ext.textPrimary,
                             elevation: 0,
-                            shadowColor: Colors.transparent,
+                            side: BorderSide(
+                              color: ext.border.withValues(alpha: 0.3),
+                            ),
                             padding: EdgeInsets.zero,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            splashFactory: NoSplash.splashFactory,
                           ),
                           child: Text(
                             'Delete',
                             style: GoogleFonts.outfit(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF333333),
+                              color: ext.textPrimary,
                             ),
                           ),
                         ),
@@ -218,7 +222,7 @@ class FriendRequestTile extends StatelessWidget {
                     width: 280,
                     height: 280,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.12),
+                      color: AppColors.primaryTeal.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     alignment: Alignment.center,
@@ -227,7 +231,7 @@ class FriendRequestTile extends StatelessWidget {
                       style: GoogleFonts.outfit(
                         fontSize: 64,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
+                        color: AppColors.primaryTeal,
                       ),
                     ),
                   );

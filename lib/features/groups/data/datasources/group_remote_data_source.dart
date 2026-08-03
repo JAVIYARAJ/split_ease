@@ -11,7 +11,16 @@ import '../models/group_member_model.dart';
 abstract interface class GroupRemoteDataSource {
   Future<String> insertGroupImage(File file);
 
-  Future<dynamic> createGroup(String name, String type, String? icon, String inviteCode);
+  Future<dynamic> createGroup(
+    String name,
+    String type,
+    String? icon,
+    String inviteCode, {
+    String? destination,
+    String? startDate,
+    String? endDate,
+    double? budget,
+  });
 
   Future<List<GroupModel>> getAllGroups();
 
@@ -22,12 +31,22 @@ abstract interface class GroupRemoteDataSource {
   Future<String?> joinGroup(String code);
 
   Future<bool> leaveGroup(String groupId);
-  
+
   Future<bool> removeMember(String groupId, String userId);
 
   Future<bool> deleteGroup(String groupId);
 
-  Future<bool> updateGroup(String id, String name, String type, String? icon,String inviteCode);
+  Future<bool> updateGroup(
+    String id,
+    String name,
+    String type,
+    String? icon,
+    String inviteCode, {
+    String? destination,
+    String? startDate,
+    String? endDate,
+    double? budget,
+  });
 
   Future<List<GroupFriendModel>> getFriendsWithGroupStatus(String groupId);
 
@@ -67,9 +86,27 @@ class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
   }
 
   @override
-  Future<dynamic> createGroup(String name, String type, String? icon, String inviteCode) async {
+  Future<dynamic> createGroup(
+    String name,
+    String type,
+    String? icon,
+    String inviteCode, {
+    String? destination,
+    String? startDate,
+    String? endDate,
+    double? budget,
+  }) async {
     try {
-      var payload = {"name": name, "group_type": type, "group_icon": icon,"invite_code": inviteCode};
+      var payload = {
+        "name": name,
+        "group_type": type,
+        "group_icon": icon,
+        "invite_code": inviteCode,
+        "destination": ?destination,
+        "start_date": ?startDate,
+        "end_date": ?endDate,
+        "budget": ?budget,
+      };
       var response = await client.from("group").insert(payload).select();
       return response;
     } catch (error) {
@@ -175,9 +212,28 @@ class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
 
 
   @override
-  Future<bool> updateGroup(String id, String name, String type, String? icon,String inviteCode) async {
+  Future<bool> updateGroup(
+    String id,
+    String name,
+    String type,
+    String? icon,
+    String inviteCode, {
+    String? destination,
+    String? startDate,
+    String? endDate,
+    double? budget,
+  }) async {
     try {
-      var payload = {"name": name, "group_type": type, if (icon case final v?) "group_icon": v, "invite_code": inviteCode};
+      var payload = {
+        "name": name,
+        "group_type": type,
+        "group_icon": ?icon,
+        "invite_code": inviteCode,
+        "destination": destination,
+        "start_date": startDate,
+        "end_date": endDate,
+        "budget": budget,
+      };
       await client.from("group").update(payload).eq("id", id);
       return true;
     } catch (error) {

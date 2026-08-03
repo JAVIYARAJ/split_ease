@@ -11,7 +11,16 @@ import '../../../../core/error/failure.dart';
 abstract interface class GroupRepository {
   Future<Either<Failure, String>> insertGroupIcon(File file);
 
-  Future<Either<Failure, dynamic>> createGroup(String name, String type, String? icon, String inviteCode);
+  Future<Either<Failure, dynamic>> createGroup(
+    String name,
+    String type,
+    String? icon,
+    String inviteCode, {
+    String? destination,
+    String? startDate,
+    String? endDate,
+    double? budget,
+  });
 
   Future<Either<Failure, List<GroupEntity>>> getAllGroups();
 
@@ -27,7 +36,17 @@ abstract interface class GroupRepository {
 
   Future<Either<Failure, bool>> deleteGroup(String groupId);
 
-  Future<Either<Failure, bool>> updateGroup(String id, String name, String type, String? icon,String inviteCode);
+  Future<Either<Failure, bool>> updateGroup(
+    String id,
+    String name,
+    String type,
+    String? icon,
+    String inviteCode, {
+    String? destination,
+    String? startDate,
+    String? endDate,
+    double? budget,
+  });
 
   Future<Either<Failure, List<GroupFriendEntity>>> getFriendsWithGroupStatus(String groupId);
 

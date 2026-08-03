@@ -16,7 +16,11 @@ class GroupModel extends GroupEntity {
     super.overallBalance,
     super.totalActiveBalances,
     super.balancePreview,
-    super.memberCount
+    super.memberCount,
+    super.destination,
+    super.startDate,
+    super.endDate,
+    super.budget,
   });
 
   factory GroupModel.fromJson(Map<String, dynamic> json) {
@@ -38,7 +42,11 @@ class GroupModel extends GroupEntity {
           : null,
       memberCount: json['member_count'] ?? (json['members'] != null
           ? (json['members'] as List).map((v) => GroupMemberModel.fromJson(v)).toList().length
-          : null)
+          : null),
+      destination: json['destination'],
+      startDate: json['start_date'],
+      endDate: json['end_date'],
+      budget: json['budget'] != null ? (json['budget'] is int ? (json['budget'] as int).toDouble() : json['budget'] as double) : null,
     );
   }
 
@@ -59,6 +67,10 @@ class GroupModel extends GroupEntity {
     if (super.balancePreview != null) {
       data['balance_preview'] = super.balancePreview!.map((v) => (v as GroupBalancePreviewModel).toJson()).toList();
     }
+    data['destination'] = super.destination;
+    data['start_date'] = super.startDate;
+    data['end_date'] = super.endDate;
+    data['budget'] = super.budget;
     return data;
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../../core/theme/app_colors.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
 
 class AuthBackground extends StatelessWidget {
   final Widget child;
@@ -8,15 +8,17 @@ class AuthBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Simple, high-performance background without blurs or gradients
+    final isDark = Theme.of(context).isDark;
+    final scaffoldBg = Theme.of(context).ext.scaffoldBg;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.white,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
+      value: SystemUiOverlayStyle(
+        statusBarColor: scaffoldBg,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
       ),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: scaffoldBg,
         body: SafeArea(child: child),
       ),
     );

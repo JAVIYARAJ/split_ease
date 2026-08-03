@@ -31,6 +31,10 @@
 | `group_type` | `group_type` |  |
 | `group_icon` | `text` |  Nullable |
 | `invite_code` | `text` |  |
+| `destination` | `text` |  Nullable |
+| `start_date` | `timestamptz` |  Nullable |
+| `end_date` | `timestamptz` |  Nullable |
+| `budget` | `numeric` |  Nullable |
 
 ## Table `group_member`
 

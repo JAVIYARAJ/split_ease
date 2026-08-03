@@ -37,11 +37,29 @@ class GroupRepositoryImpl implements GroupRepository {
   }
 
   @override
-  Future<Either<Failure, dynamic>> createGroup(String name, String type, String? icon, String inviteCode) async{
-    try{
-      var response = await dataSource.createGroup(name, type, icon, inviteCode);
+  Future<Either<Failure, dynamic>> createGroup(
+    String name,
+    String type,
+    String? icon,
+    String inviteCode, {
+    String? destination,
+    String? startDate,
+    String? endDate,
+    double? budget,
+  }) async {
+    try {
+      var response = await dataSource.createGroup(
+        name,
+        type,
+        icon,
+        inviteCode,
+        destination: destination,
+        startDate: startDate,
+        endDate: endDate,
+        budget: budget,
+      );
       return right(response);
-    } on ServerException catch(error){
+    } on ServerException catch (error) {
       return left(Failure(message: error.message));
     }
   }
@@ -117,9 +135,29 @@ class GroupRepositoryImpl implements GroupRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> updateGroup(String id, String name, String type, String? icon,String inviteCode) async {
-     try {
-      var response = await dataSource.updateGroup(id, name, type, icon,inviteCode);
+  Future<Either<Failure, bool>> updateGroup(
+    String id,
+    String name,
+    String type,
+    String? icon,
+    String inviteCode, {
+    String? destination,
+    String? startDate,
+    String? endDate,
+    double? budget,
+  }) async {
+    try {
+      var response = await dataSource.updateGroup(
+        id,
+        name,
+        type,
+        icon,
+        inviteCode,
+        destination: destination,
+        startDate: startDate,
+        endDate: endDate,
+        budget: budget,
+      );
       return right(response);
     } on ServerException catch (error) {
       return left(Failure(message: error.message));

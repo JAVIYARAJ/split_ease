@@ -203,12 +203,30 @@ class _GroupSettingsContent extends StatelessWidget {
                       iconBgColor: AppColors.primary.withValues(alpha: 0.1),
                       iconColor: AppColors.primary,
                     ),
-                    if (GroupPermissionService.hasPermission(logic.userRole, GroupPermission.inviteMembers))
-                       _buildDivider(context),
+                    _buildDivider(context),
                   ],
+
+                  // Group Category Tile
+                  _buildSettingsTile(context,
+                    icon: Icons.category_rounded,
+                    title: 'Group Category',
+                    subtitle: _getGroupTypeLabel(group.groupType),
+                    onTap: () {
+                      if (GroupPermissionService.hasPermission(logic.userRole, GroupPermission.editGroup)) {
+                        NavigationService.pushNamed(AppRoutes.createGroup, args: {'is_edit': true, 'group': group}).then((value) {
+                          if (value == true && context.mounted) {
+                            context.read<GroupSettingsBloc>().add(LoadGroupSettings(group.id!, hasChanges: true));
+                          }
+                        });
+                      }
+                    },
+                    iconBgColor: AppColors.primaryTeal.withValues(alpha: 0.1),
+                    iconColor: AppColors.primaryTeal,
+                  ),
                   
                   // Invite QR - Permission Check
                   if (GroupPermissionService.hasPermission(logic.userRole, GroupPermission.inviteMembers)) ...[
+                    _buildDivider(context),
                     _buildSettingsTile(context,
                       icon: Icons.qr_code_rounded,
                       title: 'Invite by QR',
@@ -442,20 +460,27 @@ class _GroupSettingsContent extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(color: Theme.of(context).ext.surface, borderRadius: BorderRadius.circular(20)),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.people_alt_rounded, size: 14, color: Theme.of(context).ext.textSecondary),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${group.members?.length ?? 0} members',
-                    style: GoogleFonts.openSans(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textSecondary),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(color: Theme.of(context).ext.surface, borderRadius: BorderRadius.circular(20)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.people_alt_rounded, size: 14, color: Theme.of(context).ext.textSecondary),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${group.members?.length ?? 0} members',
+                        style: GoogleFonts.openSans(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textSecondary),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 8),
+                _buildCategoryBadge(context, group.groupType),
+              ],
             ),
             if (group.createdBy?.name != null) ...[
               const SizedBox(height: 12),
@@ -744,6 +769,61 @@ class _GroupSettingsContent extends StatelessWidget {
           Navigator.pop(ctx);
           // Navigation to user profile or similar
         },
+      ),
+    );
+  }
+
+  String _getGroupTypeLabel(String? type) {
+    if (type == 'trip') return 'Trip ✈️';
+    if (type == 'home') return 'Home 🏠';
+    if (type == 'couple') return 'Duo / Couple 💑';
+    return 'General / Other 📁';
+  }
+
+  Widget _buildCategoryBadge(BuildContext context, String? type) {
+    IconData icon = Icons.folder_open_rounded;
+    String label = "General";
+    Color color = AppColors.primaryTeal;
+
+    if (type == 'trip') {
+      icon = Icons.flight_takeoff_rounded;
+      label = "Trip ✈️";
+      color = const Color(0xFF0284C7);
+    } else if (type == 'home') {
+      icon = Icons.home_rounded;
+      label = "Home 🏠";
+      color = const Color(0xFF16A34A);
+    } else if (type == 'couple') {
+      icon = Icons.favorite_rounded;
+      label = "Duo 💑";
+      color = const Color(0xFFE11D48);
+    } else if (type == 'other') {
+      icon = Icons.more_horiz_rounded;
+      label = "Other 📁";
+      color = const Color(0xFF8B5CF6);
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: GoogleFonts.outfit(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }

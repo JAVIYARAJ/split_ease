@@ -3,6 +3,7 @@ import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
 import 'package:split_ease/core/presentation/widgets/app_error_full_screen_dialog.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
@@ -25,6 +26,11 @@ class CreateGroupPage extends StatefulWidget {
 
 class _CreateGroupPageState extends State<CreateGroupPage> {
   final TextEditingController _groupNameController = TextEditingController();
+  final TextEditingController _destinationController = TextEditingController();
+  final TextEditingController _budgetController = TextEditingController();
+  DateTime? _startDate;
+  DateTime? _endDate;
+
   String _initialName = '';
   GroupType _initialType = GroupType.other;
   String _initialCode = '';
@@ -50,6 +56,16 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
         }
 
         _groupNameController.text = _initialName;
+        _destinationController.text = group.destination ?? '';
+        _budgetController.text = group.budget != null && group.budget! > 0
+            ? group.budget!.toStringAsFixed(0)
+            : '';
+        if (group.startDate != null) {
+          try { _startDate = DateTime.parse(group.startDate!); } catch (_) {}
+        }
+        if (group.endDate != null) {
+          try { _endDate = DateTime.parse(group.endDate!); } catch (_) {}
+        }
         context.read<CreateGroupBloc>().add(InitializeCreateGroup(group: group));
       } else {
         _initialType = GroupType.trip;
@@ -61,6 +77,8 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   @override
   void dispose() {
     _groupNameController.dispose();
+    _destinationController.dispose();
+    _budgetController.dispose();
     super.dispose();
   }
 
@@ -140,9 +158,13 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                         _fadeInUp(_buildSectionLabel("CHOOSE CATEGORY"), 3),
                         const SizedBox(height: 12),
                         _fadeInUp(_buildTypeSelector(context, state), 4),
-                      const SizedBox(height: 24),
-                      _fadeInUp(_buildInviteCard(context, state), 5),
-                      const SizedBox(height: 40),
+                        if (state.selectedType == GroupType.trip) ...[
+                          const SizedBox(height: 24),
+                          _fadeInUp(_buildTripDetailsForm(context, state), 5),
+                        ],
+                        const SizedBox(height: 24),
+                        _fadeInUp(_buildInviteCard(context, state), 6),
+                        const SizedBox(height: 40),
                     ],
                   ),
                 ),
@@ -316,6 +338,130 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     );
   }
 
+  Widget _buildTripDetailsForm(BuildContext context, CreateGroupState state) {
+    final ext = Theme.of(context).ext;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionLabel("TRIP DESTINATION ✈️"),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            color: ext.inputFill,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ext.border.withValues(alpha: 0.3)),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: TextField(
+            controller: _destinationController,
+            maxLines: 1,
+            style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: ext.textPrimary),
+            cursorColor: AppColors.primary,
+            decoration: InputDecoration(
+              hintText: "E.g. Goa, Paris, Bali",
+              hintStyle: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w500, color: ext.textTertiary),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        _buildSectionLabel("TRAVEL DATES"),
+        const SizedBox(height: 12),
+        InkWell(
+          onTap: () async {
+            final picked = await showDateRangePicker(
+              context: context,
+              firstDate: DateTime(2020),
+              lastDate: DateTime(2030),
+              initialDateRange: _startDate != null && _endDate != null
+                  ? DateTimeRange(start: _startDate!, end: _endDate!)
+                  : null,
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: ColorScheme.light(
+                      primary: AppColors.primary,
+                      onPrimary: Colors.white,
+                      surface: ext.surface,
+                      onSurface: ext.textPrimary,
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
+            );
+            if (picked != null) {
+              setState(() {
+                _startDate = picked.start;
+                _endDate = picked.end;
+              });
+            }
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: ext.inputFill,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: ext.border.withValues(alpha: 0.3)),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Icon(Icons.calendar_month_rounded, size: 20, color: ext.textSecondary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _startDate != null && _endDate != null
+                        ? '${DateFormat('MMM d').format(_startDate!)} - ${DateFormat('MMM d, yyyy').format(_endDate!)}'
+                        : 'Select Travel Dates',
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: _startDate != null ? FontWeight.w600 : FontWeight.w500,
+                      color: _startDate != null ? ext.textPrimary : ext.textTertiary,
+                    ),
+                  ),
+                ),
+                Icon(Icons.arrow_drop_down_rounded, color: ext.textSecondary),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        _buildSectionLabel("TARGET TRIP BUDGET"),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            color: ext.inputFill,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ext.border.withValues(alpha: 0.3)),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: TextField(
+            controller: _budgetController,
+            keyboardType: TextInputType.number,
+            maxLines: 1,
+            style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: ext.textPrimary),
+            cursorColor: AppColors.primary,
+            decoration: InputDecoration(
+              hintText: "E.g. 50000",
+              hintStyle: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w500, color: ext.textTertiary),
+              prefixText: "₹ ",
+              prefixStyle: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.primary),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildInviteCard(BuildContext context, CreateGroupState state) {
     return Container(
       width: double.infinity,
@@ -381,10 +527,34 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
           onPressed: state.status == CreateGroupStatus.loading
               ? null
               : () {
+                  final String dest = _destinationController.text.trim();
+                  final double? budget = double.tryParse(_budgetController.text.trim());
+                  final String? startStr = _startDate?.toIso8601String();
+                  final String? endStr = _endDate?.toIso8601String();
+
                   if (state.isEditMode) {
-                    context.read<CreateGroupBloc>().add(UpdateGroupSubmitted(groupId: state.createdGroupId!, name: _groupNameController.text, type: state.selectedType));
+                    context.read<CreateGroupBloc>().add(
+                      UpdateGroupSubmitted(
+                        groupId: state.createdGroupId!,
+                        name: _groupNameController.text,
+                        type: state.selectedType,
+                        destination: dest.isNotEmpty ? dest : null,
+                        startDate: startStr,
+                        endDate: endStr,
+                        budget: budget,
+                      ),
+                    );
                   } else {
-                    context.read<CreateGroupBloc>().add(CreateGroupSubmitted(name: _groupNameController.text, type: state.selectedType));
+                    context.read<CreateGroupBloc>().add(
+                      CreateGroupSubmitted(
+                        name: _groupNameController.text,
+                        type: state.selectedType,
+                        destination: dest.isNotEmpty ? dest : null,
+                        startDate: startStr,
+                        endDate: endStr,
+                        budget: budget,
+                      ),
+                    );
                   }
                 },
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),

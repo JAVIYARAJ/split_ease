@@ -92,15 +92,25 @@ class GroupListItem extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              group.name ?? "Non-group expense",
-                              style: GoogleFonts.outfit(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Theme.of(context).ext.textPrimary,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    group.name ?? "Non-group expense",
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: Theme.of(context).ext.textPrimary,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (group.groupType != null) ...[
+                                  const SizedBox(width: 6),
+                                  _buildCategoryPill(context, group.groupType!),
+                                ],
+                              ],
                             ),
                             const SizedBox(height: 2),
                             Text(
@@ -262,6 +272,41 @@ class GroupListItem extends StatelessWidget {
                     } else {
                       return Icons.list_alt_rounded;
                     }
+                  }
+
+                  Widget _buildCategoryPill(BuildContext context, String type) {
+                    String label = "General";
+                    Color color = AppColors.primaryTeal;
+
+                    if (type == 'trip') {
+                      label = "Trip ✈️";
+                      color = const Color(0xFF0284C7);
+                    } else if (type == 'home') {
+                      label = "Home 🏠";
+                      color = const Color(0xFF16A34A);
+                    } else if (type == 'couple') {
+                      label = "Duo 💑";
+                      color = const Color(0xFFE11D48);
+                    } else if (type == 'other') {
+                      label = "Other 📁";
+                      color = const Color(0xFF8B5CF6);
+                    }
+
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        label,
+                        style: GoogleFonts.outfit(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: color,
+                        ),
+                      ),
+                    );
                   }
                 }
 

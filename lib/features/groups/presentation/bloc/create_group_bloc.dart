@@ -65,7 +65,16 @@ class CreateGroupBloc extends Bloc<CreateGroupEvent, CreateGroupState> {
         }
 
         var groupResponse = await _groupCreate(
-          CreateGroupParam(name: event.name, type: state.selectedType.name, icon: groupPath, inviteCode: state.inviteCode),
+          CreateGroupParam(
+            name: event.name,
+            type: state.selectedType.name,
+            icon: groupPath,
+            inviteCode: state.inviteCode,
+            destination: event.destination,
+            startDate: event.startDate,
+            endDate: event.endDate,
+            budget: event.budget,
+          ),
         );
         groupResponse.fold(
           (l) {
@@ -156,7 +165,19 @@ class CreateGroupBloc extends Bloc<CreateGroupEvent, CreateGroupState> {
         );
       }
 
-      var result = await _updateGroup(UpdateGroupParam(id: event.groupId, name: event.name, type: event.type.name, icon: groupIconUrl,inviteCode: state.inviteCode));
+      var result = await _updateGroup(
+        UpdateGroupParam(
+          id: event.groupId,
+          name: event.name,
+          type: event.type.name,
+          icon: groupIconUrl,
+          inviteCode: state.inviteCode,
+          destination: event.destination,
+          startDate: event.startDate,
+          endDate: event.endDate,
+          budget: event.budget,
+        ),
+      );
 
       result.fold(
         (l) => emit(state.copyWith(status: CreateGroupStatus.failure, errorMessage: l.message)),

@@ -71,7 +71,7 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
   Widget _buildBody(FriendRequestsState state) {
     if (state.status == FriendRequestsStatus.loading) {
       return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
+        child: CircularProgressIndicator(color: AppColors.primaryTeal),
       );
     }
 

@@ -10,7 +10,16 @@ class GroupCreate implements UseCase<dynamic, CreateGroupParam> {
 
   @override
   Future<Either<Failure, dynamic>> call(CreateGroupParam params) async {
-    return await groupRepository.createGroup(params.name, params.type, params.icon, params.inviteCode);
+    return await groupRepository.createGroup(
+      params.name,
+      params.type,
+      params.icon,
+      params.inviteCode,
+      destination: params.destination,
+      startDate: params.startDate,
+      endDate: params.endDate,
+      budget: params.budget,
+    );
   }
 }
 
@@ -19,6 +28,19 @@ class CreateGroupParam {
   final String? icon;
   final String type;
   final String inviteCode;
+  final String? destination;
+  final String? startDate;
+  final String? endDate;
+  final double? budget;
 
-  CreateGroupParam({required this.name, required this.icon, required this.type, required this.inviteCode});
+  CreateGroupParam({
+    required this.name,
+    required this.icon,
+    required this.type,
+    required this.inviteCode,
+    this.destination,
+    this.startDate,
+    this.endDate,
+    this.budget,
+  });
 }

@@ -16,9 +16,15 @@ import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/navigation_utils.dart';
+import 'package:split_ease/core/utils/app_alerts.dart';
+import 'package:split_ease/injection_container.dart';
+import 'package:split_ease/features/groups/domain/usecases/update_group.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 import 'package:split_ease/features/groups/domain/entities/group_expense_entity.dart';
 import 'package:split_ease/features/groups/presentation/bloc/group_detail_bloc.dart';
+import 'package:split_ease/features/groups/presentation/widgets/trip_banner_widget.dart';
+import 'package:split_ease/features/groups/presentation/widgets/trip_settings_modal.dart';
+import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
 
 class GroupDetailPage extends StatefulWidget {
   const GroupDetailPage({super.key});
@@ -58,6 +64,46 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       context.read<GroupDetailBloc>().add(LoadGroupExpenseHistory(groupId: _groupId));
     });
     super.initState();
+  }
+
+  void _showTripSettingsModal(BuildContext context, GroupEntity group) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => TripSettingsModal(
+        group: group,
+        onSave: ({
+          required String destination,
+          required String? startDate,
+          required String? endDate,
+          required double? budget,
+        }) async {
+          final result = await sl<UpdateGroup>()(
+            UpdateGroupParam(
+              id: group.id ?? '',
+              name: group.name ?? '',
+              type: group.groupType ?? 'other',
+              icon: group.groupIcon,
+              inviteCode: group.inviteCode ?? '',
+              destination: destination.isNotEmpty ? destination : null,
+              startDate: startDate,
+              endDate: endDate,
+              budget: budget,
+            ),
+          );
+          if (context.mounted) {
+            result.fold(
+              (l) => AppAlerts.showError(context, l.message),
+              (r) {
+                AppAlerts.showSuccess(context, "Trip details saved!");
+                context.read<GroupDetailBloc>().add(LoadGroupDetails(groupId: group.id, hasChanges: true));
+              },
+            );
+          }
+        },
+      ),
+    );
   }
 
   /// Open the Add Expense page and reload expense history when expense is saved.
@@ -159,6 +205,35 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                   if (!hasMembers && !hasExpenses) return const SliverToBoxAdapter(child: SizedBox());
 
                   return _GroupDetailInfo(isNonGroup: _groupId == null);
+                },
+              ),
+
+              // 1b. Trip Banner (for Trip category groups)
+              BlocBuilder<GroupDetailBloc, GroupDetailState>(
+                builder: (context, state) {
+                  final group = state.groupEntity;
+                  if (group == null || group.groupType != 'trip') {
+                    return const SliverToBoxAdapter(child: SizedBox.shrink());
+                  }
+
+                  double totalSpent = 0.0;
+                  if (state.expenseHistory?.expenses != null) {
+                    for (final e in state.expenseHistory!.expenses!) {
+                      if (e.type != 'settlement') {
+                        totalSpent += e.totalAmount;
+                      }
+                    }
+                  }
+
+                  return SliverToBoxAdapter(
+                    child: TripBannerWidget(
+                      group: group,
+                      totalExpenses: totalSpent,
+                      onConfigureTrip: () {
+                        _showTripSettingsModal(context, group);
+                      },
+                    ),
+                  );
                 },
               ),
 
@@ -387,10 +462,7 @@ class _GroupDetailInfo extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const _BalanceSummary(),
-              if (!isNonGroup) ...[
-                const SizedBox(height: 16),
-                const _ActionButtons(),
-              ],
+              if (!isNonGroup) const _ActionButtons(),
             ],
           ),
         ),
@@ -517,7 +589,7 @@ class _GroupDetailAppBar extends StatelessWidget {
                     child: Text(
                       groupEntity?.name ?? "",
                       style: GoogleFonts.outfit(
-                        color: Theme.of(context).ext.surface,
+                        color: Colors.white,
                         fontSize: titleSizes,
                         fontWeight: FontWeight.w700,
                         letterSpacing: -0.5,
@@ -525,31 +597,39 @@ class _GroupDetailAppBar extends StatelessWidget {
                     ),
                   ),
 
-                  // 4. Member Count pill — hidden in non-group context
+                  // 4. Member Count & Category pill — hidden in non-group context
                   if (!isNonGroup)
                     Positioned(
                       left: 20,
                       bottom: 20,
                       child: Opacity(
                         opacity: memberOpacity,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.9),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.white24, width: 1),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.people_outline, color: Colors.white, size: 16),
-                              const SizedBox(width: 6),
-                              Text(
-                                "${groupEntity?.members?.length ?? 0} people",
-                                style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryTeal.withValues(alpha: 0.9),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: Colors.white24, width: 1),
                               ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.people_outline, color: Colors.white, size: 16),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    "${groupEntity?.members?.length ?? 0} people",
+                                    style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (groupEntity?.groupType != null) ...[
+                              const SizedBox(width: 8),
+                              _buildHeaderCategoryBadge(context, groupEntity!.groupType!),
                             ],
-                          ),
+                          ],
                         ),
                       ),
                     ),
@@ -558,6 +638,49 @@ class _GroupDetailAppBar extends StatelessWidget {
             },
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildHeaderCategoryBadge(BuildContext context, String type) {
+    IconData icon = Icons.folder_open_rounded;
+    String label = "General";
+
+    if (type == 'trip') {
+      icon = Icons.flight_takeoff_rounded;
+      label = "Trip ✈️";
+    } else if (type == 'home') {
+      icon = Icons.home_rounded;
+      label = "Home 🏠";
+    } else if (type == 'couple') {
+      icon = Icons.favorite_rounded;
+      label = "Duo 💑";
+    } else if (type == 'other') {
+      icon = Icons.more_horiz_rounded;
+      label = "Other 📁";
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white24, width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: Colors.white),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: GoogleFonts.outfit(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -635,44 +758,49 @@ class _ActionButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        children: [
-          _buildActionButton(context, 
-            label: "Settle up",
-            icon: Icons.account_balance_wallet_rounded,
-            color: AppColors.primary,
-            onPressed: () {
-              final state = context.read<GroupDetailBloc>().state;
-              if (state.expenseHistory?.memberBalances != null) {
-                NavigationService.pushNamed(
-                  AppRoutes.settleUpSelection,
-                  args: {
-                    'balances': state.expenseHistory!.memberBalances,
-                    'groupId': state.groupEntity?.id,
+    return BlocBuilder<GroupDetailBloc, GroupDetailState>(
+      builder: (context, state) {
+        final history = state.expenseHistory;
+        if (history == null) return const SizedBox.shrink();
+
+        final double overall = history.overallBalance;
+        final bool hasPendingBalances = overall != 0 ||
+            (history.memberBalances != null &&
+                history.memberBalances!.any((m) => m.balance != 0));
+
+        if (!hasPendingBalances) {
+          return const SizedBox.shrink();
+        }
+
+        return Padding(
+          padding: const EdgeInsets.only(top: 16.0),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: [
+                _buildActionButton(context, 
+                  label: "Settle up",
+                  icon: Icons.account_balance_wallet_rounded,
+                  color: AppColors.primaryTeal,
+                  onPressed: () {
+                    final currentState = context.read<GroupDetailBloc>().state;
+                    if (currentState.expenseHistory?.memberBalances != null) {
+                      NavigationService.pushNamed(
+                        AppRoutes.settleUpSelection,
+                        args: {
+                          'balances': currentState.expenseHistory!.memberBalances,
+                          'groupId': currentState.groupEntity?.id,
+                        },
+                      );
+                    }
                   },
-                );
-              }
-            },
+                ),
+              ],
+            ),
           ),
-         /* const SizedBox(width: 8),
-          _buildActionButton(context, 
-            label: "Balances",
-            icon: Icons.bar_chart_rounded,
-            color: Theme.of(context).ext.textPrimary,
-            onPressed: () {},
-          ),
-          const SizedBox(width: 8),
-          _buildActionButton(context, 
-            label: "Totals",
-            icon: Icons.functions_rounded,
-            color: Theme.of(context).ext.textPrimary,
-            onPressed: () {},
-          ),*/
-        ],
-      ),
+        );
+      },
     );
   }
 

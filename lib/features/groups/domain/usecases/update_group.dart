@@ -10,7 +10,17 @@ class UpdateGroup implements UseCase<bool, UpdateGroupParam> {
 
   @override
   Future<Either<Failure, bool>> call(UpdateGroupParam params) async {
-    return await repository.updateGroup(params.id, params.name, params.type, params.icon,params.inviteCode);
+    return await repository.updateGroup(
+      params.id,
+      params.name,
+      params.type,
+      params.icon,
+      params.inviteCode,
+      destination: params.destination,
+      startDate: params.startDate,
+      endDate: params.endDate,
+      budget: params.budget,
+    );
   }
 }
 
@@ -20,6 +30,20 @@ class UpdateGroupParam {
   final String type;
   final String? icon;
   final String inviteCode;
+  final String? destination;
+  final String? startDate;
+  final String? endDate;
+  final double? budget;
 
-  UpdateGroupParam({required this.id, required this.name, required this.type, this.icon,required this.inviteCode});
+  UpdateGroupParam({
+    required this.id,
+    required this.name,
+    required this.type,
+    this.icon,
+    required this.inviteCode,
+    this.destination,
+    this.startDate,
+    this.endDate,
+    this.budget,
+  });
 }
