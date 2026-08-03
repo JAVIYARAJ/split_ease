@@ -1,9 +1,11 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/home_dashboard_model.dart';
+import '../models/advertisement_model.dart';
 import 'package:split_ease/core/error/exception.dart';
 
 abstract class HomeRemoteDataSource {
   Future<HomeDashboardModel> getHomeDashboard({DateTime? startDate, DateTime? endDate});
+  Future<List<AdvertisementModel>> getAdvertisements(DateTime clientDate);
 }
 
 class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
@@ -28,4 +30,27 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       throw ServerException(message: e.toString());
     }
   }
+
+  @override
+  Future<List<AdvertisementModel>> getAdvertisements(DateTime clientDate) async {
+    try {
+      final response = await supabaseClient.rpc(
+        'get_active_advertisements',
+        params: {
+          'p_client_date': clientDate.toIso8601String(),
+        },
+      );
+      if (response is List) {
+        return response
+            .map((e) => AdvertisementModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      return [];
+    } on PostgrestException catch (e) {
+      throw ServerException(message: e.message);
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
 }
+

@@ -3,6 +3,7 @@ import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/presentation/widgets/app_error_full_screen_dialog.dart';
 import '../../../../core/utils/app_alerts.dart';
 import '../../../../core/utils/icon_utils.dart';
 import '../bloc/category_limits/category_limits_bloc.dart';
@@ -152,11 +153,16 @@ class _CategoryLimitsPageState extends State<CategoryLimitsPage> {
                   if (state is CategoryLimitsLoading) {
                     return const Center(child: CircularProgressIndicator());
                   } else if (state is CategoryLimitsError) {
-                    return Center(
-                      child: Text(
-                        state.message,
-                        style: GoogleFonts.outfit(color: AppColors.errorRed, fontSize: 16),
-                      ),
+                    return AppErrorFullScreenWidget(
+                      errorMessage: state.message,
+                      onRefresh: () async {
+                        final bloc = context.read<CategoryLimitsBloc>();
+                        bloc.add(LoadCategoryLimitsEvent());
+                        final nextState = await bloc.stream.firstWhere(
+                          (s) => s is! CategoryLimitsLoading,
+                        );
+                        return nextState is CategoryLimitsLoaded;
+                      },
                     );
                   } else if (state is CategoryLimitsLoaded) {
                     final searchQuery = state.searchQuery ?? '';

@@ -10,14 +10,50 @@ import 'package:split_ease/core/utils/navigation_utils.dart';
 import 'package:split_ease/features/activity/domain/entities/activity_entity.dart';
 
 import '../../../../../core/presentation/widgets/app_empty_state.dart';
+import '../../../../../core/presentation/widgets/app_error_full_screen_dialog.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/routing/navigation_service.dart';
 import '../bloc/activity_bloc.dart';
 import '../widgets/activity_list_item.dart';
 
-class ActivityPage extends StatelessWidget {
+class ActivityPage extends StatefulWidget {
   const ActivityPage({super.key});
+
+  @override
+  State<ActivityPage> createState() => _ActivityPageState();
+}
+
+class _ActivityPageState extends State<ActivityPage> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_isBottom) {
+      final state = context.read<ActivityBloc>().state;
+      if (state is ActivityLoaded && !state.isLoadingMore && !state.hasReachedMax) {
+        context.read<ActivityBloc>().add(LoadMoreActivities());
+      }
+    }
+  }
+
+  bool get _isBottom {
+    if (!_scrollController.hasClients) return false;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.offset;
+    return currentScroll >= (maxScroll - 200);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +71,20 @@ class ActivityPage extends StatelessWidget {
         body: BlocBuilder<ActivityBloc, ActivityState>(
           builder: (context, state) {
             final isLoading = state is ActivityLoading;
+            final isLoadingMore = (state is ActivityLoaded) && state.isLoadingMore;
 
             if (state is ActivityError) {
-              return Center(child: Text(state.message));
+              return AppErrorFullScreenWidget(
+                errorMessage: state.message,
+                onRefresh: () async {
+                  final bloc = context.read<ActivityBloc>();
+                  bloc.add(LoadActivities(isRefresh: true));
+                  final nextState = await bloc.stream.firstWhere(
+                    (s) => s is! ActivityLoading,
+                  );
+                  return nextState is ActivityLoaded;
+                },
+              );
             }
 
             final List<ActivityEntity> activities = (state is ActivityLoaded)
@@ -52,9 +99,10 @@ class ActivityPage extends StatelessWidget {
 
             return CustomRefreshIndicator(
               onRefresh: () async {
-                context.read<ActivityBloc>().add(LoadActivities());
+                context.read<ActivityBloc>().add(LoadActivities(isRefresh: true));
               },
               child: CustomScrollView(
+                controller: _scrollController,
                 physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                 slivers: [
                   _buildAppBar(context),
@@ -142,6 +190,22 @@ class ActivityPage extends StatelessWidget {
                               ),
                             );
                           }, childCount: groupedActivities.length),
+                        ),
+                      ),
+                    ),
+                  if (isLoadingMore)
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: AppColors.primaryTeal,
+                            ),
+                          ),
                         ),
                       ),
                     ),

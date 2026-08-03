@@ -8,6 +8,7 @@ import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import '../../../../core/presentation/widgets/app_back_button.dart';
+import '../../../../core/presentation/widgets/app_error_full_screen_dialog.dart';
 import '../../domain/entities/recurring_expense_entity.dart';
 import '../bloc/recurring_expenses_bloc.dart';
 import '../bloc/recurring_expenses_event.dart';
@@ -44,6 +45,19 @@ class RecurringExpensesPage extends StatelessWidget {
           if (state.status == RecurringExpensesStatus.loading) {
             return const Center(
               child: CircularProgressIndicator(color: AppColors.primaryTeal),
+            );
+          }
+          if (state.status == RecurringExpensesStatus.failure) {
+            return AppErrorFullScreenWidget(
+              errorMessage: state.errorMessage,
+              onRefresh: () async {
+                final bloc = context.read<RecurringExpensesBloc>();
+                bloc.add(LoadRecurringExpensesEvent());
+                final nextState = await bloc.stream.firstWhere(
+                  (s) => s.status != RecurringExpensesStatus.loading,
+                );
+                return nextState.status == RecurringExpensesStatus.loaded;
+              },
             );
           }
 

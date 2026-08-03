@@ -118,6 +118,7 @@ import 'features/home/data/datasources/home_remote_data_source.dart';
 import 'features/home/data/repositories/home_repository_impl.dart';
 import 'features/home/domain/repositories/home_repository.dart';
 import 'features/home/domain/usecases/get_home_dashboard.dart';
+import 'features/home/domain/usecases/get_advertisements_usecase.dart';
 import 'features/home/presentation/bloc/dashboard/home_dashboard_bloc.dart';
 
 import 'features/analytics/data/datasources/analytics_remote_data_source.dart';
@@ -377,6 +378,7 @@ void _home() {
   sl.registerFactory<HomeRemoteDataSource>(() => HomeRemoteDataSourceImpl(supabaseClient: sl<SupabaseClient>()));
   sl.registerFactory<HomeRepository>(() => HomeRepositoryImpl(remoteDataSource: sl<HomeRemoteDataSource>()));
   sl.registerFactory(() => GetHomeDashboard(sl<HomeRepository>()));
+  sl.registerFactory(() => GetAdvertisementsUseCase(sl<HomeRepository>()));
   sl.registerFactory(() => HomeDashboardBloc(
     getHomeDashboard: sl<GetHomeDashboard>(),
     dataRefreshCubit: sl<DataRefreshCubit>(),

@@ -7,6 +7,7 @@ import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friend_requests_bloc.dart';
 import 'package:split_ease/core/presentation/widgets/app_empty_state.dart';
+import 'package:split_ease/core/presentation/widgets/app_error_full_screen_dialog.dart';
 import 'package:split_ease/features/friends/presentation/widgets/friend_request_tile.dart';
 import 'package:split_ease/injection_container.dart';
 
@@ -75,18 +76,20 @@ class _FriendRequestsPageState extends State<FriendRequestsPage> {
     }
 
     if (state.status == FriendRequestsStatus.failure) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Text(
-            state.errorMessage,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(
-              fontSize: 15,
-              color: Theme.of(context).ext.textSecondary,
-            ),
-          ),
-        ),
+      return Builder(
+        builder: (context) {
+          return AppErrorFullScreenWidget(
+            errorMessage: state.errorMessage,
+            onRefresh: () async {
+              final bloc = context.read<FriendRequestsBloc>();
+              bloc.add(LoadFriendRequests());
+              final nextState = await bloc.stream.firstWhere(
+                (s) => s.status != FriendRequestsStatus.loading,
+              );
+              return nextState.status == FriendRequestsStatus.success;
+            },
+          );
+        },
       );
     }
 

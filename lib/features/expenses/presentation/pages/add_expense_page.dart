@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:split_ease/core/common/cubit/app_user_cubit.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
+import 'package:split_ease/core/presentation/widgets/app_error_full_screen_dialog.dart';
 import 'package:split_ease/core/presentation/widgets/group_picker_sheet.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
@@ -178,6 +179,30 @@ class _AddExpensePageState extends State<AddExpensePage> {
         },
         child: BlocBuilder<ExpenseBloc, ExpenseState>(
           builder: (context, state) {
+            if (state.status == ExpenseStatus.failure && state.categories.isEmpty) {
+              return AppErrorFullScreenWidget(
+                errorMessage: state.errorMessage,
+                onRefresh: () async {
+                  final bloc = context.read<ExpenseBloc>();
+                  final appUserState = context.read<AppUserCubit>().state;
+                  String? currentUserId;
+                  if (appUserState is AppUserLoggedIn) {
+                    currentUserId = appUserState.user.id;
+                  }
+                  bloc.add(ExpenseInitialized(
+                    group: state.group,
+                    friend: state.friend,
+                    currentUserId: currentUserId,
+                    origin: state.origin,
+                  ));
+                  final nextState = await bloc.stream.firstWhere(
+                    (s) => s.status != ExpenseStatus.loading,
+                  );
+                  return nextState.status != ExpenseStatus.failure;
+                },
+              );
+            }
+
             final group = state.group;
             final friend = state.friend;
             final members = state.groupMembers;

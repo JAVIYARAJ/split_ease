@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
+import 'package:split_ease/core/presentation/widgets/app_error_full_screen_dialog.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
@@ -79,6 +80,19 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
         }
       },
       builder: (context, state) {
+        if (state.status == CreateGroupStatus.failure && state.inviteCode.isEmpty) {
+          return AppErrorFullScreenWidget(
+            errorMessage: state.errorMessage,
+            onRefresh: () async {
+              final bloc = context.read<CreateGroupBloc>();
+              bloc.add(const GenerateInviteCode());
+              final nextState = await bloc.stream.firstWhere(
+                (s) => s.status != CreateGroupStatus.loading,
+              );
+              return nextState.status != CreateGroupStatus.failure;
+            },
+          );
+        }
         return PopScope(
           canPop: false,
           onPopInvokedWithResult: (didPop, result) async {

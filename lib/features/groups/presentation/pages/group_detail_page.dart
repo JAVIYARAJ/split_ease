@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
+import 'package:split_ease/core/presentation/widgets/app_error_full_screen_dialog.dart';
 import 'package:split_ease/core/theme/app_layout.dart';
 import 'package:split_ease/core/presentation/widgets/app_empty_state.dart';
 import 'package:split_ease/core/presentation/widgets/base_screen.dart';
@@ -172,17 +173,20 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                     return const _ShimmerTransactionList();
                   }
 
-                  if (state.expenseStatus == GroupDetailExpenseStatus.failure) {
-                    return SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Center(
-                          child: Text(
-                            state.expenseErrorMessage ?? "Failed to load expenses",
-                            style: GoogleFonts.openSans(color: AppColors.errorRed, fontSize: 14),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
+                  if (state.expenseStatus == GroupDetailExpenseStatus.failure || state.status == GroupDetailStatus.failure) {
+                    return SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: AppErrorFullScreenWidget(
+                        errorMessage: state.expenseErrorMessage ?? state.errorMessage,
+                        onRefresh: () async {
+                          final bloc = context.read<GroupDetailBloc>();
+                          bloc.add(const LoadGroupDetails(hasChanges: true));
+                          bloc.add(const LoadGroupExpenseHistory());
+                          final nextState = await bloc.stream.firstWhere(
+                            (s) => s.expenseStatus != GroupDetailExpenseStatus.loading && s.status != GroupDetailStatus.loading,
+                          );
+                          return nextState.expenseStatus == GroupDetailExpenseStatus.success;
+                        },
                       ),
                     );
                   }

@@ -1,38 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:split_ease/core/common/cubit/app_user_cubit.dart';
-import 'package:split_ease/core/services/realtime_service.dart';
-import 'package:split_ease/features/account/presentation/bloc/account_bloc.dart';
-import '../../../../../core/presentation/widgets/base_screen.dart';
-import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
+import 'package:split_ease/core/services/realtime_service.dart';
+import 'package:split_ease/core/theme/app_color_tokens.dart';
+import 'package:split_ease/core/theme/app_colors.dart';
+import 'package:split_ease/features/account/presentation/bloc/account_bloc.dart';
+
+import '../../../../../core/presentation/widgets/app_error_full_screen_dialog.dart';
+import '../../../../../core/presentation/widgets/base_screen.dart';
+import '../../../../core/presentation/widgets/animations/animated_counter_text.dart';
+import '../../../../core/routing/app_routes.dart';
+import '../../../../core/routing/navigation_service.dart';
+import '../../../../features/analytics/presentation/bloc/expense_breakdown_bloc.dart';
+import '../../../../features/analytics/presentation/pages/expense_breakdown_page.dart';
 import '../../../../injection_container.dart';
-import '../../../friends/presentation/pages/friends_page.dart';
-import '../../../groups/presentation/pages/groups_page.dart';
-import '../../../activity/presentation/pages/activity_page.dart';
 import '../../../account/presentation/pages/account_page.dart';
-import '../../../friends/presentation/bloc/friends_bloc.dart';
-import '../../../groups/presentation/bloc/groups_bloc.dart';
 import '../../../activity/presentation/bloc/activity_bloc.dart';
-import '../bloc/home_bloc.dart';
-import '../bloc/home_event.dart';
-import '../bloc/home_state.dart';
-import '../widgets/creative_bottom_nav_bar.dart';
+import '../../../activity/presentation/pages/activity_page.dart';
+import '../../../friends/presentation/bloc/friends_bloc.dart';
+import '../../../friends/presentation/pages/friends_page.dart';
+import '../../../groups/presentation/bloc/groups_bloc.dart';
+import '../../../groups/presentation/pages/groups_page.dart';
+import '../../domain/usecases/get_advertisements_usecase.dart';
 import '../bloc/dashboard/home_dashboard_bloc.dart';
 import '../bloc/dashboard/home_dashboard_event.dart';
 import '../bloc/dashboard/home_dashboard_state.dart';
-import '../../../../core/presentation/widgets/animations/animated_counter_text.dart';
-import 'package:split_ease/core/utils/app_formatter.dart';
-import 'package:skeletonizer/skeletonizer.dart';
-import '../../domain/entities/home_dashboard_entity.dart';
-import '../../../../features/analytics/presentation/bloc/expense_breakdown_bloc.dart';
-import '../../../../features/analytics/presentation/pages/expense_breakdown_page.dart';
-import '../../../../core/routing/app_routes.dart';
-import '../../../../core/routing/navigation_service.dart';
-import 'package:intl/intl.dart';
+import '../bloc/home_bloc.dart';
+import '../bloc/home_event.dart';
+import '../bloc/home_state.dart';
+import '../widgets/app_advertisement_dialog.dart';
+import '../widgets/creative_bottom_nav_bar.dart';
 
 enum HomeDashboardFilter {
   thisWeek,
@@ -57,6 +59,36 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _initRealtimeListener();
+    _checkAdvertisements();
+  }
+
+  Future<void> _checkAdvertisements() async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        final prefs = sl<SharedPreferences>();
+        final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+        final lastSeenDate = prefs.getString('last_advertisement_seen_date');
+
+        if (lastSeenDate == todayStr) {
+          // Already displayed to user today
+          return;
+        }
+
+        final getAdvertisements = sl<GetAdvertisementsUseCase>();
+        final result = await getAdvertisements(DateTime.now());
+        result.fold(
+          (failure) => null,
+          (ads) async {
+            if (mounted && ads.isNotEmpty) {
+              await prefs.setString('last_advertisement_seen_date', todayStr);
+              if (mounted) {
+                AppAdvertisementDialog.show(context, ads);
+              }
+            }
+          },
+        );
+      } catch (_) {}
+    });
   }
 
   void _initRealtimeListener() {
@@ -353,11 +385,16 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                 if (state.status == HomeDashboardStatus.loading && state.dashboard == null) {
                   return const _DashboardSkeleton();
                 } else if (state.status == HomeDashboardStatus.failure && state.dashboard == null) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Text(state.errorMessage, style: GoogleFonts.outfit(color: Theme.of(context).ext.textSecondary)),
-                    ),
+                  return AppErrorFullScreenWidget(
+                    errorMessage: state.errorMessage,
+                    onRefresh: () async {
+                      final bloc = context.read<HomeDashboardBloc>();
+                      bloc.add(_buildEvent());
+                      final nextState = await bloc.stream.firstWhere(
+                        (s) => s.status != HomeDashboardStatus.loading,
+                      );
+                      return nextState.status == HomeDashboardStatus.success;
+                    },
                   );
                 }
 

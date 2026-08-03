@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
+import 'package:split_ease/core/presentation/widgets/app_error_full_screen_dialog.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
@@ -113,6 +114,20 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                                 child: const Center(child: CircularProgressIndicator()),
                               ),
                           ],
+                        );
+                      }
+
+                      if (state is GroupSettingsError && group == null) {
+                        return AppErrorFullScreenWidget(
+                          errorMessage: state.message,
+                          onRefresh: () async {
+                            final bloc = context.read<GroupSettingsBloc>();
+                            bloc.add(LoadGroupSettings(widget.groupId));
+                            final nextState = await bloc.stream.firstWhere(
+                              (s) => s is! GroupSettingsLoading,
+                            );
+                            return nextState is GroupSettingsLoaded;
+                          },
                         );
                       }
 

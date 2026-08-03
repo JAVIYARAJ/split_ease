@@ -13,6 +13,7 @@ import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart
 import 'package:split_ease/features/groups/presentation/bloc/groups_bloc.dart';
 
 import '../../../../../core/presentation/widgets/app_empty_state.dart';
+import '../../../../../core/presentation/widgets/app_error_full_screen_dialog.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
 import '../../../../../core/presentation/widgets/custom_refresh_indicator.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -246,6 +247,22 @@ class _GroupsPageState extends State<GroupsPage> {
     return BlocBuilder<GroupsBloc, GroupsState>(
       builder: (context, state) {
         if (state.status == GroupsStatus.loading) return const _GroupsShimmerList();
+        if (state.status == GroupsStatus.failure) {
+          return SliverFillRemaining(
+            hasScrollBody: false,
+            child: AppErrorFullScreenWidget(
+              errorMessage: state.errorMessage,
+              onRefresh: () async {
+                final bloc = context.read<GroupsBloc>();
+                bloc.add(LoadGroups());
+                final nextState = await bloc.stream.firstWhere(
+                  (s) => s.status != GroupsStatus.loading,
+                );
+                return nextState.status == GroupsStatus.success;
+              },
+            ),
+          );
+        }
 
         if (state.groups.isEmpty) {
           return const SliverFillRemaining(

@@ -7,6 +7,7 @@ import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_category_entity.dart';
 import '../../../../core/presentation/widgets/app_back_button.dart';
+import '../../../../core/presentation/widgets/app_error_full_screen_dialog.dart';
 import '../../../../core/routing/navigation_service.dart';
 import '../../domain/entities/recurring_expense_entity.dart';
 import '../bloc/add_edit_recurring_expense_bloc.dart';
@@ -148,6 +149,19 @@ class _AddEditRecurringExpenseFormView extends StatelessWidget {
       ),
       body: BlocBuilder<AddEditRecurringExpenseBloc, AddEditRecurringExpenseState>(
         builder: (context, state) {
+          if (!state.isLoadingCategories && state.categories.isEmpty) {
+            return AppErrorFullScreenWidget(
+              errorMessage: "Failed to load categories",
+              onRefresh: () async {
+                final bloc = context.read<AddEditRecurringExpenseBloc>();
+                bloc.add(AddEditRecurringExpenseInitialized(existingTemplate));
+                final nextState = await bloc.stream.firstWhere(
+                  (s) => !s.isLoadingCategories,
+                );
+                return nextState.categories.isNotEmpty;
+              },
+            );
+          }
           return SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),

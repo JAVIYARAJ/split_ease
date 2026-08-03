@@ -13,6 +13,7 @@ import 'package:split_ease/core/utils/navigation_utils.dart';
 import 'package:split_ease/features/activity/presentation/bloc/activity_bloc.dart';
 
 import '../../../../../core/presentation/widgets/base_screen.dart';
+import '../../../../../core/presentation/widgets/app_error_full_screen_dialog.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../core/presentation/widgets/animations/animated_counter_text.dart';
 import '../../../../core/presentation/widgets/animations/smooth_animated_fab.dart';
@@ -267,7 +268,22 @@ class _FriendsPageState extends State<FriendsPage> {
           prev.errorMessage != curr.errorMessage,
       builder: (context, state) {
         if (state.status == FriendsStatus.loading) return const _FriendsShimmerList();
-        if (state.status == FriendsStatus.failure) return SliverToBoxAdapter(child: Center(child: Text(state.errorMessage)));
+        if (state.status == FriendsStatus.failure) {
+          return SliverFillRemaining(
+            hasScrollBody: false,
+            child: AppErrorFullScreenWidget(
+              errorMessage: state.errorMessage,
+              onRefresh: () async {
+                final bloc = context.read<FriendsBloc>();
+                bloc.add(LoadFriends());
+                final nextState = await bloc.stream.firstWhere(
+                  (s) => s.status != FriendsStatus.loading,
+                );
+                return nextState.status == FriendsStatus.success;
+              },
+            ),
+          );
+        }
         
         if (state.friends.isEmpty) {
           return const SliverFillRemaining(

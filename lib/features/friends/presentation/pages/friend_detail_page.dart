@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:split_ease/core/presentation/widgets/app_empty_state.dart';
+import 'package:split_ease/core/presentation/widgets/app_error_full_screen_dialog.dart';
 import 'package:split_ease/core/presentation/widgets/base_screen.dart';
 import 'package:split_ease/core/presentation/widgets/custom_refresh_indicator.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
@@ -142,16 +143,21 @@ class _FriendDetailPageState extends State<FriendDetailPage> {
                     return const _ShimmerTransactionList();
                   }
                   if (state.expenseStatus == FriendDetailExpenseStatus.failure) {
-                    return SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Center(
-                          child: Text(
-                            state.expenseErrorMessage ?? "Failed to load expenses",
-                            style: GoogleFonts.outfit(color: AppColors.errorRed, fontSize: 14),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
+                    return SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: AppErrorFullScreenWidget(
+                        errorMessage: state.expenseErrorMessage,
+                        onRefresh: () async {
+                          final bloc = context.read<FriendDetailBloc>();
+                          final currentFriend = bloc.state.friendEntity;
+                          if (currentFriend != null) {
+                            bloc.add(LoadFriendDetails(friend: currentFriend, hasChanges: true));
+                          }
+                          final nextState = await bloc.stream.firstWhere(
+                            (s) => s.expenseStatus != FriendDetailExpenseStatus.loading,
+                          );
+                          return nextState.expenseStatus == FriendDetailExpenseStatus.success;
+                        },
                       ),
                     );
                   }
