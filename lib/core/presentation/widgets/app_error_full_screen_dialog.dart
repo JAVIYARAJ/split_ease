@@ -81,14 +81,17 @@ class _AppErrorFullScreenWidgetState extends State<AppErrorFullScreenWidget> wit
             : "An unexpected error occurred. Please try again.")
         : "Something went wrong while processing your request. Please try again.";
 
-    return Scaffold(
-      backgroundColor: colors.scaffoldBg,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28.0),
+    return Container(
+      color: colors.scaffoldBg,
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 48.0),
+      child: Center(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const Spacer(),
               // Animated Icon Container
               ScaleTransition(
                 scale: _scaleAnimation,
@@ -201,8 +204,6 @@ class _AppErrorFullScreenWidgetState extends State<AppErrorFullScreenWidget> wit
                   ),
                 ),
               ],
-              const Spacer(),
-              const SizedBox(height: 100), // Bottom clearance for bottom nav bar
             ],
           ),
         ),

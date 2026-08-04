@@ -14,8 +14,11 @@ import 'package:split_ease/features/account/presentation/bloc/account_bloc.dart'
 import '../../../../../core/presentation/widgets/app_error_full_screen_dialog.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
 import '../../../../core/presentation/widgets/animations/animated_counter_text.dart';
+import '../../../../core/presentation/widgets/app_image_view.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/routing/navigation_service.dart';
+import '../../../../core/utils/navigation_utils.dart';
+import '../../domain/entities/home_dashboard_entity.dart';
 import '../../../../features/analytics/presentation/bloc/expense_breakdown_bloc.dart';
 import '../../../../features/analytics/presentation/pages/expense_breakdown_page.dart';
 import '../../../../injection_container.dart';
@@ -315,7 +318,12 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
       color: AppColors.primary,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-        padding: const EdgeInsets.only(top: 64, left: 20, right: 20, bottom: 100),
+        padding: EdgeInsets.only(
+          top: 64,
+          left: 20,
+          right: 20,
+          bottom: 140 + MediaQuery.of(context).padding.bottom,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -377,7 +385,7 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
             BlocBuilder<HomeDashboardBloc, HomeDashboardState>(
               builder: (context, state) {
@@ -414,7 +422,7 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                             isPrimary: true
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: _buildGridCard(
                             "YOUR SHARE", 
@@ -425,9 +433,9 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 12),
 
-                    // Analytics Entry Point
+                    // Analytics Entry Point (Expense Breakdown)
                     InkWell(
                       onTap: () {
                         Navigator.push(
@@ -440,75 +448,80 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                           ),
                         );
                       },
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(20),
                       child: Container(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
                         ),
                         child: Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(12),
+                              padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
-                              child: const Icon(Icons.pie_chart_rounded, color: AppColors.primary, size: 24),
+                              child: const Icon(Icons.pie_chart_rounded, color: AppColors.primary, size: 22),
                             ),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 14),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text("Expense Breakdown", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary)),
-                                  Text("See your spending breakdown", style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary)),
+                                  Text("Expense Breakdown", style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary)),
+                                  Text("See your spending breakdown", style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).ext.textSecondary)),
                                 ],
                               ),
                             ),
-                            const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.primary),
+                            const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.primary),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 10),
+
                     // Personal Expenses Entry Point
                     InkWell(
                       onTap: () {
                         NavigationService.pushNamed(AppRoutes.personalExpenses);
                       },
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(20),
                       child: Container(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         decoration: BoxDecoration(
                           color: Theme.of(context).ext.isDark ? const Color(0xFF2A1B3D) : const Color(0xFFF3E8FF),
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: Theme.of(context).ext.isDark ? const Color(0xFF4C2882) : const Color(0xFFE9D5FF)),
                         ),
                         child: Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(12),
+                              padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
                                 color: Theme.of(context).ext.isDark ? const Color(0xFF4C2882) : const Color(0xFFE9D5FF),
                                 shape: BoxShape.circle,
                               ),
-                              child: Icon(Icons.person_rounded, color: Theme.of(context).ext.isDark ? const Color(0xFFC084FC) : const Color(0xFF9333EA), size: 24),
+                              child: Icon(Icons.person_rounded, color: Theme.of(context).ext.isDark ? const Color(0xFFC084FC) : const Color(0xFF9333EA), size: 22),
                             ),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 14),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text("Personal Expenses", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary)),
-                                  Text("Track your non-shared expenses", style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).ext.textSecondary)),
+                                  Text("Personal Expenses", style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary)),
+                                  Text("Track your non-shared expenses", style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).ext.textSecondary)),
                                 ],
                               ),
                             ),
-                            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Theme.of(context).ext.isDark ? const Color(0xFFC084FC) : const Color(0xFF9333EA)),
+                            Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Theme.of(context).ext.isDark ? const Color(0xFFC084FC) : const Color(0xFF9333EA)),
                           ],
                         ),
                       ),
                     ),
+                    const SizedBox(height: 16),
+
+                    // Recent Transactions Section (Last 5)
+                    _buildRecentTransactionsSection(context, dash.recentTransactions),
                   ],
                 );
               },
@@ -521,16 +534,16 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
 
   Widget _buildGridCard(String title, double amount, int count, {required bool isPrimary}) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: isPrimary ? AppColors.primary : Theme.of(context).ext.surface,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(22),
         border: isPrimary ? null : Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: isPrimary ? AppColors.primary.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
+            color: isPrimary ? AppColors.primary.withValues(alpha: 0.25) : Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           )
         ],
       ),
@@ -546,9 +559,9 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
               letterSpacing: 1.2
             )
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           SizedBox(
-            height: 32,
+            height: 30,
             width: double.infinity,
             child: FittedBox(
               fit: BoxFit.scaleDown,
@@ -556,7 +569,7 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
               child: AnimatedCounterText(
                 value: amount, 
                 style: GoogleFonts.outfit(
-                  fontSize: 28, 
+                  fontSize: 26, 
                   fontWeight: FontWeight.w900, 
                   color: isPrimary ? Colors.white : Theme.of(context).ext.textPrimary, 
                   height: 1.1
@@ -564,9 +577,9 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
               color: isPrimary ? Colors.white.withValues(alpha: 0.2) : Theme.of(context).ext.backgroundGrey,
               borderRadius: BorderRadius.circular(10),
@@ -594,6 +607,290 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
         ],
       ),
     );
+  }
+
+  Widget _buildRecentTransactionsSection(BuildContext context, List<RecentTransactionEntity> transactions) {
+    final formatter = NumberFormat('#,##0.00', 'en_IN');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Recent Transactions",
+              style: GoogleFonts.outfit(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Theme.of(context).ext.textPrimary,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              "Last 5 activities",
+              style: GoogleFonts.outfit(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Theme.of(context).ext.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        if (transactions.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).ext.surface,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.receipt_long_outlined,
+                  size: 36,
+                  color: Theme.of(context).ext.textTertiary.withValues(alpha: 0.5),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "No recent transactions",
+                  style: GoogleFonts.outfit(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).ext.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "Your personal, group & friend expenses will show up here",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    color: Theme.of(context).ext.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          ListView.separated(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: transactions.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final tx = transactions[index];
+              return _buildTransactionCard(context, tx, formatter);
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildTransactionCard(BuildContext context, RecentTransactionEntity tx, NumberFormat formatter) {
+    final String subtitleText;
+    if (tx.originType == 'group') {
+      subtitleText = "In ${tx.groupName ?? 'Group'}";
+    } else if (tx.originType == 'friend') {
+      subtitleText = tx.isPaidByMe
+          ? "Shared expense"
+          : "Paid by ${tx.paidByName ?? 'Friend'}";
+    } else {
+      subtitleText = "Personal • ${tx.categoryName ?? 'Expense'}";
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).ext.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Theme.of(context).ext.borderLight),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            NavigationUtils.handleResult(
+              context: context,
+              navigation: NavigationService.pushNamed(
+                AppRoutes.expanseDetail,
+                args: {"expanse_id": tx.id},
+              ),
+              onRefresh: () {
+                context.read<HomeDashboardBloc>().add(_buildEvent());
+              },
+            );
+          },
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
+            child: Row(
+              children: [
+                // Avatar with Mini Type Badge
+                Stack(
+                  children: [
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        color: Theme.of(context).ext.inputFill,
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: tx.groupIcon != null && tx.groupIcon!.isNotEmpty
+                            ? AppImageView(
+                                url: tx.groupIcon,
+                                width: 46,
+                                height: 46,
+                                fit: BoxFit.cover,
+                              )
+                            : Icon(
+                                _getTransactionIcon(tx.originType),
+                                color: AppColors.primary,
+                                size: 24,
+                              ),
+                      ),
+                    ),
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: _getBadgeColor(tx.originType),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Theme.of(context).ext.surface, width: 1.5),
+                        ),
+                        child: Icon(
+                          _getBadgeIcon(tx.originType),
+                          size: 9,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 12),
+
+                // Title & Subtitle Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        tx.title,
+                        style: GoogleFonts.outfit(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: Theme.of(context).ext.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        "${_formatDate(tx.expenseDate)} · $subtitleText",
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Theme.of(context).ext.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // Amount Column
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      "₹${formatter.format(tx.totalAmount)}",
+                      style: GoogleFonts.outfit(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: Theme.of(context).ext.textPrimary,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      tx.isPaidByMe
+                          ? "You paid"
+                          : "Share ₹${formatter.format(tx.userShare)}",
+                      style: GoogleFonts.outfit(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: tx.isPaidByMe ? AppColors.primaryTeal : AppColors.warningOrange,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _getTransactionIcon(String originType) {
+    switch (originType) {
+      case 'group':
+        return Icons.groups_rounded;
+      case 'friend':
+        return Icons.handshake_rounded;
+      default:
+        return Icons.person_rounded;
+    }
+  }
+
+  Color _getBadgeColor(String originType) {
+    switch (originType) {
+      case 'group':
+        return AppColors.primaryTeal;
+      case 'friend':
+        return const Color(0xFF0284C7);
+      default:
+        return const Color(0xFF9333EA);
+    }
+  }
+
+  IconData _getBadgeIcon(String originType) {
+    switch (originType) {
+      case 'group':
+        return Icons.groups_rounded;
+      case 'friend':
+        return Icons.person_add_rounded;
+      default:
+        return Icons.lock_rounded;
+    }
+  }
+
+  String _formatDate(DateTime dt) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final date = DateTime(dt.year, dt.month, dt.day);
+
+    if (date == today) return "Today";
+    if (date == yesterday) return "Yesterday";
+    return DateFormat("MMM d").format(dt);
   }
 }
 
