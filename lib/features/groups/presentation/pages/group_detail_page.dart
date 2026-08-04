@@ -542,9 +542,10 @@ class _GroupDetailAppBar extends StatelessWidget {
               final double t = ((currentHeight - collapsedHeight) / (expandedHeight - collapsedHeight)).clamp(0.0, 1.0);
               
               // Animations
-              final double titleSizes = Tween<double>(begin: 20.0, end: 28.0).transform(t);
-              final double titleLeft = Tween<double>(begin: 50.0, end: 20.0).transform(t);
-              final double titleBottom = Tween<double>(begin: 14.0, end: 58.0).transform(t);
+              final double titleSizes = Tween<double>(begin: 18.0, end: 28.0).transform(t);
+              final double titleLeft = Tween<double>(begin: 68.0, end: 20.0).transform(t);
+              final double titleRight = Tween<double>(begin: 56.0, end: 20.0).transform(t);
+              final double titleBottom = Tween<double>(begin: 16.0, end: 58.0).transform(t);
               final double memberOpacity = Tween<double>(begin: 0.0, end: 1.0).transform((t - 0.5).clamp(0.0, 0.5) * 2);
 
               return Stack(
@@ -585,6 +586,7 @@ class _GroupDetailAppBar extends StatelessWidget {
                   // 3. Title Animation
                   Positioned(
                     left: titleLeft,
+                    right: titleRight,
                     bottom: titleBottom,
                     child: Text(
                       groupEntity?.name ?? "",
@@ -594,6 +596,8 @@ class _GroupDetailAppBar extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                         letterSpacing: -0.5,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
 

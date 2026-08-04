@@ -22,7 +22,6 @@ import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart
 import 'package:split_ease/core/services/data_refresh_service.dart';
 import 'package:split_ease/core/utils/navigation_utils.dart';
 import 'package:intl/intl.dart';
-import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 
 class FriendDetailPage extends StatefulWidget {
   const FriendDetailPage({super.key});
@@ -272,9 +271,10 @@ class _FriendDetailAppBar extends StatelessWidget {
               
               final double t = ((currentHeight - collapsedHeight) / (expandedHeight - collapsedHeight)).clamp(0.0, 1.0);
               
-              final double titleSizes = Tween<double>(begin: 20.0, end: 28.0).transform(t);
-              final double titleLeft = Tween<double>(begin: 50.0, end: 20.0).transform(t);
-              final double titleBottom = Tween<double>(begin: 14.0, end: 58.0).transform(t);
+              final double titleSizes = Tween<double>(begin: 18.0, end: 28.0).transform(t);
+              final double titleLeft = Tween<double>(begin: 68.0, end: 20.0).transform(t);
+              final double titleRight = Tween<double>(begin: 20.0, end: 20.0).transform(t);
+              final double titleBottom = Tween<double>(begin: 16.0, end: 58.0).transform(t);
               final double memberOpacity = Tween<double>(begin: 0.0, end: 1.0).transform((t - 0.5).clamp(0.0, 0.5) * 2);
 
               return Stack(
@@ -312,6 +312,7 @@ class _FriendDetailAppBar extends StatelessWidget {
 
                   Positioned(
                     left: titleLeft,
+                    right: titleRight,
                     bottom: titleBottom,
                     child: Text(
                       friendEntity?.name ?? "",
@@ -321,6 +322,8 @@ class _FriendDetailAppBar extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                         letterSpacing: -0.5,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
 

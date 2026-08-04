@@ -20,6 +20,7 @@ class ActivityEntity {
   final String? action; // action performed (e.g. created, updated, removed)
   final String actorName;
   final String? groupName;
+  final String? groupType;
   final String? description;
   final String? amountType;
   final double? balanceEffect;
@@ -39,6 +40,7 @@ class ActivityEntity {
     this.action,
     required this.actorName,
     this.groupName,
+    this.groupType,
     this.description,
     this.amountType,
     this.balanceEffect,

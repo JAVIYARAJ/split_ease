@@ -83,63 +83,62 @@ class GroupListItem extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 14),
 
                     // Name and Subtitle
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 4.0), // Align name slightly down
+                        padding: const EdgeInsets.only(top: 2.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Text(
+                              group.name ?? "Non-group expense",
+                              style: GoogleFonts.outfit(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Theme.of(context).ext.textPrimary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
                             Row(
                               children: [
+                                if (group.groupType != null) ...[
+                                  _buildCategoryPill(context, group.groupType!),
+                                  const SizedBox(width: 6),
+                                ],
                                 Flexible(
                                   child: Text(
-                                    group.name ?? "Non-group expense",
+                                    subtitleText,
                                     style: GoogleFonts.outfit(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                      color: Theme.of(context).ext.textPrimary,
+                                      fontSize: 13,
+                                      color: showBalance ? statusColor : Theme.of(context).ext.textTertiary,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                if (group.groupType != null) ...[
-                                  const SizedBox(width: 6),
-                                  _buildCategoryPill(context, group.groupType!),
+                                if (showBalance && group.overallBalance != null) ...[
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    "₹${formatter.format(group.overallBalance!.abs())}",
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 16,
+                                      color: statusColor,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: -0.5,
+                                    ),
+                                  ),
                                 ],
                               ],
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              subtitleText,
-                              style: GoogleFonts.outfit(
-                                fontSize: 13,
-                                color: showBalance ? statusColor : Theme.of(context).ext.textTertiary,
-                                fontWeight: FontWeight.w500,
-                              ),
                             ),
                           ],
                         ),
                       ),
                     ),
-
-                    // Overall Balance
-                    if (showBalance && group.overallBalance != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
-                        child: Text(
-                          "₹${formatter.format(group.overallBalance!.abs())}",
-                          style: GoogleFonts.outfit(
-                            fontSize: 18,
-                            color: statusColor,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                      ),
                   ],
                 ),
                 

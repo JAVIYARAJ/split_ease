@@ -29,6 +29,8 @@ class TripBannerWidget extends StatelessWidget {
         : 'Set Trip Destination';
 
     final String dateRange = _formatDateRange(group.startDate, group.endDate);
+    final _TripStatusTag? statusTag =
+        _getTripStatusTag(group.startDate, group.endDate);
     final double? budget = group.budget;
     final bool hasBudget = budget != null && budget > 0;
 
@@ -92,15 +94,58 @@ class TripBannerWidget extends StatelessWidget {
                             ),
                           ],
                         ),
-                        if (dateRange.isNotEmpty) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            dateRange,
-                            style: GoogleFonts.outfit(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: ext.textSecondary,
-                            ),
+                        if (dateRange.isNotEmpty || statusTag != null) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              if (dateRange.isNotEmpty)
+                                Text(
+                                  dateRange,
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: ext.textSecondary,
+                                  ),
+                                ),
+                              if (statusTag != null) ...[
+                                if (dateRange.isNotEmpty)
+                                  const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: statusTag.color
+                                        .withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                      color: statusTag.color
+                                          .withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        statusTag.icon,
+                                        size: 11,
+                                        color: statusTag.color,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        statusTag.label,
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          color: statusTag.color,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ],
                       ],
@@ -167,6 +212,60 @@ class TripBannerWidget extends StatelessWidget {
     );
   }
 
+  _TripStatusTag? _getTripStatusTag(String? startStr, String? endStr) {
+    final now = DateTime.now();
+
+    // 1. Check if Trip Ended
+    if (endStr != null && endStr.trim().isNotEmpty) {
+      try {
+        final endDate = DateTime.parse(endStr);
+        final endOfTripDay = DateTime(
+          endDate.year,
+          endDate.month,
+          endDate.day,
+          23,
+          59,
+          59,
+          999,
+        );
+        if (now.isAfter(endOfTripDay)) {
+          return const _TripStatusTag(
+            label: 'Trip Ended',
+            icon: Icons.flag_rounded,
+            color: AppColors.warningOrange,
+          );
+        }
+      } catch (_) {}
+    }
+
+    // 2. Check if Starts Soon (within 3 days: 0, 1, 2, or 3 days until start)
+    if (startStr != null && startStr.trim().isNotEmpty) {
+      try {
+        final startDate = DateTime.parse(startStr);
+        final todayStart = DateTime(now.year, now.month, now.day);
+        final startOfTripDay = DateTime(
+          startDate.year,
+          startDate.month,
+          startDate.day,
+        );
+        final daysUntilStart = startOfTripDay.difference(todayStart).inDays;
+
+        if (daysUntilStart >= 0 && daysUntilStart <= 3) {
+          final String label = daysUntilStart == 0
+              ? 'Starts Today'
+              : (daysUntilStart == 1 ? 'Starts Tomorrow' : 'Starts Soon');
+          return _TripStatusTag(
+            label: label,
+            icon: Icons.schedule_rounded,
+            color: const Color(0xFF0284C7),
+          );
+        }
+      } catch (_) {}
+    }
+
+    return null;
+  }
+
   String _formatDateRange(String? start, String? end) {
     if (start == null || start.isEmpty) return '';
     try {
@@ -183,4 +282,16 @@ class TripBannerWidget extends StatelessWidget {
       return '';
     }
   }
+}
+
+class _TripStatusTag {
+  final String label;
+  final IconData icon;
+  final Color color;
+
+  const _TripStatusTag({
+    required this.label,
+    required this.icon,
+    required this.color,
+  });
 }

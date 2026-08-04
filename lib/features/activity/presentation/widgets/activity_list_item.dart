@@ -147,36 +147,7 @@ class ActivityListItem extends StatelessWidget {
                                         // Optional Group Scope Tag
                                         if (activity.groupName != null && activity.groupName!.isNotEmpty) ...[
                                           const SizedBox(width: 8),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                            decoration: BoxDecoration(
-                                              color: Theme.of(context).ext.backgroundGrey,
-                                              borderRadius: BorderRadius.circular(6),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons.group_rounded,
-                                                  size: 10,
-                                                  color: Theme.of(context).ext.textSecondary,
-                                                ),
-                                                const SizedBox(width: 3),
-                                                Flexible(
-                                                  child: Text(
-                                                    activity.groupName!,
-                                                    style: GoogleFonts.outfit(
-                                                      fontSize: 10.5,
-                                                      fontWeight: FontWeight.w600,
-                                                      color: Theme.of(context).ext.textSecondary,
-                                                    ),
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
+                                          _buildGroupScopeTag(context),
                                         ],
                                       ],
                                     ),
@@ -338,5 +309,62 @@ class ActivityListItem extends StatelessWidget {
     } else {
       return DateFormat("MMM d, y").format(date);
     }
+  }
+
+  Widget _buildGroupScopeTag(BuildContext context) {
+    final type = activity.groupType;
+    String emoji = "👥";
+    Color color = Theme.of(context).ext.textSecondary;
+    Color bgColor = Theme.of(context).ext.backgroundGrey;
+
+    if (type == 'trip') {
+      emoji = "✈️";
+      color = const Color(0xFF0284C7);
+      bgColor = const Color(0xFF0284C7).withValues(alpha: 0.12);
+    } else if (type == 'home') {
+      emoji = "🏠";
+      color = const Color(0xFF16A34A);
+      bgColor = const Color(0xFF16A34A).withValues(alpha: 0.12);
+    } else if (type == 'couple') {
+      emoji = "💑";
+      color = const Color(0xFFE11D48);
+      bgColor = const Color(0xFFE11D48).withValues(alpha: 0.12);
+    } else if (type == 'other') {
+      emoji = "📁";
+      color = const Color(0xFF8B5CF6);
+      bgColor = const Color(0xFF8B5CF6).withValues(alpha: 0.12);
+    }
+
+    return Flexible(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              emoji,
+              style: const TextStyle(fontSize: 10),
+            ),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                activity.groupName!,
+                style: GoogleFonts.outfit(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -14,9 +14,9 @@ extension ActivityUIPresentation on ActivityEntity {
     }
     
     final String subject = isMe ? "You" : actorName;
-    final String groupInfo = groupName != null ? ' in "$groupName"' : '';
-    final String toGroup = groupName != null ? ' to "$groupName"' : '';
-    final String fromGroup = groupName != null ? ' from "$groupName"' : '';
+    const String groupInfo = '';
+    const String toGroup = '';
+    const String fromGroup = '';
 
     switch (action) {
       case ActivityType.added:
