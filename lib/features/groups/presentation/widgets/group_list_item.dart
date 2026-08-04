@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:split_ease/features/groups/domain/entities/group_type.dart';
+import 'package:split_ease/core/enums/app_enums.dart';
 import '../../../../../core/presentation/widgets/app_image_view.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../domain/entities/group_entity.dart';

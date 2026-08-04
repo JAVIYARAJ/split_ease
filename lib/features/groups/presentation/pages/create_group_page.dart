@@ -14,7 +14,6 @@ import 'package:split_ease/core/utils/clipboard_utils.dart';
 import '../../../../../core/presentation/widgets/base_screen.dart';
 import '../bloc/create_group_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../domain/entities/group_type.dart';
 import '../../domain/entities/group_entity.dart';
 
 class CreateGroupPage extends StatefulWidget {

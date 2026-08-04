@@ -14,8 +14,5 @@ class LoadHomeDashboard extends HomeDashboardEvent {
   const LoadHomeDashboard({this.startDate, this.endDate});
 
   @override
-  List<Object> get props => [
-        if (startDate != null) startDate!,
-        if (endDate != null) endDate!,
-      ];
+  List<Object> get props => [?startDate, ?endDate];
 }

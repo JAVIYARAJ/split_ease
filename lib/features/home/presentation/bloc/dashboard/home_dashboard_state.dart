@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
+import 'package:split_ease/core/enums/app_enums.dart';
+export 'package:split_ease/core/enums/app_enums.dart';
 import '../../../domain/entities/home_dashboard_entity.dart';
-
-enum HomeDashboardStatus { initial, loading, success, failure }
 
 class HomeDashboardState extends Equatable {
   final HomeDashboardStatus status;

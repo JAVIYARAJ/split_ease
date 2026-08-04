@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
+import 'package:split_ease/core/enums/app_enums.dart';
 import 'package:split_ease/injection_container.dart';
 
 class NavigationUtils {

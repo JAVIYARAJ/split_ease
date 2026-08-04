@@ -4,6 +4,8 @@ import 'package:split_ease/features/groups/domain/entities/group_entity.dart';
 import 'package:split_ease/features/groups/domain/entities/group_expense_history_entity.dart';
 import 'package:split_ease/features/groups/domain/usecases/get_group_detail.dart';
 import 'package:split_ease/features/groups/domain/usecases/get_group_expense_history.dart';
+import 'package:split_ease/core/enums/app_enums.dart';
+export 'package:split_ease/core/enums/app_enums.dart';
 
 part 'group_detail_event.dart';
 

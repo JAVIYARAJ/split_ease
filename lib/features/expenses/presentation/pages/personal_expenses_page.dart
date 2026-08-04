@@ -24,15 +24,7 @@ import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart
 import '../../../../core/presentation/widgets/app_back_button.dart';
 import 'package:split_ease/core/theme/app_layout.dart';
 
-// ── Filter definition (mirrors AnalyticsFilter) ─────────────────────────────
-enum PersonalExpenseFilter {
-  thisWeek,
-  lastWeek,
-  thisMonth,
-  lastMonth,
-  thisYear,
-  custom,
-}
+import 'package:split_ease/core/enums/app_enums.dart';
 
 class PersonalExpensesPage extends StatefulWidget {
   const PersonalExpensesPage({super.key});

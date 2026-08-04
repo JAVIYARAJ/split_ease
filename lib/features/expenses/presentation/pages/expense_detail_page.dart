@@ -1286,7 +1286,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       createdBy: ExpenseUserEntity(id: "", fullName: "User Name"),
       updatedAt: null,
       updatedBy: null,
-      splits: const [
+      splits: [
         ExpenseSplitEntity(type: "you_owe", amount: 500, userId: "1", fullName: "Test User"),
         ExpenseSplitEntity(type: "participant", amount: 500, userId: "2", fullName: "Test User"),
       ],

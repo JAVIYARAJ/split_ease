@@ -1,8 +1,5 @@
 part of 'friends_bloc.dart';
 
-enum FriendsStatus { initial, loading, success, failure }
-
-enum FriendJoinStatus { initial, loading, success, failure }
 
 class FriendsState {
   final FriendsStatus status;

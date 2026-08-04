@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:split_ease/core/utils/app_formatter.dart';
 

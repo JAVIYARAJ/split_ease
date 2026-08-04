@@ -5,6 +5,8 @@ import 'package:split_ease/features/friends/domain/entities/friend_request_entit
 import 'package:split_ease/features/friends/domain/usecases/get_friend_requests.dart';
 import 'package:split_ease/features/friends/domain/usecases/respond_to_friend_request.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
+import 'package:split_ease/core/enums/app_enums.dart';
+export 'package:split_ease/core/enums/app_enums.dart';
 
 part 'friend_requests_event.dart';
 part 'friend_requests_state.dart';

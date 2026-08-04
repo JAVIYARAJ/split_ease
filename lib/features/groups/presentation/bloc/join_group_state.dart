@@ -1,6 +1,5 @@
 part of 'join_group_bloc.dart';
 
-enum JoinGroupStatus { initial, loading, success, failure }
 
 final class JoinGroupState extends Equatable {
   final JoinGroupStatus status;

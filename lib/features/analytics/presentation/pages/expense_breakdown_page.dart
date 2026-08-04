@@ -493,7 +493,7 @@ class _ExpenseBreakdownPageState extends State<ExpenseBreakdownPage> {
 
           // Animated Multi-Segment Proportion Bar with Smooth Subpixel Scaling
           TweenAnimationBuilder<double>(
-            key: ValueKey('${isLoading}_${filter}_${summary.totalSpent}_${groupPct}_${personalPct}_${nonGroupPct}'),
+            key: ValueKey('${isLoading}_${filter}_${summary.totalSpent}_${groupPct}_${personalPct}_$nonGroupPct'),
             tween: Tween<double>(begin: 0.0, end: 1.0),
             duration: const Duration(milliseconds: 900),
             curve: Curves.easeOutCubic,

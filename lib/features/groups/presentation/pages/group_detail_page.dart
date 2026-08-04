@@ -19,7 +19,6 @@ import 'package:split_ease/core/utils/navigation_utils.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/injection_container.dart';
 import 'package:split_ease/features/groups/domain/usecases/update_group.dart';
-import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 import 'package:split_ease/features/groups/domain/entities/group_expense_entity.dart';
 import 'package:split_ease/features/groups/presentation/bloc/group_detail_bloc.dart';
 import 'package:split_ease/features/groups/presentation/widgets/trip_banner_widget.dart';

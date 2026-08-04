@@ -1,7 +1,5 @@
 part of 'group_detail_bloc.dart';
 
-enum GroupDetailStatus { initial, loading, success, failure }
-enum GroupDetailExpenseStatus { initial, loading, success, failure }
 
 class GroupDetailState extends Equatable {
   final GroupDetailStatus status;

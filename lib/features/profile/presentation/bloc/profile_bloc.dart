@@ -7,6 +7,8 @@ import '../../../../core/common/cubit/app_user_cubit.dart';
 import '../../../../core/services/image_picker_service.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../domain/usecases/update_profile_usecase.dart';
+import 'package:split_ease/core/enums/app_enums.dart';
+export 'package:split_ease/core/enums/app_enums.dart';
 
 part 'profile_event.dart';
 part 'profile_state.dart';

@@ -2,8 +2,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_color_tokens.dart';
-import '../../../../../core/theme/app_colors.dart';
-
 class SocialButton extends StatelessWidget {
   final String text;
   final Widget icon;

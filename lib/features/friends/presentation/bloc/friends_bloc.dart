@@ -6,6 +6,8 @@ import 'package:split_ease/features/friends/domain/usecases/get_unread_friend_re
 import '../../../../core/usecases/use_case.dart';
 import '../../../../core/services/data_refresh_service.dart';
 import '../../domain/entities/friend_entity.dart';
+import 'package:split_ease/core/enums/app_enums.dart';
+export 'package:split_ease/core/enums/app_enums.dart';
 
 part 'friends_event.dart';
 

@@ -3,8 +3,6 @@ import 'package:split_ease/features/expenses/data/models/expense_category_model.
 import 'package:split_ease/features/expenses/data/models/expense_media_model.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_media_entity.dart';
 
-import '../../domain/entities/expense_media_entity.dart';
-
 class ExpenseDetailModel extends ExpenseDetailEntity {
   const ExpenseDetailModel({
     required super.id,

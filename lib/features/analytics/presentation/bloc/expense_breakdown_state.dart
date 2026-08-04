@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
+import 'package:split_ease/core/enums/app_enums.dart';
+export 'package:split_ease/core/enums/app_enums.dart';
 import '../../domain/entities/expense_breakdown_entity.dart';
 import 'expense_breakdown_event.dart';
-
-enum ExpenseBreakdownStatus { initial, loading, success, failure }
 
 class ExpenseBreakdownState extends Equatable {
   final ExpenseBreakdownStatus status;

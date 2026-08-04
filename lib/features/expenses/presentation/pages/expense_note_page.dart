@@ -4,7 +4,6 @@ import 'package:split_ease/core/config/app_configs.dart';
 import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
 import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
-import 'package:split_ease/core/theme/app_colors_x.dart';
 import 'package:split_ease/core/theme/app_layout.dart';
 
 class ExpenseNotePage extends StatefulWidget {

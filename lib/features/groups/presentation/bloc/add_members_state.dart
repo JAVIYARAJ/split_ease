@@ -1,8 +1,5 @@
 part of 'add_members_bloc.dart';
 
-enum AddMembersStatus { initial, loading, loaded, failure }
-
-enum AddMembersSubmitStatus { initial, submitting, success, failure }
 
 class AddMembersState extends Equatable {
   final AddMembersStatus status;

@@ -1,6 +1,5 @@
 part of 'create_group_bloc.dart';
 
-enum CreateGroupStatus { initial, loading, success, failure }
 
 class CreateGroupState extends Equatable {
   final GroupType selectedType;

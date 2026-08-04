@@ -1,17 +1,5 @@
-enum ActivityType {
-  settlement,
-  expense,
-  payment,
-  modification,
-  added,
-  removed,
-  deleted,
-  restored,
-  roleUpdated,
-  groupCreated,
-  limitExceeded,
-  unknown,
-}
+import 'package:split_ease/core/enums/app_enums.dart';
+export 'package:split_ease/core/enums/app_enums.dart';
 
 class ActivityEntity {
   final String activityId;

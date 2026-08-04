@@ -1,13 +1,6 @@
 import 'package:equatable/equatable.dart';
-
-enum AnalyticsFilter {
-  thisWeek,
-  lastWeek,
-  thisMonth,
-  lastMonth,
-  thisYear,
-  custom,
-}
+import 'package:split_ease/core/enums/app_enums.dart';
+export 'package:split_ease/core/enums/app_enums.dart';
 
 class LoadExpenseBreakdown extends ExpenseBreakdownEvent {
   final AnalyticsFilter filter;

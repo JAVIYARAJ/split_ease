@@ -5,10 +5,11 @@ import 'package:split_ease/features/groups/domain/usecases/group_create.dart';
 import 'package:split_ease/features/groups/domain/usecases/check_invite_code.dart';
 import 'package:split_ease/features/groups/domain/usecases/update_group.dart';
 import '../../../../../core/services/image_picker_service.dart';
-import '../../domain/entities/group_type.dart';
 import '../../domain/usecases/group_insert_icon.dart';
 import '../../domain/entities/group_entity.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
+import 'package:split_ease/core/enums/app_enums.dart';
+export 'package:split_ease/core/enums/app_enums.dart';
 import 'dart:math';
 
 part 'create_group_event.dart';

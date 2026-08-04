@@ -1,7 +1,6 @@
 import 'package:equatable/equatable.dart';
+export 'package:split_ease/core/enums/app_enums.dart';
 import '../../domain/entities/recurring_expense_entity.dart';
-
-enum RecurringExpensesStatus { initial, loading, loaded, failure }
 
 class RecurringExpensesState extends Equatable {
   final RecurringExpensesStatus status;

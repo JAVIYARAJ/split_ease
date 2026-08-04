@@ -1,26 +1,6 @@
 import 'package:equatable/equatable.dart';
-
-enum RecurrenceFrequency {
-  daily,
-  weekly,
-  monthly,
-  yearly,
-}
-
-extension RecurrenceFrequencyX on RecurrenceFrequency {
-  String get displayName {
-    switch (this) {
-      case RecurrenceFrequency.daily:
-        return 'Daily';
-      case RecurrenceFrequency.weekly:
-        return 'Weekly';
-      case RecurrenceFrequency.monthly:
-        return 'Monthly';
-      case RecurrenceFrequency.yearly:
-        return 'Yearly';
-    }
-  }
-}
+import 'package:split_ease/core/enums/app_enums.dart';
+export 'package:split_ease/core/enums/app_enums.dart';
 
 class RecurringExpenseEntity extends Equatable {
   final String id;

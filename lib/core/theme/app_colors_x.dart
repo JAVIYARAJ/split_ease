@@ -32,7 +32,4 @@ class _AppContextColors {
   Color get error          => _t.error;
   Color get success        => _t.success;
   Color get warning        => _t.warning;
-
-  static const Color primary     = Color(0xFF009688);
-  static const Color primaryDark = Color(0xFF00A99D);
 }

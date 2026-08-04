@@ -257,7 +257,7 @@ class _CategoryTransactionsBottomSheetState extends State<CategoryTransactionsBo
                                 controller: _scrollController,
                                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                                 itemCount: _items.length + (_hasMore ? 1 : 0),
-                                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                                separatorBuilder: (_, _) => const SizedBox(height: 12),
                                 itemBuilder: (context, index) {
                                   if (index == _items.length) {
                                     return const Padding(

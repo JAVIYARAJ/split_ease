@@ -9,7 +9,6 @@ import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
 import 'package:split_ease/features/activity/presentation/bloc/activity_bloc.dart';
-import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 import 'package:split_ease/features/groups/presentation/bloc/groups_bloc.dart';
 
 import '../../../../../core/presentation/widgets/app_empty_state.dart';

@@ -1,7 +1,5 @@
 part of 'expense_bloc.dart';
 
-/// Represents the status of the expense creation process.
-enum ExpenseStatus { initial, loading, success, failure, validationError }
 
 class ExpenseState {
   final ExpenseStatus status;

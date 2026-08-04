@@ -14,7 +14,7 @@ class LoadPayerEvent extends PayerEvent {
   const LoadPayerEvent({required this.members, this.initialPayerId});
 
   @override
-  List<Object> get props => [members, if (initialPayerId != null) initialPayerId!];
+  List<Object> get props => [members, ?initialPayerId];
 }
 
 class SelectPayerEvent extends PayerEvent {

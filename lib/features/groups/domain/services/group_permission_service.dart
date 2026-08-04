@@ -1,4 +1,5 @@
-enum GroupPermission { editGroup, deleteGroup, inviteMembers, addMembers, exitGroup, removeMember, changeRole }
+import 'package:split_ease/core/enums/app_enums.dart';
+export 'package:split_ease/core/enums/app_enums.dart';
 
 class GroupPermissionService {
   static const String roleOwner = 'owner';

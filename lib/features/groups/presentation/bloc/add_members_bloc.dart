@@ -5,6 +5,8 @@ import 'package:split_ease/features/groups/domain/entities/group_friend_entity.d
 import 'package:split_ease/features/groups/domain/usecases/add_friends_to_group.dart';
 import 'package:split_ease/features/groups/domain/usecases/get_friends_with_group_status.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
+import 'package:split_ease/core/enums/app_enums.dart';
+export 'package:split_ease/core/enums/app_enums.dart';
 
 part 'add_members_event.dart';
 part 'add_members_state.dart';

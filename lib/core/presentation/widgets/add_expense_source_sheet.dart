@@ -8,7 +8,6 @@ import 'package:split_ease/core/routing/navigation_service.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/navigation_utils.dart';
 import 'package:split_ease/features/activity/presentation/bloc/activity_bloc.dart';
-import 'package:split_ease/features/expenses/domain/entities/expense_entity.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friends_bloc.dart';
 import 'package:split_ease/features/groups/presentation/bloc/groups_bloc.dart';
 
@@ -242,7 +241,7 @@ class _GroupList extends StatelessWidget {
           shrinkWrap: true,
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
           itemCount: state.groups.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          separatorBuilder: (_, _) => const SizedBox(height: 8),
           itemBuilder: (ctx, i) {
             final group = state.groups[i];
             return _RowTile(
@@ -308,7 +307,7 @@ class _FriendList extends StatelessWidget {
           shrinkWrap: true,
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
           itemCount: state.friends.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          separatorBuilder: (_, _) => const SizedBox(height: 8),
           itemBuilder: (ctx, i) {
             final friend = state.friends[i];
             return _RowTile(

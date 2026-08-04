@@ -1,6 +1,5 @@
 part of 'settle_up_cubit.dart';
 
-enum SettleUpStatus { initial, loading, success, failure }
 
 class SettleUpState extends Equatable {
   final String? currentUserId;

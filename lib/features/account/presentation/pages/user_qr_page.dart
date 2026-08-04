@@ -7,7 +7,6 @@ import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
-import 'package:split_ease/core/utils/clipboard_utils.dart';
 import 'package:split_ease/core/utils/file_utils.dart';
 import 'package:split_ease/core/presentation/widgets/animations/staggered_entry_column.dart';
 import 'package:split_ease/core/presentation/widgets/app_back_button.dart';

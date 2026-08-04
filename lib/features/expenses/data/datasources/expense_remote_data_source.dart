@@ -7,7 +7,6 @@ import 'package:split_ease/core/utils/error_message_utils.dart';
 import '../../../../core/error/exception.dart';
 
 import 'package:split_ease/features/expenses/data/models/expense_detail_model.dart';
-import 'package:split_ease/features/expenses/data/models/expense_category_model.dart';
 import 'package:split_ease/features/expenses/data/models/expense_metadata_model.dart';
 import 'package:split_ease/features/expenses/data/models/personal_expenses_model.dart';
 import 'package:split_ease/features/expenses/data/models/expense_media_model.dart';

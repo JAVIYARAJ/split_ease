@@ -34,7 +34,7 @@ class _GroupPickerSheet extends StatelessWidget {
   final List<GroupEntity> groups;
   final bool isNonGroupVisible;
 
-  _GroupPickerSheet({required this.groups,this.isNonGroupVisible=false});
+  const _GroupPickerSheet({required this.groups,this.isNonGroupVisible=false});
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +80,7 @@ class _GroupPickerSheet extends StatelessWidget {
                     shrinkWrap: true,
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                     itemCount: groups.length + 1,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
                       if (index == 0) {
                         if(!isNonGroupVisible){

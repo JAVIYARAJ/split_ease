@@ -36,16 +36,6 @@ import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
 import '../widgets/app_advertisement_dialog.dart';
 import '../widgets/creative_bottom_nav_bar.dart';
-
-enum HomeDashboardFilter {
-  thisWeek,
-  lastWeek,
-  thisMonth,
-  lastMonth,
-  thisYear,
-  custom,
-}
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 

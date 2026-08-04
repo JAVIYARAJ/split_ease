@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-
-enum FeedbackStatus { initial, loading, success, failure }
+import 'package:split_ease/core/enums/app_enums.dart';
+export 'package:split_ease/core/enums/app_enums.dart';
 
 @immutable
 class FeedbackState {

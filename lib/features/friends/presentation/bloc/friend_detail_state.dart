@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
+import 'package:split_ease/core/enums/app_enums.dart';
+export 'package:split_ease/core/enums/app_enums.dart';
 import 'package:split_ease/features/friends/domain/entities/friend_entity.dart';
 import 'package:split_ease/features/friends/domain/entities/friend_expense_history_entity.dart';
-
-enum FriendDetailExpenseStatus { initial, loading, success, failure }
 
 class FriendDetailState extends Equatable {
   final FriendEntity? friendEntity;

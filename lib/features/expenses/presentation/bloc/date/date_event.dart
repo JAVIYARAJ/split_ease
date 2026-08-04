@@ -13,7 +13,7 @@ class InitializeDateEvent extends DateEvent {
   const InitializeDateEvent({this.initialDate});
 
   @override
-  List<Object> get props => [if (initialDate != null) initialDate!];
+  List<Object> get props => [?initialDate];
 }
 
 class DateSelectedEvent extends DateEvent {

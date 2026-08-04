@@ -1,18 +1,6 @@
 import 'package:equatable/equatable.dart';
-
-enum SplitType {
-  equal,
-  exact,
-  percentage,
-  shares,
-}
-
-enum ExpenseOrigin {
-  group,
-  friend,
-  global,
-  personal,
-}
+import 'package:split_ease/core/enums/app_enums.dart';
+export 'package:split_ease/core/enums/app_enums.dart';
 
 class ExpenseEntity extends Equatable {
   final String? id;

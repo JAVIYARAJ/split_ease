@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+export 'package:split_ease/core/enums/app_enums.dart';
 import 'package:split_ease/features/expenses/domain/entities/expense_category_entity.dart';
 import '../../domain/entities/recurring_expense_entity.dart';
 

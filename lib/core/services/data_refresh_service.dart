@@ -1,15 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
-
-enum RefreshType {
-  home,
-  groups,
-  friends,
-  activity,
-  groupDetail,
-  friendDetail,
-  expenseDetail,
-}
+import '../enums/app_enums.dart';
 
 class RefreshSignal extends Equatable {
   final RefreshType type;

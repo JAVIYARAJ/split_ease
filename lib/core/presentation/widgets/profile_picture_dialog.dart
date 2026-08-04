@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:split_ease/core/presentation/widgets/app_image_view.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 

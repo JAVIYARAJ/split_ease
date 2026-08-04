@@ -5,6 +5,8 @@ import 'package:split_ease/features/groups/domain/usecases/get_all_groups.dart';
 
 import '../../../../core/usecases/use_case.dart';
 import '../../domain/entities/group_entity.dart';
+import 'package:split_ease/core/enums/app_enums.dart';
+export 'package:split_ease/core/enums/app_enums.dart';
 
 part 'groups_event.dart';
 

@@ -1,7 +1,6 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-
-enum AppAlertType { success, error, warning, info }
+import 'dart:ui';
+import '../enums/app_enums.dart';
 
 class AppAlerts {
   // --- Success SnackBar ---

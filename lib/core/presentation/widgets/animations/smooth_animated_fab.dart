@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SmoothAnimatedFAB extends StatelessWidget {
