@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
+import 'package:split_ease/core/presentation/widgets/profile_picture_dialog.dart';
 import 'package:split_ease/features/friends/domain/entities/friend_request_entity.dart';
 import 'package:split_ease/features/friends/presentation/bloc/friend_requests_bloc.dart';
 
@@ -40,7 +41,20 @@ class FriendRequestTile extends StatelessWidget {
         children: [
           // ── Avatar ──
           GestureDetector(
-            onLongPress: () => _showFullImage(context),
+            onTap: () {
+              ProfilePictureDialog.show(
+                context,
+                avatarUrl: request.avatarUrl,
+                name: request.fullName,
+              );
+            },
+            onLongPress: () {
+              ProfilePictureDialog.show(
+                context,
+                avatarUrl: request.avatarUrl,
+                name: request.fullName,
+              );
+            },
             child: AppAvatar(
               url: request.avatarUrl,
               radius: 26,
@@ -178,69 +192,6 @@ class FriendRequestTile extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  void _showFullImage(BuildContext context) {
-    if (request.avatarUrl == null) return;
-
-    showDialog(
-      context: context,
-      barrierColor: Colors.black87,
-      builder: (context) {
-        return GestureDetector(
-          onTap: () => Navigator.of(context).pop(),
-          child: Dialog(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            insetPadding: const EdgeInsets.all(24),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(1000),
-              child: Image.network(
-                request.avatarUrl!,
-                width: 280,
-                height: 280,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, progress) {
-                  if (progress == null) return child;
-                  return SizedBox(
-                    width: 280,
-                    height: 280,
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: Theme.of(context).ext.surface,
-                        value: progress.expectedTotalBytes != null
-                            ? progress.cumulativeBytesLoaded /
-                                progress.expectedTotalBytes!
-                            : null,
-                      ),
-                    ),
-                  );
-                },
-                errorBuilder: (context, error, stack) {
-                  return Container(
-                    width: 280,
-                    height: 280,
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryTeal.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      request.fullName[0].toUpperCase(),
-                      style: GoogleFonts.outfit(
-                        fontSize: 64,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primaryTeal,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }

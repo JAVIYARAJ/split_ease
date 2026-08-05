@@ -3,6 +3,7 @@ import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
+import 'package:split_ease/core/presentation/widgets/profile_picture_dialog.dart';
 import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
 import 'package:split_ease/core/theme/app_layout.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
@@ -155,7 +156,16 @@ class SettleUpSelectionPage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Row(
           children: [
-            AppAvatar(url: balance.avatar, radius: 18),
+            GestureDetector(
+              onLongPress: () {
+                ProfilePictureDialog.show(
+                  context,
+                  avatarUrl: balance.avatar,
+                  name: balance.fullName,
+                );
+              },
+              child: AppAvatar(url: balance.avatar, radius: 18),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(

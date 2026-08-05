@@ -10,6 +10,7 @@ import 'package:split_ease/injection_container.dart';
 import 'package:split_ease/core/common/cubit/app_user_cubit.dart';
 import 'package:split_ease/core/presentation/widgets/app_empty_state.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
+import 'package:split_ease/core/presentation/widgets/profile_picture_dialog.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
 import 'package:split_ease/core/routing/navigation_service.dart';
 
@@ -276,11 +277,20 @@ class _AddMembersPageState extends State<AddMembersPage> {
           child: Row(
             children: [
               // Avatar
-              AppAvatar(
-                url: friend.avatarUrl,
-                radius: 25,
-                backgroundColor: Theme.of(context).ext.backgroundGrey,
-                iconColor: AppColors.primaryTeal,
+              GestureDetector(
+                onLongPress: () {
+                  ProfilePictureDialog.show(
+                    context,
+                    avatarUrl: friend.avatarUrl,
+                    name: friend.fullName,
+                  );
+                },
+                child: AppAvatar(
+                  url: friend.avatarUrl,
+                  radius: 25,
+                  backgroundColor: Theme.of(context).ext.backgroundGrey,
+                  iconColor: AppColors.primaryTeal,
+                ),
               ),
               const SizedBox(width: 16),
 

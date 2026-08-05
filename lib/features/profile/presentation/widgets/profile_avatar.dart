@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
+import 'package:split_ease/core/presentation/widgets/profile_picture_dialog.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class ProfileAvatar extends StatelessWidget {
@@ -22,14 +23,19 @@ class ProfileAvatar extends StatelessWidget {
     return Center(
       child: Stack(
         children: [
-          AppAvatar(
-            url: avatarUrl,
-            file: pickedImage,
-            radius: 60,
-            iconSize: 60,
-            backgroundColor: Theme.of(context).ext.backgroundGrey,
-            iconColor: AppColors.iconGrey,
-            border: Border.all(color: Theme.of(context).ext.border, width: 2),
+          GestureDetector(
+            onTap: () {
+              ProfilePictureDialog.show(context, avatarUrl: avatarUrl);
+            },
+            child: AppAvatar(
+              url: avatarUrl,
+              file: pickedImage,
+              radius: 60,
+              iconSize: 60,
+              backgroundColor: Theme.of(context).ext.backgroundGrey,
+              iconColor: AppColors.iconGrey,
+              border: Border.all(color: Theme.of(context).ext.border, width: 2),
+            ),
           ),
           Positioned(
             bottom: 4,

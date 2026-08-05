@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
+import 'package:split_ease/core/presentation/widgets/profile_picture_dialog.dart';
 import 'package:split_ease/core/presentation/widgets/app_error_full_screen_dialog.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
@@ -653,11 +654,20 @@ class _GroupSettingsContent extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           child: Row(
             children: [
-              AppAvatar(
-                url: member.avtar,
-                radius: 24,
-                backgroundColor: Theme.of(context).ext.backgroundGrey,
-                iconColor: Colors.grey.shade400,
+              GestureDetector(
+                onLongPress: () {
+                  ProfilePictureDialog.show(
+                    context,
+                    avatarUrl: member.avtar,
+                    name: member.fullName,
+                  );
+                },
+                child: AppAvatar(
+                  url: member.avtar,
+                  radius: 24,
+                  backgroundColor: Theme.of(context).ext.backgroundGrey,
+                  iconColor: Colors.grey.shade400,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(

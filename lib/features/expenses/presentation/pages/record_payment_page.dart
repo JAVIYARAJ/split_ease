@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:split_ease/core/common/cubit/app_user_cubit.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
+import 'package:split_ease/core/presentation/widgets/profile_picture_dialog.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/utils/app_alerts.dart';
 import 'package:split_ease/core/routing/app_routes.dart';
@@ -692,20 +693,29 @@ class _UserNode extends StatelessWidget {
       width: 80,
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(2),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: borderColor, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: borderColor.withValues(alpha: 0.12),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
+          GestureDetector(
+            onTap: () {
+              ProfilePictureDialog.show(
+                context,
+                avatarUrl: avatar,
+                name: name,
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: borderColor, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: borderColor.withValues(alpha: 0.12),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: AppAvatar(url: avatar, radius: 24),
             ),
-            child: AppAvatar(url: avatar, radius: 24),
           ),
           const SizedBox(height: 6),
           Text(

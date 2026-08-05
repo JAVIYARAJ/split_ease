@@ -156,6 +156,7 @@ class AccountPage extends StatelessWidget {
               ProfilePictureDialog.show(
                 context,
                 avatarUrl: avatar,
+                name: name,
                 heroTag: 'account_profile_pic',
               );
             },

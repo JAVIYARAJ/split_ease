@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/theme/app_colors.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
+import 'package:split_ease/core/presentation/widgets/profile_picture_dialog.dart';
 import '../../domain/entities/friend_entity.dart';
 
 class FriendListItem extends StatelessWidget {
@@ -62,13 +63,23 @@ class FriendListItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Avatar
-                    Hero(
-                      tag: friend.id,
-                      child: AppAvatar(
-                        url: friend.imageUrl,
-                        radius: 26,
-                        backgroundColor: Theme.of(context).ext.backgroundGrey,
-                        iconColor: Theme.of(context).ext.textTertiary,
+                    GestureDetector(
+                      onTap: () {
+                        ProfilePictureDialog.show(
+                          context,
+                          avatarUrl: friend.imageUrl,
+                          name: friend.name,
+                          heroTag: friend.id,
+                        );
+                      },
+                      child: Hero(
+                        tag: friend.id,
+                        child: AppAvatar(
+                          url: friend.imageUrl,
+                          radius: 26,
+                          backgroundColor: Theme.of(context).ext.backgroundGrey,
+                          iconColor: Theme.of(context).ext.textTertiary,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),

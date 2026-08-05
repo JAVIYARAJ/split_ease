@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -6,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:split_ease/core/common/cubit/app_user_cubit.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
+import 'package:split_ease/core/presentation/widgets/profile_picture_dialog.dart';
 import 'package:split_ease/core/services/realtime_service.dart';
 import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
@@ -39,6 +41,7 @@ import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
 import '../widgets/app_advertisement_dialog.dart';
 import '../widgets/creative_bottom_nav_bar.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -252,6 +255,13 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
     }
   }
 
+  String _getTimeBasedGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
   void _showFilterSheet() {
     showModalBottomSheet(
       context: context,
@@ -301,7 +311,6 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
         _customStart = picked.start;
         _customEnd = picked.end;
       });
-      context.read<HomeDashboardBloc>().add(_buildEvent());
     }
   }
 
@@ -309,6 +318,8 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
   Widget build(BuildContext context) {
     final userState = context.watch<AppUserCubit>().state;
     final String name = (userState is AppUserLoggedIn) ? (userState.user.name.split(' ').first) : "Splitting";
+    final String fullName = (userState is AppUserLoggedIn) ? userState.user.name : "Splitting";
+    final String? avatarUrl = (userState is AppUserLoggedIn) ? userState.user.avatarUrl : null;
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -319,7 +330,7 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
         padding: EdgeInsets.only(
-          top: 64,
+          top: MediaQuery.of(context).padding.top + 20,
           left: 20,
           right: 20,
           bottom: 140 + MediaQuery.of(context).padding.bottom,
@@ -330,39 +341,98 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
             // 1. Welcome Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
-                      Text(
-                        "Hey $name,",
-                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).ext.textSecondary),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      // User Avatar with glowing halo ring & long press preview
+                      GestureDetector(
+                        onLongPress: () {
+                          ProfilePictureDialog.show(context, avatarUrl: avatarUrl, name: fullName);
+                        },
+                        onTap: () {
+                          ProfilePictureDialog.show(context, avatarUrl: avatarUrl, name: fullName);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(2.5),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: const LinearGradient(
+                              colors: [AppColors.primary, Color(0xFF00C853)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withValues(alpha: 0.25),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: AppAvatar(
+                            url: avatarUrl,
+                            radius: 23,
+                          ),
+                        ),
                       ),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          "Your Dashboard",
-                          style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: Theme.of(context).ext.textPrimary, letterSpacing: -1.0),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "${_getTimeBasedGreeting()},",
+                              style: GoogleFonts.outfit(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Theme.of(context).ext.textSecondary,
+                                letterSpacing: 0.2,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              name,
+                              style: GoogleFonts.outfit(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: Theme.of(context).ext.textPrimary,
+                                letterSpacing: -0.5,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
+
+                // Filter Pill Button
                 GestureDetector(
                   onTap: _showFilterSheet,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                      color: Theme.of(context).ext.isDark
+                          ? AppColors.primary.withValues(alpha: 0.15)
+                          : AppColors.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.25),
+                        width: 1.2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.08),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -373,20 +443,21 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                           _filterLabel(_activeFilter),
                           style: GoogleFonts.outfit(
                             fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                             color: AppColors.primary,
                           ),
                         ),
                         const SizedBox(width: 4),
-                        Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: AppColors.primary),
+                        Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppColors.primary),
                       ],
                     ),
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 16),
+            ).animate().fadeIn(duration: 350.ms).slideY(begin: -0.1, end: 0),
+            const SizedBox(height: 22),
 
+            // 2. Metrics & Dashboard Content
             BlocBuilder<HomeDashboardBloc, HomeDashboardState>(
               builder: (context, state) {
                 if (state.status == HomeDashboardStatus.loading && state.dashboard == null) {
@@ -416,112 +487,84 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                       children: [
                         Expanded(
                           child: _buildGridCard(
-                            "TOTAL SPENT", 
-                            dash.totalSpend.amount, 
-                            dash.totalSpend.expenseCount, 
-                            isPrimary: true
+                            "TOTAL SPENT",
+                            dash.totalSpend.amount,
+                            dash.totalSpend.expenseCount,
+                            isPrimary: true,
+                            icon: Icons.account_balance_wallet_rounded,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 14),
                         Expanded(
                           child: _buildGridCard(
-                            "YOUR SHARE", 
-                            dash.moneyLost.amount, 
-                            dash.moneyLost.expenseCount, 
-                            isPrimary: false
+                            "YOUR SHARE",
+                            dash.moneyLost.amount,
+                            dash.moneyLost.expenseCount,
+                            isPrimary: false,
+                            icon: Icons.pie_chart_rounded,
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 12),
+                    ).animate().fadeIn(duration: 400.ms, delay: 100.ms).scale(begin: const Offset(0.96, 0.96), end: const Offset(1, 1)),
+                    const SizedBox(height: 18),
 
-                    // Analytics Entry Point (Expense Breakdown)
-                    InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => BlocProvider(
-                              create: (_) => sl<ExpenseBreakdownBloc>(),
-                              child: const ExpenseBreakdownPage(),
-                            ),
-                          ),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
-                              child: const Icon(Icons.pie_chart_rounded, color: AppColors.primary, size: 22),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text("Expense Breakdown", style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary)),
-                                  Text("See your spending breakdown", style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).ext.textSecondary)),
-                                ],
-                              ),
-                            ),
-                            const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.primary),
-                          ],
-                        ),
+                    // Quick Insights Hub Header
+                    Text(
+                      "Quick Insights",
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: Theme.of(context).ext.textPrimary,
+                        letterSpacing: -0.3,
                       ),
                     ),
                     const SizedBox(height: 10),
 
-                    // Personal Expenses Entry Point
-                    InkWell(
-                      onTap: () {
-                        NavigationService.pushNamed(AppRoutes.personalExpenses);
-                      },
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).ext.isDark ? const Color(0xFF2A1B3D) : const Color(0xFFF3E8FF),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Theme.of(context).ext.isDark ? const Color(0xFF4C2882) : const Color(0xFFE9D5FF)),
+                    // 2-Card Quick Hub Grid (Expense Breakdown & Personal Expenses)
+                    Row(
+                      children: [
+                        // Expense Breakdown Card
+                        Expanded(
+                          child: _buildQuickHubCard(
+                            title: "Expense Breakdown",
+                            subtitle: "Category split",
+                            icon: Icons.donut_large_rounded,
+                            gradientColors: const [Color(0xFF009688), Color(0xFF00BFA5)],
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => BlocProvider(
+                                    create: (_) => sl<ExpenseBreakdownBloc>(),
+                                    child: const ExpenseBreakdownPage(),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).ext.isDark ? const Color(0xFF4C2882) : const Color(0xFFE9D5FF),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(Icons.person_rounded, color: Theme.of(context).ext.isDark ? const Color(0xFFC084FC) : const Color(0xFF9333EA), size: 22),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text("Personal Expenses", style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w700, color: Theme.of(context).ext.textPrimary)),
-                                  Text("Track your non-shared expenses", style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).ext.textSecondary)),
-                                ],
-                              ),
-                            ),
-                            Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Theme.of(context).ext.isDark ? const Color(0xFFC084FC) : const Color(0xFF9333EA)),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+                        const SizedBox(width: 12),
 
-                    // Recent Transactions Section (Last 5)
-                    _buildRecentTransactionsSection(context, dash.recentTransactions),
+                        // Personal Expenses Card
+                        Expanded(
+                          child: _buildQuickHubCard(
+                            title: "Personal Expenses",
+                            subtitle: "Non-shared log",
+                            icon: Icons.person_rounded,
+                            gradientColors: const [Color(0xFF8B5CF6), Color(0xFFA855F7)],
+                            onTap: () {
+                              NavigationService.pushNamed(AppRoutes.personalExpenses);
+                            },
+                          ),
+                        ),
+                      ],
+                    ).animate().fadeIn(duration: 450.ms, delay: 180.ms).slideY(begin: 0.05, end: 0),
+                    const SizedBox(height: 24),
+
+                    // Recent Transactions Section
+                    _buildRecentTransactionsSection(context, dash.recentTransactions)
+                        .animate()
+                        .fadeIn(duration: 500.ms, delay: 250.ms),
                   ],
                 );
               },
@@ -532,79 +575,246 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
     );
   }
 
-  Widget _buildGridCard(String title, double amount, int count, {required bool isPrimary}) {
+  Widget _buildGridCard(
+    String title,
+    double amount,
+    int count, {
+    required bool isPrimary,
+    required IconData icon,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      height: 148,
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: isPrimary ? AppColors.primary : Theme.of(context).ext.surface,
-        borderRadius: BorderRadius.circular(22),
-        border: isPrimary ? null : Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.5)),
+        borderRadius: BorderRadius.circular(24),
+        gradient: isPrimary
+            ? const LinearGradient(
+                colors: [Color(0xFF004D40), Color(0xFF002720)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : const LinearGradient(
+                colors: [Color(0xFF2E1065), Color(0xFF17072B)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+        ),
         boxShadow: [
           BoxShadow(
-            color: isPrimary ? AppColors.primary.withValues(alpha: 0.25) : Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
+            color: isPrimary
+                ? const Color(0xFF004D40).withValues(alpha: 0.4)
+                : const Color(0xFF2E1065).withValues(alpha: 0.4),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Text(
-            title, 
-            style: GoogleFonts.outfit(
-              fontSize: 11, 
-              fontWeight: FontWeight.w800, 
-              color: isPrimary ? Colors.white.withValues(alpha: 0.8) : Theme.of(context).ext.textSecondary, 
-              letterSpacing: 1.2
-            )
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 30,
-            width: double.infinity,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: AnimatedCounterText(
-                value: amount, 
-                style: GoogleFonts.outfit(
-                  fontSize: 26, 
-                  fontWeight: FontWeight.w900, 
-                  color: isPrimary ? Colors.white : Theme.of(context).ext.textPrimary, 
-                  height: 1.1
-                )
+          // Background Decorative Ambient Circle
+          Positioned(
+            right: -15,
+            top: -15,
+            child: Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.08),
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: isPrimary ? Colors.white.withValues(alpha: 0.2) : Theme.of(context).ext.backgroundGrey,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(
-                  Icons.receipt_long_rounded, 
-                  size: 12, 
-                  color: isPrimary ? Colors.white : Theme.of(context).ext.textSecondary
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.outfit(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white.withValues(alpha: 0.82),
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(icon, size: 13, color: Colors.white),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  "$count Trx", 
-                  style: GoogleFonts.outfit(
-                    fontSize: 10, 
-                    fontWeight: FontWeight.w700, 
-                    color: isPrimary ? Colors.white : Theme.of(context).ext.textSecondary
-                  )
+                SizedBox(
+                  height: 32,
+                  width: double.infinity,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: AnimatedCounterText(
+                      value: amount,
+                      style: GoogleFonts.outfit(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        height: 1.1,
+                      ),
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.receipt_long_rounded,
+                        size: 11,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        "$count ${count == 1 ? 'Trx' : 'Trxs'}",
+                        style: GoogleFonts.outfit(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-          )
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuickHubCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required List<Color> gradientColors,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).ext.isDark;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          decoration: BoxDecoration(
+            color: Theme.of(context).ext.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark ? const Color(0xFF334155) : Theme.of(context).ext.borderLight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: gradientColors,
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(13),
+                      boxShadow: [
+                        BoxShadow(
+                          color: gradientColors.first.withValues(alpha: 0.3),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Icon(icon, color: Colors.white, size: 19),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 11,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 32,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      title,
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: Theme.of(context).ext.textPrimary,
+                        height: 1.15,
+                      ),
+                      maxLines: 2,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 2),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  subtitle,
+                  style: GoogleFonts.outfit(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).ext.textSecondary,
+                  ),
+                  maxLines: 1,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -615,62 +825,102 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              "Recent Transactions",
-              style: GoogleFonts.outfit(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: Theme.of(context).ext.textPrimary,
-                letterSpacing: -0.5,
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Recent Activity",
+                  style: GoogleFonts.outfit(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Theme.of(context).ext.textPrimary,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  "Latest 5 expenses",
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).ext.textSecondary,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 2),
-            Text(
-              "Last 5 activities",
-              style: GoogleFonts.outfit(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Theme.of(context).ext.textSecondary,
+            GestureDetector(
+              onTap: () {
+                context.read<HomeBloc>().add(HomeTabChanged(3));
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "See All",
+                      style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.arrow_forward_rounded, size: 13, color: AppColors.primary),
+                  ],
+                ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         if (transactions.isEmpty)
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
             decoration: BoxDecoration(
               color: Theme.of(context).ext.surface,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.3)),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: Theme.of(context).ext.border.withValues(alpha: 0.4)),
             ),
             child: Column(
               children: [
-                Icon(
-                  Icons.receipt_long_outlined,
-                  size: 36,
-                  color: Theme.of(context).ext.textTertiary.withValues(alpha: 0.5),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.receipt_long_rounded,
+                    size: 32,
+                    color: AppColors.primary.withValues(alpha: 0.8),
+                  ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Text(
-                  "No recent transactions",
+                  "No transactions yet",
                   style: GoogleFonts.outfit(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).ext.textSecondary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: Theme.of(context).ext.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "Your personal, group & friend expenses will show up here",
+                  "Expenses added in groups, with friends, or personal will show up here",
                   textAlign: TextAlign.center,
                   style: GoogleFonts.outfit(
                     fontSize: 12,
-                    color: Theme.of(context).ext.textTertiary,
+                    color: Theme.of(context).ext.textSecondary,
                   ),
                 ),
               ],
@@ -682,7 +932,7 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: transactions.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 8),
+            separatorBuilder: (context, index) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final tx = transactions[index];
               return _buildTransactionCard(context, tx, formatter);
@@ -711,7 +961,7 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
         border: Border.all(color: Theme.of(context).ext.borderLight),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: 0.025),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -737,7 +987,7 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
             padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
             child: Row(
               children: [
-                // Avatar with Mini Type Badge
+                // Avatar with Gradient Background & Mini Type Badge
                 Stack(
                   children: [
                     Container(
@@ -745,7 +995,11 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                       height: 46,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(14),
-                        color: Theme.of(context).ext.inputFill,
+                        gradient: LinearGradient(
+                          colors: _getAvatarGradient(tx.originType),
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(14),
@@ -758,8 +1012,8 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                               )
                             : Icon(
                                 _getTransactionIcon(tx.originType),
-                                color: AppColors.primary,
-                                size: 24,
+                                color: Colors.white,
+                                size: 22,
                               ),
                       ),
                     ),
@@ -771,7 +1025,7 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                         decoration: BoxDecoration(
                           color: _getBadgeColor(tx.originType),
                           shape: BoxShape.circle,
-                          border: Border.all(color: Theme.of(context).ext.surface, width: 1.5),
+                          border: Border.all(color: Theme.of(context).ext.surface, width: 1.8),
                         ),
                         child: Icon(
                           _getBadgeIcon(tx.originType),
@@ -792,7 +1046,7 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                       Text(
                         tx.title,
                         style: GoogleFonts.outfit(
-                          fontSize: 15,
+                          fontSize: 14.5,
                           fontWeight: FontWeight.w700,
                           color: Theme.of(context).ext.textPrimary,
                         ),
@@ -815,7 +1069,7 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                 ),
                 const SizedBox(width: 8),
 
-                // Amount Column
+                // Amount Column & Badge
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -828,15 +1082,26 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
                         letterSpacing: -0.3,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      tx.isPaidByMe
-                          ? "You paid"
-                          : "Share ₹${formatter.format(tx.userShare)}",
-                      style: GoogleFonts.outfit(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: tx.isPaidByMe ? AppColors.primaryTeal : AppColors.warningOrange,
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                      decoration: BoxDecoration(
+                        color: tx.isPaidByMe
+                            ? Color(0xFF00C853).withValues(alpha: 0.1)
+                            : Color(0xFFFF6D00).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        tx.isPaidByMe
+                            ? "You paid"
+                            : "Share ₹${formatter.format(tx.userShare)}",
+                        style: GoogleFonts.outfit(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: tx.isPaidByMe
+                              ? const Color(0xFF00C853)
+                              : const Color(0xFFFF6D00),
+                        ),
                       ),
                     ),
                   ],
@@ -847,6 +1112,17 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
         ),
       ),
     );
+  }
+
+  List<Color> _getAvatarGradient(String originType) {
+    switch (originType) {
+      case 'group':
+        return const [Color(0xFF009688), Color(0xFF00BFA5)];
+      case 'friend':
+        return const [Color(0xFF0284C7), Color(0xFF38BDF8)];
+      default:
+        return const [Color(0xFF8B5CF6), Color(0xFFA855F7)];
+    }
   }
 
   IconData _getTransactionIcon(String originType) {
@@ -867,7 +1143,7 @@ class _HomeDashboardViewState extends State<_HomeDashboardView> {
       case 'friend':
         return const Color(0xFF0284C7);
       default:
-        return const Color(0xFF9333EA);
+        return const Color(0xFF8B5CF6);
     }
   }
 
@@ -904,17 +1180,61 @@ class _DashboardSkeleton extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: double.infinity,
-            height: 160,
-            decoration: BoxDecoration(color: Theme.of(context).ext.surface, borderRadius: BorderRadius.circular(28)),
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 148,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).ext.surface,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Container(
+                  height: 148,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).ext.surface,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 18),
           Container(width: 120, height: 16, color: Colors.white),
-          const SizedBox(height: 16),
-          Container(width: double.infinity, height: 80, decoration: BoxDecoration(color: Theme.of(context).ext.surface, borderRadius: BorderRadius.circular(20))),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).ext.surface,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Container(
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).ext.surface,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Container(width: 140, height: 18, color: Colors.white),
           const SizedBox(height: 12),
-          Container(width: double.infinity, height: 80, decoration: BoxDecoration(color: Theme.of(context).ext.surface, borderRadius: BorderRadius.circular(20))),
+          Container(width: double.infinity, height: 72, decoration: BoxDecoration(color: Theme.of(context).ext.surface, borderRadius: BorderRadius.circular(20))),
+          const SizedBox(height: 10),
+          Container(width: double.infinity, height: 72, decoration: BoxDecoration(color: Theme.of(context).ext.surface, borderRadius: BorderRadius.circular(20))),
         ],
       ),
     );
@@ -1116,7 +1436,7 @@ class _HomeFilterSheet extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).ext.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
       child: Column(
@@ -1231,3 +1551,4 @@ class _HomeFilterSheet extends StatelessWidget {
     );
   }
 }
+

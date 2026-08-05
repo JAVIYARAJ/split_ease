@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
+import 'package:split_ease/core/presentation/widgets/profile_picture_dialog.dart';
 import 'package:split_ease/features/expenses/presentation/bloc/payer/payer_bloc.dart';
 import 'package:split_ease/features/groups/domain/entities/group_member_entity.dart';
 
@@ -69,9 +70,18 @@ class PayerSelectionPage extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                     child: Row(
                       children: [
-                        AppAvatar(
-                          url: member.avtar,
-                          radius: 20,
+                        GestureDetector(
+                          onLongPress: () {
+                            ProfilePictureDialog.show(
+                              context,
+                              avatarUrl: member.avtar,
+                              name: member.fullName,
+                            );
+                          },
+                          child: AppAvatar(
+                            url: member.avtar,
+                            radius: 20,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(

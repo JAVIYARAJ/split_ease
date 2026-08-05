@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
+import 'package:split_ease/core/presentation/widgets/profile_picture_dialog.dart';
 import 'package:split_ease/core/presentation/widgets/app_back_button.dart';
 import 'package:split_ease/core/presentation/widgets/base_screen.dart';
 import 'package:split_ease/core/services/data_refresh_service.dart';
@@ -722,11 +723,20 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                AppAvatar(
-                  url: entity.paidBy.avatar,
-                  radius: 18,
-                  backgroundColor: Theme.of(context).ext.inputFill,
-                  iconColor: Theme.of(context).ext.textSecondary,
+                GestureDetector(
+                  onTap: () {
+                    ProfilePictureDialog.show(
+                      context,
+                      avatarUrl: entity.paidBy.avatar,
+                      name: entity.paidBy.fullName,
+                    );
+                  },
+                  child: AppAvatar(
+                    url: entity.paidBy.avatar,
+                    radius: 18,
+                    backgroundColor: Theme.of(context).ext.inputFill,
+                    iconColor: Theme.of(context).ext.textSecondary,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -966,11 +976,20 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Row(
           children: [
-            AppAvatar(
-              url: avatarUrl,
-              radius: 18,
-              backgroundColor: Theme.of(context).ext.inputFill,
-              iconColor: Theme.of(context).ext.textSecondary,
+            GestureDetector(
+              onTap: () {
+                ProfilePictureDialog.show(
+                  context,
+                  avatarUrl: avatarUrl,
+                  name: name,
+                );
+              },
+              child: AppAvatar(
+                url: avatarUrl,
+                radius: 18,
+                backgroundColor: Theme.of(context).ext.inputFill,
+                iconColor: Theme.of(context).ext.textSecondary,
+              ),
             ),
             const SizedBox(width: 14),
             Expanded(

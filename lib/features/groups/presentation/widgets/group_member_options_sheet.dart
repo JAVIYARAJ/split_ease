@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:split_ease/core/theme/app_color_tokens.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:split_ease/core/presentation/widgets/app_avatar.dart';
+import 'package:split_ease/core/presentation/widgets/profile_picture_dialog.dart';
 import 'package:split_ease/core/theme/app_colors.dart';
 import 'package:split_ease/features/groups/domain/services/group_permission_service.dart';
 import 'package:split_ease/features/groups/presentation/utils/group_settings_logic_helper.dart';
@@ -69,13 +70,22 @@ class GroupMemberOptionsSheet extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Theme.of(context).ext.border, width: 2),
-                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))],
+                  GestureDetector(
+                    onTap: () {
+                      ProfilePictureDialog.show(
+                        context,
+                        avatarUrl: member.avtar,
+                        name: member.fullName,
+                      );
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Theme.of(context).ext.border, width: 2),
+                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))],
+                      ),
+                      child: AppAvatar(url: member.avtar, radius: 28),
                     ),
-                    child: AppAvatar(url: member.avtar, radius: 28),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
