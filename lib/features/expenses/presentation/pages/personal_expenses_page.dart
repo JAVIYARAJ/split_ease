@@ -607,9 +607,79 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
     }
   }
 
-  Widget _buildChart(PersonalExpensesEntity displayData, {bool isLoading = false}) {
-    if (displayData.chart.isEmpty) return const SizedBox.shrink();
+  Widget _buildChartEmptyState() {
+    return ValueListenableBuilder<PersonalExpenseFilter>(
+      valueListenable: _activeFilterNotifier,
+      builder: (context, activeFilter, _) {
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).ext.surface,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: Theme.of(context).ext.border.withValues(alpha: 0.5),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Nested circle icon
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.07),
+                  shape: BoxShape.circle,
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.13),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.bar_chart_rounded,
+                    size: 32,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No Chart Data Available',
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).ext.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Not enough spending data to display a chart for "${_filterLabel(activeFilter)}". Add some expenses and they\'ll appear here.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).ext.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
+  Widget _buildChart(PersonalExpensesEntity displayData, {bool isLoading = false}) {
     final chartItems = displayData.chart;
     final summary = displayData.summary;
 
@@ -618,6 +688,12 @@ class _PersonalExpensesPageState extends State<PersonalExpensesPage> {
       if (item.amount.toDouble() > maxAmount) maxAmount = item.amount.toDouble();
     }
     final maxY = maxAmount > 0 ? maxAmount * 1.25 : 100.0;
+
+    // Show empty state when there is no data or all amounts are zero
+    final hasNoMeaningfulData = chartItems.isEmpty || maxAmount == 0;
+    if (hasNoMeaningfulData && !isLoading) {
+      return _buildChartEmptyState();
+    }
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 20),
