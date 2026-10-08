@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   android:
-    uses: JAVIYARAJ/ci-workflows/.github/workflows/android-build.yml@v1
+    uses: JAVIYARAJ/ci-workflows/.github/workflows/android-build.yml@main
     with:
       build-type: release
       create-release: true
